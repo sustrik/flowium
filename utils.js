@@ -59,7 +59,10 @@ function eraseCookie(name) {
 function getToken() {
     if(token != null) return
     token = getCookie("flowium")
-    if(token != null) return
+    if(token != null) {
+        console.log("Cookie found!")
+        return
+    }
     var code = getParameterByName('code')
     if(code == null) {
         window.location.replace("https://github.com/login/oauth/authorize?" +
@@ -68,7 +71,7 @@ function getToken() {
     }
     htmlGet("https://flowium.herokuapp.com/authenticate/" + code,
           function(response) {
-        console.log(response)
+        console.log("Token retrieved!")
         setCookie("flowium", response, 30)
         token = response
     })
@@ -76,6 +79,4 @@ function getToken() {
 
 var token = null
 getToken()
-
-
 
