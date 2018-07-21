@@ -4,12 +4,24 @@
   <meta charset="utf-8">
   <title>flowium</title>
 </head>
+<script
+    src="https://code.jquery.com/jquery-3.3.1.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous">
+</script>
 <script src="utils.js"></script>
 <script>
 
 function init() {
+    $("#token").text(token)
+}
+
+function deleteCookie() {
+    eraseCookie("flowium")
 }
 
 </script>
 <body onload="init()">
+<p id="token"></p>
+<button onclick="deleteCookie()">Delete</button>
 </body>
