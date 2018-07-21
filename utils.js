@@ -62,7 +62,7 @@ function getToken() {
     var code = getParameterByName('code')
     if(code == null) {
         window.location.replace("https://github.com/login/oauth/authorize?" +
-            "scope=repo&client_id=d027578d9cca180f9e0e)
+            "scope=repo&client_id=d027578d9cca180f9e0e"
         return
     }
     var client = new HttpClient();
