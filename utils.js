@@ -70,7 +70,7 @@ function getToken() {
             "scope=repo&client_id=d027578d9cca180f9e0e")
         return
     }
-    htmlGet("https://flowium.herokuapp.com/authenticate/" + code,
+    httpGet("https://flowium.herokuapp.com/authenticate/" + code,
           function(response) {
         console.log("Token retrieved!")
         setCookie("flowium", response, 30)
