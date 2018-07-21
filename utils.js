@@ -61,7 +61,7 @@ function getToken() {
     if(token != null) return
     token = getCookie("flowium")
     if(token != null) {
-        console.log("Cookie found!")
+        console.log("Cookie found:" + token)
         return
     }
     var code = getParameterByName('code')
