@@ -8,25 +8,26 @@ function getParameterByName(name) {
     return decodeURIComponent(results[2].replace(/\+/g, ' '))
 }
 
-function httpGet(aUrl, aCallback) {
+function httpGet(url, cb) {
     var anHttpRequest = new XMLHttpRequest();
     anHttpRequest.onreadystatechange = function() { 
         if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
-            aCallback(issues = JSON.parse(anHttpRequest.responseText))
+            cb(issues = JSON.parse(anHttpRequest.responseText))
     }
-    anHttpRequest.open('GET', aUrl, true);            
+    anHttpRequest.open('GET', url, true);
     anHttpRequest.send(null);
 }
 
-function httpPost(aUrl, args, token, aCallback) {
+function httpPost(url, args, token, cb) {
     var anHttpRequest = new XMLHttpRequest();
     anHttpRequest.onreadystatechange = function() { 
         if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
-            aCallback(issues = JSON.parse(anHttpRequest.responseText))
+            cb(issues = JSON.parse(anHttpRequest.responseText))
     }
-    anHttpRequest.open('POST', aUrl, true)
+    anHttpRequest.open('POST', url, true)
     anHttpRequest.setRequestHeader('Authorization','token ' + token)
-    anHttpRequest.setRequestHeader('Content-type','application/x-www-form-urlencoded')
+    anHttpRequest.setRequestHeader('Content-type',
+        'application/x-www-form-urlencoded')
     anHttpRequest.setRequestHeader('Accept', '*/*')
     anHttpRequest.send(JSON.stringify(args))
 }
