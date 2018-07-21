@@ -72,7 +72,7 @@ function getToken() {
     }
     httpGet("https://flowium.herokuapp.com/authenticate/" + code,
           function(response) {
-        console.log("Token retrieved!")
+        console.log("Token retrieved: " + response)
         setCookie("flowium", response, 30)
         token = response
     })
