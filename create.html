@@ -9,11 +9,19 @@
     integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
     crossorigin="anonymous">
 </script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
 <script src="utils.js"></script>
 <script>
+
 function init() {
     var template = getParameterByName('template')
     $("#template").text(template)
+    var commentElement = document.getElementById("comment")
+    commentElement['editor'] = new SimpleMDE({
+		    element: commentElement,
+		    spellChecker: false,
+	  })
 }
 
 function create() {
@@ -27,8 +35,8 @@ function create() {
                        '~> __version:' + sha + "\n\n"
         // Create the issue.
         var args = {
-            "title": $(".title").val(),
-            "body": prologue + $(".comment").val(),
+            "title": $("#title").val(),
+            "body": prologue + $("#comment").editor.value(),
         }
         ghPost("issues", args, function(reply) {
             console.log(reply)
@@ -51,8 +59,8 @@ function create() {
 <body onload="init()">
 <h1>Create new issue</h1>
 <p>Template: <span id="template">fff</span></p>
-<p>Title: <input type="text" name="title" class="title"></p>
-<p>Comment: <textarea name="comment" cols="40" rows="5" class="comment"></textarea></p>
+<p>Title: <input type="text" id="title"></p>
+<p>Comment: <textarea id="comment"></textarea></p>
 <button onclick="create()">Create</button>
 </div>
 </body>

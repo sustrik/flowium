@@ -113,3 +113,13 @@ function ltrimHash(str) {
     return str.substring(pos)
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Markdown rendering
+
+var mdConverter = new showdown.Converter()
+mdConverter.setFlavor('github')
+
+function mdConvert(md) {
+    return mdConverter.makeHtml(md)
+}
+
