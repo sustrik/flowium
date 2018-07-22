@@ -13,15 +13,38 @@
 <script>
 
 function init() {
-    $("#token").text(token)
-}
+    ghGet('issues', null, function(issues) {
+        for(var i = 0; i < issues.length; i++) {
+            var issue = issues[i]
+            var item = '<p><a href="issue.html' +
+                '?username=' + getUsername() +
+                '&repository=' + getRepository() +
+                '&issue=' + issue.number +
+                '&token=' + getToken() +
+                '">#' + issue.number + ' ' + issue.title + '</a></p>'
+            $("#open-issue").append(item)
+        }
+    });
 
-function deleteCookie() {
-    eraseCookie("flowium")
+    ghGet("contents/" + getPath(), null, function(files) {
+        for(var i = 0; i < files.length; i++) {
+            var f = files[i]
+            if(!f.name.endsWith('.md')) continue
+            var item = '<p><a href="create.html' +
+                '?username=' + getUsername() +
+                '&repository=' + getRepository() +
+                '&template=' + getPath() + f.name +
+                '&token=' + getToken() +
+                '">' + f.name + '</a></p>'
+            $("#create-issue").append(item)
+        }
+    });
 }
 
 </script>
 <body onload="init()">
-<p id="token"></p>
-<button onclick="deleteCookie()">Delete</button>
+<h1>Open an issue</h1>
+<div id='open-issue'></div>
+<h1>Create an issue</h1>
+<div id='create-issue'></div>
 </body>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>flowium</title>
+</head>
+<script
+    src="https://code.jquery.com/jquery-3.3.1.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous">
+</script>
+<script src="utils.js"></script>
+<script src="https://cdn.rawgit.com/showdownjs/showdown/1.8.5/dist/showdown.min.js"></script>
+<script>
+function splitComment(src) {
+    var vars = {}
+    var body = ""
+    var lns = src.split("\n")
+    for(var i = 0; i < lns.length; i++) {
+        if(lns[i].startsWith("~>")) {
+            var elems = lns[i].substring(2).split(":")
+            vars[elems[0].trim()] = elems[1].trim()
+            continue
+        }
+        body += "\n" + lns[i]
+    }
+    return {
+        variables: vars,
+        body: body
+    }
+}
+
+function loadIssue(cb) {
+    ghGet('issues/' + getIssue(), null, function(response) {
+        var title = response.title
+        var comments = [{
+            user: response.user.login,
+            created_at: response.created_at,
+            body: response.body
+        }]
+        ghGet('issues/' + getIssue() + "/comments", null, function(cmts) {
+            for(var i = 0; i < cmts.length; i++) {
+                comments.push({
+                    user: cmts[i].user.login,
+                    created_at: cmts[i].created_at,
+                    body: cmts[i].body
+                })
+            }
+            cb(title, comments)
+        })
+    })
+}
+
+function ltrimHash(str) {
+    var pos = [...str].findIndex(function (el) {
+        return el != "#"
+    })
+    return str.substring(pos)
+}
+
+function loadTemplate(template, version) {
+    var converter = new showdown.Converter()
+    ghGet("contents/" + template + "?ref=" + version, {}, function(content) {
+        var body = atob(content.content)
+        var lns = body.split("\n")
+        var steps = []
+        var stepname = "__introduction"
+        var step = ""
+        var title = ""
+        var deps = []
+        for(var i = 0; i < lns.length; i++) {
+            var ln = lns[i]
+            if(ln.startsWith("#") && ln.includes("~>")) {
+                steps.push({
+                    id: stepname,
+                    title: title,
+                    body: step,
+                    deps: deps
+                })
+                title = ""
+                step = ""
+                deps = []
+                var ruleparts = ln.split("~>")
+                title = ltrimHash(ruleparts[0]).trim()
+                var elems = ruleparts[1].trim().split(":")
+                stepname = elems[0].trim()
+                if (elems.length > 1) {
+                    deps = elems[1].split(' ')
+                }
+                continue
+            }
+            step += ln
+        }
+        steps.push({
+            id: stepname,
+            title: title,
+            body: step,
+            deps: deps
+        })
+        console.log(steps)
+
+        for(var i = 0; i < steps.length; i++) {
+            var div = "<div id='__" + steps[i].id + "'>"
+            div += "<h1>" + steps[i].title + "</h1>"
+            div += converter.makeHtml(steps[i].body)
+            div += "<p><textarea cols='40' rows='5'></textarea></p>"
+            div += "<p><button onclick=''>Not done</button>"
+            div += "<button onclick=''>In progress</button>"
+            div += "<button onclick=''>Done</button></p>"
+            div += "<hr></div>"
+            $("#flow").append(div)
+        }
+    })
+}
+
+function init() {
+    var converter = new showdown.Converter()
+    loadIssue(function(title, comments) {
+        var variables = {}
+        $("#title").text(title)
+        for(var i = 0; i < comments.length; i++) {
+            var b = splitComment(comments[i].body)
+            var body = "<hr><p>user " + comments[i].user + " at " + comments[i].created_at + "</p>"
+            if(b.variables["__action"] != undefined) {
+                body += "<p>Action:" + b.variables.__action + "</p>"
+            }
+            body += converter.makeHtml(b.body)
+            $("#history").append(body)
+            variables = Object.assign(variables, b.variables)
+        }
+        var keys = Object.keys(variables).sort()
+        for(var i = 0; i < keys.length; i++) {
+            var key = keys[i]
+            var val = variables[key]
+            $("#variables").append("<p>" + key + ": " + val + "</p>") 
+        }
+        loadTemplate(variables['__template'], variables['__version'])
+    })
+}
+
+function switchTab(name) {
+    $("#flow").hide()
+    $("#variables").hide()
+    $("#history").hide()
+    $("#" + name).show()
+}
+
+</script>
+<body onload="init()">
+<h1 id="title"></h1>
+<p>
+<button onclick="switchTab('flow')">Flow</button>
+<button onclick="switchTab('variables')">Variables</button>
+<button onclick="switchTab('history')">History</button>
+</p>
+<div id="flow" hidden></div>
+<div id="variables" hidden></div>
+<div id="history"></div>
+</body>
+

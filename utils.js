@@ -1,3 +1,6 @@
+////////////////////////////////////////////////////////////////////////////////
+// Query parameters
+
 function getParameterByName(name) {
     var url = window.location.href
     var name = name.replace(/[\[\]]/g, '\\$&')
@@ -8,76 +11,97 @@ function getParameterByName(name) {
     return decodeURIComponent(results[2].replace(/\+/g, ' '))
 }
 
-function httpGet(url, cb) {
+////////////////////////////////////////////////////////////////////////////////
+// HTTP requests
+
+function httpGet(url, token, args, cb) {
     var anHttpRequest = new XMLHttpRequest();
     anHttpRequest.onreadystatechange = function() { 
         if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
             cb(issues = JSON.parse(anHttpRequest.responseText))
     }
     anHttpRequest.open('GET', url, true);
-    anHttpRequest.send(null);
+    if(token != null) {
+        anHttpRequest.setRequestHeader('Authorization','token ' + token)
+    }
+    anHttpRequest.setRequestHeader('Content-type', 'application/json')
+    anHttpRequest.setRequestHeader('Accept', '*/*')
+    anHttpRequest.send(args);
 }
 
-function httpPost(url, args, token, cb) {
+function httpPost(url, token, args, cb) {
     var anHttpRequest = new XMLHttpRequest();
-    anHttpRequest.onreadystatechange = function() { 
-        if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
+    anHttpRequest.onreadystatechange = function() {
+        if (anHttpRequest.readyState == 4 && anHttpRequest.status == 201)
             cb(issues = JSON.parse(anHttpRequest.responseText))
     }
     anHttpRequest.open('POST', url, true)
-    anHttpRequest.setRequestHeader('Authorization','token ' + token)
-    anHttpRequest.setRequestHeader('Content-type',
-        'application/x-www-form-urlencoded')
+    if(token != null) {
+        anHttpRequest.setRequestHeader('Authorization','token ' + token)
+    }
+    anHttpRequest.setRequestHeader('Content-type', 'application/json')
     anHttpRequest.setRequestHeader('Accept', '*/*')
     anHttpRequest.send(JSON.stringify(args))
 }
 
-function setCookie(name,value,days) {
-    var expires = ""
-    if (days) {
-        var date = new Date()
-        date.setTime(date.getTime() + (days*24*60*60*1000))
-        expires = "; expires=" + date.toUTCString()
-    }
-    document.cookie = name + "=" + (value || "")  + expires + "; path=/"
-}
-
-function getCookie(name) {
-    var nameEQ = name + "="
-    var ca = document.cookie.split(';')
-    for(var i=0;i < ca.length;i++) {
-        var c = ca[i]
-        while (c.charAt(0)==' ') c = c.substring(1,c.length)
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length)
-    }
-    return null
-}
-
-function eraseCookie(name) {   
-    document.cookie = name+'=; Max-Age=-99999999;' 
-}
+////////////////////////////////////////////////////////////////////////////////
+// These should be eventually stored in cookies.
 
 function getToken() {
-    if(token != null) return
-    token = getCookie("flowium")
-    if(token != null) {
-        console.log("Cookie found:" + token)
-        return
-    }
-    var code = getParameterByName('code')
-    if(code == null) {
-        window.location.replace("https://github.com/login/oauth/authorize?" +
-            "scope=repo&client_id=d027578d9cca180f9e0e")
-        return
-    }
-    httpGet("https://flowium.herokuapp.com/authenticate/" + code,
-          function(response) {
-        console.log("Token retrieved: " + JSON.stringify(response))
-        setCookie("flowium", response, 30)
-        token = response
-    })
+    var token = getParameterByName('token')
+    return token
+    //if(token != null) {
+    //    setCookie("token", token)
+    //    return token
+    //}
+    //token = getCookie("token")
+    //if(token != null) {
+    //    return token
+    //}
+    //var code = getParameterByName('code')
+    //if(code == null) {
+    //    window.location.replace("https://github.com/login/oauth/authorize?" +
+    //        "scope=repo&client_id=d027578d9cca180f9e0e")
+    //    return
+    //}
+    //httpGet("https://flowium.herokuapp.com/authenticate/" + code,
+    //      token,
+    //      null,
+    //      function(response) {
+    //    console.log("Token retrieved: " + JSON.stringify(response))
+    //    setCookie("token", response)
+    //    token = response
+    //})
 }
 
-var token = null
-getToken()
+function getUsername() {
+    return getParameterByName("username")
+}
+
+function getRepository() {
+    return getParameterByName("repository")
+}
+
+function getIssue() {
+    return getParameterByName("issue")
+}
+
+function getPath() {
+    return "/"
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// GitHub helpers
+
+function ghGet(url, args, cb) {
+    var repo = 'https://api.github.com/repos/' + getUsername() + "/" +
+        getRepository() + "/"
+    httpGet(repo + url, getToken(), args, cb)
+}
+
+function ghPost(url, args, cb) {
+    var repo = 'https://api.github.com/repos/' + getUsername() + "/" +
+        getRepository() + "/"
+    httpPost(repo + url, getToken(), args, cb)
+}
 
