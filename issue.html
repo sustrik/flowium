@@ -119,22 +119,26 @@ function initFlow(comments, source, variables) {
 }
 
 function initVariables(comments, source, variables) {
+    var body = "<table>"
     var keys = Object.keys(variables).sort()
     for(var i = 0; i < keys.length; i++) {
         var key = keys[i]
         var val = variables[key]
-        $("#variable-table").append("<p>" + key + ": " + val + "</p>") 
+        body += "<tr><td>" + key + "</td><td>" + val + "</td></tr>"
     }
+    body += "</table>"
+    $("#variable-table").append(body)
 }
 
 function initHistory(comments, source, variables) {
     for(var i = 0; i < comments.length; i++) {
         var body = "<p>user " + comments[i].user + " at " + comments[i].created_at + "</p>"
+        body += "<div class='comment'>"
         if(comments[i].variables["__action"] != undefined) {
             body += "<p>Action:" + comments[i].variables.__action + "</p>"
         }
         body += mdConvert(comments[i].body)
-        body += "<hr>"
+        body += "</div>"
         $("#history-table").append(body)
     }
 

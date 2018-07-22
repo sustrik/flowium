@@ -25,3 +25,26 @@ h5 {
 h6 {
     font-size: 120%;
 }
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+textarea {
+    width: 100%;
+}
+
+.comment {
+    background-color: #FDFEBF;
+    border-style: solid;
+    border-width: 1px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
