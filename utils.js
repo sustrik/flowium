@@ -105,3 +105,11 @@ function ghPost(url, args, cb) {
     httpPost(repo + url, getToken(), args, cb)
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Random functions
+
+function ltrimHash(str) {
+    var pos = [...str].findIndex(function (el) {return el != "#"})
+    return str.substring(pos)
+}
+

@@ -12,7 +12,9 @@
 <script src="utils.js"></script>
 <script src="https://cdn.rawgit.com/showdownjs/showdown/1.8.5/dist/showdown.min.js"></script>
 <script>
-function splitComment(src) {
+
+function splitComment(el) {
+    var src = el.body
     var vars = {}
     var body = ""
     var lns = src.split("\n")
@@ -25,116 +27,132 @@ function splitComment(src) {
         body += "\n" + lns[i]
     }
     return {
+        user: el.user.login,
+        created_at: el.created_at,
         variables: vars,
-        body: body
+        body: body,
     }
 }
 
-function loadIssue(cb) {
-    ghGet('issues/' + getIssue(), null, function(response) {
-        var title = response.title
-        var comments = [{
-            user: response.user.login,
-            created_at: response.created_at,
-            body: response.body
-        }]
-        ghGet('issues/' + getIssue() + "/comments", null, function(cmts) {
-            for(var i = 0; i < cmts.length; i++) {
-                comments.push({
-                    user: cmts[i].user.login,
-                    created_at: cmts[i].created_at,
-                    body: cmts[i].body
-                })
+function extractComments(issue, comments) {
+    var result = []
+    result.push(splitComment(issue))
+    for(var i = 0; i < comments.length; i++) {
+        result.push(splitComment(comments[i]))
+    }
+    return result
+}
+
+function extractVariables(comments) {
+    var result = {}
+    for(var i = 0; i < comments.length; i++) {
+        result = Object.assign(result, comments[i].variables)
+    }
+    // "action" is not a real variable.
+    delete result['__action']
+    return result
+}
+
+function initFlow(comments, source, variables) {
+    /* Parse the source. */
+    var lns = source.split("\n")
+    var steps = []
+    var stepname = "__introduction"
+    var step = ""
+    var title = ""
+    var deps = []
+    for(var i = 0; i < lns.length; i++) {
+        var ln = lns[i]
+        if(ln.startsWith("#") && ln.includes("~>")) {
+            steps.push({
+                id: stepname,
+                title: title,
+                body: step,
+                deps: deps
+            })
+            title = ""
+            step = ""
+            deps = []
+            var ruleparts = ln.split("~>")
+            title = ltrimHash(ruleparts[0]).trim()
+            var elems = ruleparts[1].trim().split(":")
+            stepname = elems[0].trim()
+            if (elems.length > 1) {
+                deps = elems[1].split(' ')
             }
-            cb(title, comments)
-        })
+            continue
+        }
+        step += ln
+    }
+    steps.push({
+        id: stepname,
+        title: title,
+        body: step,
+        deps: deps
     })
-}
 
-function ltrimHash(str) {
-    var pos = [...str].findIndex(function (el) {
-        return el != "#"
-    })
-    return str.substring(pos)
-}
+    /* Expand the variables. */
+    var keys = Object.keys(variables)
+    for(var i = 0; i < steps.length; i++) {
+        for(var j = 0; j < keys.length; j++) {
+            steps[i].body = steps[i].body.replace(new RegExp('#{' + keys[j] + '}', 'g'), variables[keys[j]])
+        }
+    }
 
-function loadTemplate(template, version) {
+    /* Render the page. */
     var converter = new showdown.Converter()
-    ghGet("contents/" + template + "?ref=" + version, {}, function(content) {
-        var body = atob(content.content)
-        var lns = body.split("\n")
-        var steps = []
-        var stepname = "__introduction"
-        var step = ""
-        var title = ""
-        var deps = []
-        for(var i = 0; i < lns.length; i++) {
-            var ln = lns[i]
-            if(ln.startsWith("#") && ln.includes("~>")) {
-                steps.push({
-                    id: stepname,
-                    title: title,
-                    body: step,
-                    deps: deps
-                })
-                title = ""
-                step = ""
-                deps = []
-                var ruleparts = ln.split("~>")
-                title = ltrimHash(ruleparts[0]).trim()
-                var elems = ruleparts[1].trim().split(":")
-                stepname = elems[0].trim()
-                if (elems.length > 1) {
-                    deps = elems[1].split(' ')
-                }
-                continue
-            }
-            step += ln
+    $("#flow").append("<p><input type='checkbox'>Show blocked</input><input type='checkbox'>Show done</input></p>")
+    for(var i = 0; i < steps.length; i++) {
+        var div = "<div id='__" + steps[i].id + "'>"
+        div += "<h1>" + steps[i].title + "</h1>"
+        div += converter.makeHtml(steps[i].body)
+        div += "<p><textarea cols='40' rows='5'></textarea></p>"
+        div += "<p><button onclick=''>Save comment</button></p>"
+        div += "<p><button onclick=''>Not done</button>"
+        div += "<button onclick=''>In progress</button>"
+        div += "<button onclick=''>Done</button></p>"
+        div += "<hr></div>"
+        $("#flow").append(div)
+    }
+}
+
+function initVariables(comments, source, variables) {
+    var keys = Object.keys(variables).sort()
+    for(var i = 0; i < keys.length; i++) {
+        var key = keys[i]
+        var val = variables[key]
+        $("#variable-table").append("<p>" + key + ": " + val + "</p>") 
+    }
+}
+
+function initHistory(comments, source, variables) {
+    var converter = new showdown.Converter()
+    for(var i = 0; i < comments.length; i++) {
+        var body = "<p>user " + comments[i].user + " at " + comments[i].created_at + "</p>"
+        if(comments[i].variables["__action"] != undefined) {
+            body += "<p>Action:" + comments[i].variables.__action + "</p>"
         }
-        steps.push({
-            id: stepname,
-            title: title,
-            body: step,
-            deps: deps
-        })
-        $("#flow").append("<p><input type='checkbox'>Show blocked</input><input type='checkbox'>Show done</input></p>")
-        for(var i = 0; i < steps.length; i++) {
-            var div = "<div id='__" + steps[i].id + "'>"
-            div += "<h1>" + steps[i].title + "</h1>"
-            div += converter.makeHtml(steps[i].body)
-            div += "<p><textarea cols='40' rows='5'></textarea></p>"
-            div += "<p><button onclick=''>Save comment</button></p>"
-            div += "<p><button onclick=''>Not done</button>"
-            div += "<button onclick=''>In progress</button>"
-            div += "<button onclick=''>Done</button></p>"
-            div += "<hr></div>"
-            $("#flow").append(div)
-        }
-    })
+        body += converter.makeHtml(comments[i].body)
+        body += "<hr>"
+        $("#history-table").append(body)
+    }
 }
 
 function init() {
-    var converter = new showdown.Converter()
-    loadIssue(function(title, comments) {
-        var variables = {}
-        $("#title").text(title)
-        for(var i = 0; i < comments.length; i++) {
-            var b = splitComment(comments[i].body)
-            var body = "<hr><p>user " + comments[i].user + " at " + comments[i].created_at + "</p>"
-            if(b.variables["__action"] != undefined) {
-                body += "<p>Action:" + b.variables.__action + "</p>"
-            }
-            body += converter.makeHtml(b.body)
-            $("#history").append(body)
-            variables = Object.assign(variables, b.variables)
-        }
-        var keys = Object.keys(variables).sort()
-        for(var i = 0; i < keys.length; i++) {
-            var key = keys[i]
-            var val = variables[key]
-            $("#variables").append("<p>" + key + ": " + val + "</p>") 
-        }
-        loadTemplate(variables['__template'], variables['__version'])
+    ghGet('issues/' + getIssue(), null, function(issue) {
+        $("#title").text(issue.title)
+        ghGet('issues/' + getIssue() + "/comments", null, function(cmnts) {
+            var comments = extractComments(issue, cmnts)
+            var variables = extractVariables(comments)
+            var template = variables["__template"]
+            var version = variables["__version"]
+            ghGet("contents/" + template + "?ref=" + version, {}, function(src) {
+                var source = atob(src.content)
+                initFlow(comments, source, variables)
+                initVariables(comments, source, variables)
+                initHistory(comments, source, variables)
+            })
+        })
     })
 }
 
@@ -154,7 +172,16 @@ function switchTab(name) {
 <button onclick="switchTab('history')">History</button>
 </p>
 <div id="flow" hidden></div>
-<div id="variables" hidden></div>
-<div id="history"></div>
+<div id="variables" hidden>
+    <div id="variable-table"></div>
+    <p>Key: <input/></p>
+    <p>Value: <input/></p>
+    <button onclick="">Update variable</button>
+</div>
+<div id="history">
+    <div id="history-table"></div>
+    <p><textarea cols='40' rows='5'></textarea></p>
+    <p><button onclick="">Comment</button></p>
+</div>
 </body>
 
