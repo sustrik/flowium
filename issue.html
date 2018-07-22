@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>flowium</title>
+    <meta charset="utf-8">
+    <title>flowium</title>
+    <link rel="stylesheet" type="text/css" href="flowium.css">
 </head>
 <script
     src="https://code.jquery.com/jquery-3.3.1.min.js"
@@ -105,7 +106,7 @@ function initFlow(comments, source, variables) {
     $("#flow").append("<p><input type='checkbox'>Show blocked</input><input type='checkbox'>Show done</input></p>")
     for(var i = 0; i < steps.length; i++) {
         var div = "<div id='__" + steps[i].id + "'>"
-        div += "<h1>" + steps[i].title + "</h1>"
+        div += "<h2>" + steps[i].title + "</h2>"
         div += mdConvert(steps[i].body)
         div += "<p><textarea cols='40' rows='5'></textarea></p>"
         div += "<p><button onclick=''>Save comment</button></p>"
