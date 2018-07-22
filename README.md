@@ -6,7 +6,7 @@ Blabity-blab
 
 # Second step ~> second
 
-Boo!
+Frobnicate #{foo} and #{bar}.
 
 # Third step ~> third
 
