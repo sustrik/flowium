@@ -97,13 +97,13 @@ function loadTemplate(template, version) {
             body: step,
             deps: deps
         })
-        console.log(steps)
-
+        $("#flow").append("<p><input type='checkbox'>Show blocked</input><input type='checkbox'>Show done</input></p>")
         for(var i = 0; i < steps.length; i++) {
             var div = "<div id='__" + steps[i].id + "'>"
             div += "<h1>" + steps[i].title + "</h1>"
             div += converter.makeHtml(steps[i].body)
             div += "<p><textarea cols='40' rows='5'></textarea></p>"
+            div += "<p><button onclick=''>Save comment</button></p>"
             div += "<p><button onclick=''>Not done</button>"
             div += "<button onclick=''>In progress</button>"
             div += "<button onclick=''>Done</button></p>"
