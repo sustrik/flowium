@@ -17,9 +17,6 @@
 function renderComment(comment) {
     var body = "<p><img class='avatar' src='" + comment.avatar + "&s=44'/><a href='" + comment.url + "'>" + comment.user + "</a> at " + comment.created_at + ":</p>"
     body += "<div class='comment'>"
-    if(comment.variables["__action"] != undefined) {
-        body += "<p>Action:" + comment.variables.__action + "</p>"
-    }
     body += mdConvert(comment.body)
     body += "</div>"
     return body
@@ -173,6 +170,26 @@ function switchTab(name) {
     $("#" + name).show()
 }
 
+function postComment() {
+    var body = $("#comment").val()
+    ghPost("issues/" + getIssue() + "/comments", {"body": body},
+          function(reply) { 
+        window.location.href = window.location.pathname +
+            window.location.search + window.location.hash;
+    })
+}
+
+function updateVariable() {
+    var name = $("#variable-name").val()
+    var value = $("#variable-value").val()
+    var body = "~> __action: variable\n~> " + name + ": " + value
+    ghPost("issues/" + getIssue() + "/comments", {"body": body},
+          function(reply) { 
+        window.location.href = window.location.pathname +
+            window.location.search + window.location.hash;
+    })
+}
+
 </script>
 <body onload="init()">
 <h1 id="title"></h1>
@@ -184,14 +201,13 @@ function switchTab(name) {
 <div id="flow"></div>
 <div id="variables" hidden>
     <div id="variable-table"></div>
-    <p>Key: <input/></p>
-    <p>Value: <input/></p>
-    <button onclick="">Update variable</button>
+    <p>Variable: <input id="variable-name"/> Value: <input id="variable-value"/></p>
+    <button onclick="updateVariable()">Update variable</button>
 </div>
 <div id="history" hidden>
     <div id="history-table"></div>
     <p><textarea id='comment' cols='40' rows='5'></textarea></p>
-    <p><button onclick="">Comment</button></p>
+    <p><button onclick="postComment()">Comment</button></p>
 </div>
 </body>
 

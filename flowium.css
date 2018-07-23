@@ -36,6 +36,10 @@ a {
 }
 
 table {
+    background-color: #c0d3eb;
+    border-color: #d1d5da;
+    border-style: solid;
+    border-width: 1px;
     border-collapse: collapse;
     width: 100%;
 }
@@ -51,7 +55,8 @@ textarea {
 }
 
 .comment {
-    background-color: #FDFEBF;
+    background-color: #c0d3eb;
+    border-color: #d1d5da;
     border-style: solid;
     border-width: 1px;
     padding-left: 10px;
