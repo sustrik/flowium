@@ -11,10 +11,19 @@
     crossorigin="anonymous">
 </script>
 <script src="https://cdn.rawgit.com/showdownjs/showdown/1.8.5/dist/showdown.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
-<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
 <script src="utils.js"></script>
 <script>
+
+function renderComment(comment) {
+    var body = "<p><img class='avatar' src='" + comment.avatar + "&s=44'/><a href='" + comment.url + "'>" + comment.user + "</a> at " + comment.created_at + ":</p>"
+    body += "<div class='comment'>"
+    if(comment.variables["__action"] != undefined) {
+        body += "<p>Action:" + comment.variables.__action + "</p>"
+    }
+    body += mdConvert(comment.body)
+    body += "</div>"
+    return body
+}
 
 function splitComment(el) {
     var src = el.body
@@ -31,6 +40,8 @@ function splitComment(el) {
     }
     return {
         user: el.user.login,
+        url: el.user.html_url,
+        avatar: el.user.avatar_url,
         created_at: el.created_at,
         variables: vars,
         body: body,
@@ -132,21 +143,9 @@ function initVariables(comments, source, variables) {
 
 function initHistory(comments, source, variables) {
     for(var i = 0; i < comments.length; i++) {
-        var body = "<p>user " + comments[i].user + " at " + comments[i].created_at + "</p>"
-        body += "<div class='comment'>"
-        if(comments[i].variables["__action"] != undefined) {
-            body += "<p>Action:" + comments[i].variables.__action + "</p>"
-        }
-        body += mdConvert(comments[i].body)
-        body += "</div>"
+        var body = renderComment(comments[i])
         $("#history-table").append(body)
     }
-
-    var commentElement = document.getElementById("comment")
-    commentElement['editor'] = new SimpleMDE({
-		    element: commentElement,
-		    spellChecker: false,
-	  })
 }
 
 function init() {

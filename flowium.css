@@ -26,6 +26,15 @@ h6 {
     font-size: 120%;
 }
 
+a {
+    color: black;
+    text-decoration: underline;
+}
+
+.avatar {
+    padding-right: 5px;
+}
+
 table {
     border-collapse: collapse;
     width: 100%;
