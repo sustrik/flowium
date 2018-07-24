@@ -11,6 +11,11 @@
     crossorigin="anonymous">
 </script>
 <script src="https://cdn.rawgit.com/showdownjs/showdown/1.8.5/dist/showdown.min.js"></script>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://unpkg.com/viz.js@1.8.0/viz.js" type="javascript/worker"></script>
+<script src="https://unpkg.com/d3-graphviz@1.4.0/build/d3-graphviz.min.js"></script>
+
 <script src="utils.js"></script>
 <script>
 
@@ -64,23 +69,24 @@ function extractVariables(comments) {
     return result
 }
 
-function initFlow(comments, source, variables) {
-    /* Parse the source. */
+function parseSource(source, variables) {
     var lns = source.split("\n")
     var steps = []
-    var stepname = "__introduction"
+    var stepname = null
     var step = ""
     var title = ""
     var deps = []
     for(var i = 0; i < lns.length; i++) {
         var ln = lns[i]
         if(ln.startsWith("#") && ln.includes("~>")) {
-            steps.push({
-                id: stepname,
-                title: title,
-                body: step,
-                deps: deps
-            })
+            if(stepname != null) {
+                steps.push({
+                    id: stepname,
+                    title: title,
+                    body: step,
+                    deps: deps
+                })
+            }
             title = ""
             step = ""
             deps = []
@@ -95,12 +101,14 @@ function initFlow(comments, source, variables) {
         }
         step += ln
     }
-    steps.push({
-        id: stepname,
-        title: title,
-        body: step,
-        deps: deps
-    })
+    if(stepname != null) {
+        steps.push({
+            id: stepname,
+            title: title,
+            body: step,
+            deps: deps
+        })
+    }
 
     /* Expand the variables. */
     var keys = Object.keys(variables)
@@ -109,6 +117,13 @@ function initFlow(comments, source, variables) {
             steps[i].body = steps[i].body.replace(new RegExp('#{' + keys[j] + '}', 'g'), variables[keys[j]])
         }
     }
+
+    return steps
+}
+
+function initFlow(comments, source, variables) {
+    /* Parse the source. */
+    var steps = parseSource(source, variables)
 
     /* Render the page. */
     $("#flow").append("<p><input type='checkbox'>Show blocked</input><input type='checkbox'>Show done</input></p>")
@@ -145,6 +160,23 @@ function initHistory(comments, source, variables) {
     }
 }
 
+function initGraph(comments, source, variables) {
+    var steps = parseSource(source, variables)
+    var dot = "digraph {\n"
+    for(var i = 0; i < steps.length; i++) {
+        var s = steps[i]
+        dot += s['id'] + "[shape=box style=filled fillcolor=green]\n"
+        for(var j = 0; j < s['deps'].length; j++) {
+            if(s['deps'][j].trim() != '') {
+                dot += s['deps'][j] + " -> " + s['id'] + "\n"
+            }
+        }
+    }
+    dot += "}"
+    console.log(dot)
+    d3.select("#graph-main").graphviz().fade(false).renderDot(dot)
+}
+
 function init() {
     ghGet('issues/' + getIssue(), null, function(issue) {
         $("#title").text(issue.title)
@@ -158,6 +190,7 @@ function init() {
                 initFlow(comments, source, variables)
                 initVariables(comments, source, variables)
                 initHistory(comments, source, variables)
+                initGraph(comments, source, variables)
             })
         })
     })
@@ -167,6 +200,7 @@ function switchTab(name) {
     $("#flow").hide()
     $("#variables").hide()
     $("#history").hide()
+    $("#graph").hide()
     $("#" + name).show()
 }
 
@@ -197,6 +231,7 @@ function updateVariable() {
 <button onclick="switchTab('flow')">Flow</button>
 <button onclick="switchTab('variables')">Variables</button>
 <button onclick="switchTab('history')">History</button>
+<button onclick="switchTab('graph')">Graph</button>
 </p>
 <div id="flow"></div>
 <div id="variables" hidden>
@@ -208,6 +243,9 @@ function updateVariable() {
     <div id="history-table"></div>
     <p><textarea id='comment' cols='40' rows='5'></textarea></p>
     <p><button onclick="postComment()">Comment</button></p>
+</div>
+<div id="graph" hidden>
+    <div id="graph-main"></div>
 </div>
 </body>
 
