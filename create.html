@@ -10,19 +10,13 @@
     integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
     crossorigin="anonymous">
 </script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
-<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+<script src="https://cdn.rawgit.com/showdownjs/showdown/1.8.5/dist/showdown.min.js"></script>
 <script src="utils.js"></script>
 <script>
 
 function init() {
     var template = getParameterByName('template')
     $("#template").text(template)
-    var commentElement = document.getElementById("comment")
-    commentElement['editor'] = new SimpleMDE({
-		    element: commentElement,
-		    spellChecker: false,
-	  })
 }
 
 function create() {
@@ -31,13 +25,11 @@ function create() {
     var sha
     ghGet("commits?path=" + template, null, function(commits) {
         var sha = commits[0].sha
-        var prologue = '~> __action: create\n' +
-                       '~> __template:' + template + "\n" +
-                       '~> __version:' + sha + "\n\n"
+        var prologue = '~> _template:' + template + ":" + sha + "\n\n"
         // Create the issue.
         var args = {
             "title": $("#title").val(),
-            "body": prologue + $("#comment").editor.value(),
+            "body": prologue + $("#comment").val(),
         }
         ghPost("issues", args, function(reply) {
             console.log(reply)
@@ -46,7 +38,10 @@ function create() {
                 '&repository=' + getRepository() +
                 '&issue=' + reply.number +
                 '&token=' + getToken()
-            var body = "View in Flowium: <https://flowium.com/issue.hmtl?username=" + getUsername() + "&repository=" + getRepository() + "&issue=" + reply.number + ">"
+            var body = "View in Flowium: " +
+                "<https://flowium.com/issue.hmtl?username=" + getUsername() +
+                "&repository=" + getRepository() +
+                "&issue=" + reply.number + ">"
             ghPost("issues/" + reply.number + "/comments", {"body": body},
                   function(reply) { 
                 window.location.href = addr

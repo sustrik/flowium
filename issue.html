@@ -19,6 +19,12 @@
 <script src="utils.js"></script>
 <script>
 
+function splitOnce(str, delimiter) {
+    var i = str.indexOf(delimiter)
+    if(i == -1) return [str]
+    return [str.substring(0, i), str.substring(i + delimiter.length)]
+}
+
 function renderComment(comment) {
     var body = "<p><img class='avatar' src='" + comment.avatar + "&s=44'/><a href='" + comment.url + "'>" + comment.user + "</a> at " + comment.created_at + ":</p>"
     body += "<div class='comment'>"
@@ -34,7 +40,7 @@ function splitComment(el) {
     var lns = src.split("\n")
     for(var i = 0; i < lns.length; i++) {
         if(lns[i].startsWith("~>")) {
-            var elems = lns[i].substring(2).split(":")
+            var elems = splitOnce(lns[i].substring(2), ":")
             vars[elems[0].trim()] = elems[1].trim()
             continue
         }
@@ -64,8 +70,6 @@ function extractVariables(comments) {
     for(var i = 0; i < comments.length; i++) {
         result = Object.assign(result, comments[i].variables)
     }
-    // "action" is not a real variable.
-    delete result['__action']
     return result
 }
 
@@ -90,12 +94,15 @@ function parseSource(source, variables) {
             title = ""
             step = ""
             deps = []
-            var ruleparts = ln.split("~>")
+            var ruleparts = splitOnce(ln, "~>")
             title = ltrimHash(ruleparts[0]).trim()
-            var elems = ruleparts[1].trim().split(":")
+            var elems = splitOnce(ruleparts[1].trim(), ":")
             stepname = elems[0].trim()
             if (elems.length > 1) {
-                deps = elems[1].split(' ')
+                d = elems[1].trim().split(/\s+/)
+                for(var j = 0; j < d.length; j++) {
+                    deps.push(d[j])
+                }
             }
             continue
         }
@@ -162,16 +169,17 @@ function initGraph(comments, source, variables) {
     var dot = "digraph {\n"
     for(var i = 0; i < steps.length; i++) {
         var s = steps[i]
-        dot += s['id'] + '[shape=box style=filled fillcolor=green tooltip="' +
+        dot += '"' + s['id'] + '" [shape=box style=filled fillcolor=green tooltip="' +
             s['title'] +'" URL="javascript:scrollToStep(\'' + s['id'] +
             '\');"]\n'
         for(var j = 0; j < s['deps'].length; j++) {
             if(s['deps'][j].trim() != '') {
-                dot += s['deps'][j] + " -> " + s['id'] + "\n"
+                dot += "\"" + s['deps'][j] + "\" -> \"" + s['id'] + "\"\n"
             }
         }
     }
     dot += "}"
+    console.log(dot)
     d3.select("#graph-main").graphviz().fade(false).renderDot(dot)
 }
 
@@ -181,9 +189,9 @@ function init() {
         ghGet('issues/' + getIssue() + "/comments", null, function(cmnts) {
             var comments = extractComments(issue, cmnts)
             var variables = extractVariables(comments)
-            var template = variables["__template"]
-            var version = variables["__version"]
-            ghGet("contents/" + template + "?ref=" + version, {}, function(src) {
+            var template = variables["_template"].split(':')
+            ghGet("contents/" + template[0] + "?ref=" + template[1], {},
+                  function(src) {
                 var source = atob(src.content)
                 initFlow(comments, source, variables)
                 initVariables(comments, source, variables)
@@ -224,7 +232,7 @@ function postStepComment(step) {
 function updateVariable() {
     var name = $("#variable-name").val()
     var value = $("#variable-value").val()
-    var body = "~> __action: variable\n~> " + name + ": " + value
+    var body = "~> " + name + ": " + value
     ghPost("issues/" + getIssue() + "/comments", {"body": body},
           function(reply) { 
         window.location.href = window.location.pathname +
