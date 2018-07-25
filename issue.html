@@ -127,8 +127,10 @@ function initFlow(comments, source, variables) {
         var div = "<div id='__" + steps[i].id + "'>"
         div += "<h2>" + steps[i].title + "</h2>"
         div += mdConvert(steps[i].body)
-        div += "<p><textarea cols='40' rows='5'></textarea></p>"
-        div += "<p><button onclick=''>Save comment</button></p>"
+        div += "<p><textarea id='comment-" + steps[i].id + 
+            "' cols='40' rows='5'></textarea></p>"
+        div += "<p><button onclick='postStepComment(\"" + steps[i].id +
+            "\")'>Comment</button></p>"
         div += "<p><button onclick=''>Not done</button>"
         div += "<button onclick=''>Done</button></p>"
         div += "<hr></div>"
@@ -205,13 +207,18 @@ function scrollToStep(id) {
     $("#__" + id)[0].scrollIntoView()
 }
 
-function postComment() {
-    var body = $("#comment").val()
+function postComment(elid, prefix) {
+    var body = prefix + $("#" + elid).val()
     ghPost("issues/" + getIssue() + "/comments", {"body": body},
           function(reply) { 
         window.location.href = window.location.pathname +
             window.location.search + window.location.hash;
     })
+}
+
+function postStepComment(step) {
+    var prefix = "~> .step " + step + "\n\n"
+    postComment("comment-" + step, prefix)
 }
 
 function updateVariable() {
@@ -250,7 +257,7 @@ function updateVariable() {
 <div id="history" hidden>
     <div id="history-table"></div>
     <p><textarea id='comment' cols='40' rows='5'></textarea></p>
-    <p><button onclick="postComment()">Comment</button></p>
+    <p><button onclick="postComment('comment', '')">Comment</button></p>
 </div>
 <div id="graph" hidden>
     <div id="graph-main"></div>

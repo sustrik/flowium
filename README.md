@@ -1,13 +1,37 @@
-Blah blah
+This text should be ignored.
 
-# First step ~> first: second third
+# Get the bread ~> bread
 
-Blabity-blab
+It's on the link.
 
-# Second step ~> second
+# Toast the bread ~> toast: bread
 
-Frobnicate #{foo} and #{bar}.
+Put a slice of bread into the toaster.
 
-# Third step ~> third
+# Open the refrigerator ~> open
 
-Hoo!
+Pull the door towards you.
+
+# Get the butter ~> butter: open
+
+Get the butter out of the refrigerator.
+
+# Get the jam ~> jam: open
+
+Get the butter out of the refrigerator.
+
+What type of jam is it?
+
+~> input jam-type
+
+# Close the refrigerator ~> close: butter jam
+
+Close the door.
+
+# Spread the butter ~> spread-butter: toast close
+
+Spread the butter on the toast.
+
+# Spreas the jam ~> spead-jam: spread-butter jam
+
+Spread the #{jam-type} jam on the toast.
