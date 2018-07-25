@@ -165,7 +165,9 @@ function initGraph(comments, source, variables) {
     var dot = "digraph {\n"
     for(var i = 0; i < steps.length; i++) {
         var s = steps[i]
-        dot += s['id'] + "[shape=box style=filled fillcolor=green]\n"
+        dot += s['id'] + '[shape=box style=filled fillcolor=green tooltip="' +
+            s['title'] +'" URL="javascript:scrollToStep(\'' + s['id'] +
+            '\');"]\n'
         for(var j = 0; j < s['deps'].length; j++) {
             if(s['deps'][j].trim() != '') {
                 dot += s['deps'][j] + " -> " + s['id'] + "\n"
@@ -173,7 +175,6 @@ function initGraph(comments, source, variables) {
         }
     }
     dot += "}"
-    console.log(dot)
     d3.select("#graph-main").graphviz().fade(false).renderDot(dot)
 }
 
@@ -202,6 +203,11 @@ function switchTab(name) {
     $("#history").hide()
     $("#graph").hide()
     $("#" + name).show()
+}
+
+function scrollToStep(id) {
+    switchTab("flow")
+    $("#__" + id)[0].scrollIntoView()
 }
 
 function postComment() {
