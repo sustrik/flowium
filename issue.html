@@ -122,11 +122,7 @@ function parseSource(source, variables) {
 }
 
 function initFlow(comments, source, variables) {
-    /* Parse the source. */
     var steps = parseSource(source, variables)
-
-    /* Render the page. */
-    $("#flow").append("<p><input type='checkbox'>Show blocked</input><input type='checkbox'>Show done</input></p>")
     for(var i = 0; i < steps.length; i++) {
         var div = "<div id='__" + steps[i].id + "'>"
         div += "<h2>" + steps[i].title + "</h2>"
@@ -134,10 +130,9 @@ function initFlow(comments, source, variables) {
         div += "<p><textarea cols='40' rows='5'></textarea></p>"
         div += "<p><button onclick=''>Save comment</button></p>"
         div += "<p><button onclick=''>Not done</button>"
-        div += "<button onclick=''>In progress</button>"
         div += "<button onclick=''>Done</button></p>"
         div += "<hr></div>"
-        $("#flow").append(div)
+        $("#flow-steps").append(div)
     }
 }
 
@@ -239,7 +234,14 @@ function updateVariable() {
 <button onclick="switchTab('history')">History</button>
 <button onclick="switchTab('graph')">Graph</button>
 </p>
-<div id="flow"></div>
+<div id="flow">
+   <p>
+       <input type='checkbox' checked>Show active</input>
+       <input type='checkbox'>Show blocked</input>
+       <input type='checkbox'>Show done</input>
+   </p>
+   <div id="flow-steps"></div>
+</div>
 <div id="variables" hidden>
     <div id="variable-table"></div>
     <p>Variable: <input id="variable-name"/> Value: <input id="variable-value"/></p>
