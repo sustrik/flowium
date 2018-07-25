@@ -25,14 +25,13 @@ function create() {
     var sha
     ghGet("commits?path=" + template, null, function(commits) {
         var sha = commits[0].sha
-        var prologue = '~> _template:' + template + ":" + sha + "\n\n"
+        var prologue = '~> _template: ' + template + ":" + sha + "\n\n"
         // Create the issue.
         var args = {
             "title": $("#title").val(),
             "body": prologue + $("#comment").val(),
         }
         ghPost("issues", args, function(reply) {
-            console.log(reply)
             var addr = 'issue.html' +
                 '?username=' + getUsername() +
                 '&repository=' + getRepository() +

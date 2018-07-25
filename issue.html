@@ -225,7 +225,7 @@ function postComment(elid, prefix) {
 }
 
 function postStepComment(step) {
-    var prefix = "~> .step " + step + "\n\n"
+    var prefix = "~> _step: " + step + "\n\n"
     postComment("comment-" + step, prefix)
 }
 
