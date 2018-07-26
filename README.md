@@ -19,7 +19,7 @@ Get the butter out of the refrigerator.
 
 # Get the jam ~> jam: open
 
-Get the butter out of the refrigerator.
+Get the jam out of the refrigerator.
 
 What type of jam is it?
 

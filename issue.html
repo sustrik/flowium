@@ -56,7 +56,7 @@ function parseSteps(source, variables) {
             }
             continue
         }
-        step += ln
+        step += ln + "\n"
     }
     if(stepname != null) {
         steps.push({
@@ -65,6 +65,29 @@ function parseSteps(source, variables) {
             body: step,
             deps: deps
         })
+    }
+
+    // Expand the input statements.
+    for(var j = 0; j < steps.length; j++) {
+        var body = ""
+        var lns = steps[j].body.split("\n")
+        for (var i = 0; i < lns.length; i++) {
+            var ln = lns[i]
+            if(!ln.startsWith("~>")) {
+                body += ln + "\n"
+                continue
+            }
+            ln = ln.substring(2).trim()
+            if(ln.startsWith("input ")) {
+                var vars = ln.substring(6).split(/\s+/)
+                for(var k = 0; k < vars.length; k++) {
+                    body += "<p>" + vars[k] + ": <input/></p>"
+                }
+                body += "<button onclick=''>Save</button>"
+            }
+            // TODO other commands
+        }
+        steps[j].body = body
     }
 
     // Expand the variables.
