@@ -235,6 +235,16 @@ function postStepComment(step) {
     postComment("comment-" + step, prefix)
 }
 
+function postStepDone(step) {
+    var prefix = "~> _status+" + step + ": done\n\n"
+    postComment("comment-" + step, prefix)
+}
+
+function postStepNotDone(step) {
+    var prefix = "~> _status+" + step + ": not-done\n\n"
+    postComment("comment-" + step, prefix)
+}
+
 function initMain(steps) {
     for(var i = 0; i < steps.length; i++) {
         var div = "<div id='__" + steps[i].id
@@ -249,10 +259,15 @@ function initMain(steps) {
         div += "<p><textarea id='comment-" + steps[i].id + 
             "' cols='40' rows='5'></textarea></p>"
         div += "<p><button onclick='postStepComment(\"" + steps[i].id +
-            "\")'>Comment</button></p>"
-        div += "<p><button onclick=''>Not done</button>"
-        div += "<button onclick=''>Done</button></p>"
-        div += "<hr></div>"
+            "\")'>Comment</button>"
+        if(steps[i].status == "done") {
+            div += "<button onclick='postStepNotDone(\"" + steps[i].id +
+                "\")'>Mark as not done</button>"
+        } else {
+            div += "<button onclick='postStepDone(\"" + steps[i].id +
+                "\")'>Mark as done</button>"
+        }
+        div += "</p><hr></div>"
         $("#main-steps").append(div)
     }
 
