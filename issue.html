@@ -79,7 +79,7 @@ function parseSteps(source, variables) {
     return steps
 }
 
-function annotateSteps(steps, sysvars) {
+function annotateStepsWithStatus(steps, sysvars) {
     var statuses = {}
     // Check whether steps are done or not done.
     for(var i = 0; i != steps.length; i++) {
@@ -105,6 +105,20 @@ function annotateSteps(steps, sysvars) {
             }
         }
         steps[i]["dstatus"] = status
+    }
+}
+
+function annotateStepsWithComments(steps, comments) {
+    for(var i = 0; i != steps.length; i++) {
+        var step = steps[i]
+        var res = []
+        for(var j = 0; j != comments.length; j++) {
+            var comment = comments[j]
+            if(comment.type != "comment" || !("step" in comment)) continue
+            if(comment.step != step.id) continue
+            res.push(comment)
+        }
+        step['comments'] = res
     }
 }
 
@@ -225,9 +239,13 @@ function initMain(steps) {
     for(var i = 0; i < steps.length; i++) {
         var div = "<div id='__" + steps[i].id
         div += "' class=" + steps[i].dstatus + ">"
-        div += "<div class='status-sign' style='background-color:" + statusToColor(steps[i].dstatus) + ";'></div>"
+        div += "<div class='status-sign' style='background-color:" 
+        div += statusToColor(steps[i].dstatus) + ";'></div>"
         div += "<h2>" + steps[i].title + "</h2>"
         div += mdConvert(steps[i].body)
+        for(var j = 0; j != steps[i].comments.length; j++) {
+            div += renderComment(steps[i].comments[j])
+        }
         div += "<p><textarea id='comment-" + steps[i].id + 
             "' cols='40' rows='5'></textarea></p>"
         div += "<p><button onclick='postStepComment(\"" + steps[i].id +
@@ -364,7 +382,8 @@ function init() {
             ghGet("contents/" + template[0] + "?ref=" + template[1], {},
                   function(src) {
                 var steps = parseSteps(atob(src.content), vars)
-                annotateSteps(steps, sysvars)
+                annotateStepsWithStatus(steps, sysvars)
+                annotateStepsWithComments(steps, comments)
                 console.log(steps)
                 initMain(steps)
                 initFlow(steps)
