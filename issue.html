@@ -19,55 +19,11 @@
 <script src="utils.js"></script>
 <script>
 
-function renderComment(comment) {
-    var body = "<p><img class='avatar' src='" + comment.avatar + "&s=44'/><a href='" + comment.url + "'>" + comment.user + "</a> at " + comment.created_at + ":</p>"
-    body += "<div class='comment'>"
-    body += mdConvert(comment.body)
-    body += "</div>"
-    return body
-}
+////////////////////////////////////////////////////////////////////////////////
+//  Parsing the flow source code.
+////////////////////////////////////////////////////////////////////////////////
 
-function splitComment(el) {
-    var src = el.body
-    var vars = {}
-    var body = ""
-    var lns = src.split("\n")
-    for(var i = 0; i < lns.length; i++) {
-        if(lns[i].startsWith("~>")) {
-            var elems = splitOnce(lns[i].substring(2), ":")
-            vars[elems[0].trim()] = elems[1].trim()
-            continue
-        }
-        body += "\n" + lns[i]
-    }
-    return {
-        user: el.user.login,
-        url: el.user.html_url,
-        avatar: el.user.avatar_url,
-        created_at: el.created_at,
-        variables: vars,
-        body: body,
-    }
-}
-
-function extractComments(issue, comments) {
-    var result = []
-    result.push(splitComment(issue))
-    for(var i = 0; i < comments.length; i++) {
-        result.push(splitComment(comments[i]))
-    }
-    return result
-}
-
-function extractVariables(comments) {
-    var result = {}
-    for(var i = 0; i < comments.length; i++) {
-        result = Object.assign(result, comments[i].variables)
-    }
-    return result
-}
-
-function parseSource(source, variables) {
+function parseSteps(source, variables) {
     var lns = source.split("\n")
     var steps = []
     var stepname = null
@@ -111,19 +67,152 @@ function parseSource(source, variables) {
         })
     }
 
-    /* Expand the variables. */
+    // Expand the variables.
     var keys = Object.keys(variables)
     for(var i = 0; i < steps.length; i++) {
         for(var j = 0; j < keys.length; j++) {
-            steps[i].body = steps[i].body.replace(new RegExp('#{' + keys[j] + '}', 'g'), variables[keys[j]])
+            steps[i].body = steps[i].body.replace(
+                new RegExp('#{' + keys[j] + '}', 'g'), variables[keys[j]])
         }
     }
 
     return steps
 }
 
-function initFlow(comments, source, variables) {
-    var steps = parseSource(source, variables)
+function annotateSteps(steps, sysvars) {
+    var statuses = {}
+    // Check whether steps are done or not done.
+    for(var i = 0; i != steps.length; i++) {
+        var status = "not-done"
+        var vname = "_status+" + steps[i].id
+        if(vname in sysvars)
+            status = sysvars[vname]
+        steps[i]["status"] = status
+        statuses[steps[i].id] = status
+    }
+    // Steps are not yet done can be also blocked.
+    console.log(statuses)
+    for(var i = 0; i != steps.length; i++) {
+        if(steps[i].status == "done") {
+            steps[i]["dstatus"] = "done"
+            continue
+        }
+        var deps = steps[i].deps
+        var status = "active"
+        for(j = 0; j < deps.length; j++) {
+            if(statuses[deps[j]] != "done") {
+                status = "blocked"
+                break
+            }
+        }
+        steps[i]["dstatus"] = status
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//  Preprocessing comments.
+////////////////////////////////////////////////////////////////////////////////
+
+function splitVariables(res, text) {
+    var userVariables = {}
+    var systemVariables = {}
+    var lns = text.split('\n')
+    for(var i = 0; i < lns.length; i++) {
+        var ln = lns[i]
+        var vdef = splitOnce(lns[i].substring(2), ":")
+        var name = vdef[0].trim()
+        if(vdef.length < 2) {
+            var value = ""
+        } else {
+            var value = vdef[1].trim()
+        }
+        if(name.startsWith("_")) systemVariables[name] = value
+        else userVariables[name] = value
+    }
+    if(Object.keys(systemVariables).length > 0)
+        res.push({type: 'sysvars', vars: systemVariables})
+    if(Object.keys(userVariables).length > 0)
+        res.push({type: 'vars', vars: userVariables})
+}
+
+function splitCommentsAndVariables(text) {
+    var res = []
+    var variable = true
+    var body = ""
+    var lns = text.split('\n')
+    for(var i = 0; i < lns.length; i++) {
+        if(lns[i].startsWith("~>")) {
+            if(!variable && body != "") {
+                res.push({type: 'comment', body: body.trim()})
+                body = ""
+            }
+            variable = true
+        } else {
+            if(variable && body != "") {
+                splitVariables(res, body.trim())
+                body = ""
+            }
+            variable = false
+        }
+        body += "\n" + lns[i]
+    }
+    if(variable) {
+        splitVariables(res, body.trim())
+    } else {
+        res.push({type: 'comment', body: body.trim()})
+    }
+
+    // Pair comments to steps.
+    var step = null
+    for(var i = 0; i < res.length; i++) {
+        var it = res[i]
+        if(it.type == 'sysvars' && "_step" in it.vars) {
+            step = it.vars["_step"]
+            delete it.vars["_step"]
+            if(Object.keys(it.vars).length == 0) {
+                res.splice(i, 1)
+                i--
+            }
+            continue    
+        }
+        if(step != null && it.type == "comment")
+            it.step = step
+    }
+
+    return res
+}
+
+function processComments(comments) {
+    var res = []
+    for(var i = 0; i < comments.length; i++) {
+        var c = comments[i]
+        sc = splitCommentsAndVariables(c.body)
+        for(var j = 0; j < sc.length; j++) {
+            sc[j].userName = c.user.login
+            sc[j].userUrl = c.user.html_url
+            sc[j].userAvatar = c.user.avatar_url
+            sc[j].createdAt = c.created_at
+            res.push(sc[j])
+        }
+    }
+    return res
+}
+
+function extractVariablesFromComments(comments, type) {
+    var result = {}
+    for(var i = 0; i < comments.length; i++) {
+        if(comments[i].type == type) {
+            result = Object.assign(result, comments[i].vars)
+        }
+    }
+    return result
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//  Main tab.
+////////////////////////////////////////////////////////////////////////////////
+
+function initMain(steps) {
     for(var i = 0; i < steps.length; i++) {
         var div = "<div id='__" + steps[i].id + "'>"
         div += "<h2>" + steps[i].title + "</h2>"
@@ -135,36 +224,25 @@ function initFlow(comments, source, variables) {
         div += "<p><button onclick=''>Not done</button>"
         div += "<button onclick=''>Done</button></p>"
         div += "<hr></div>"
-        $("#flow-steps").append(div)
+        $("#main-steps").append(div)
     }
 }
 
-function initVariables(comments, source, variables) {
-    var body = "<table>"
-    var keys = Object.keys(variables).sort()
-    for(var i = 0; i < keys.length; i++) {
-        var key = keys[i]
-        var val = variables[key]
-        body += "<tr><td>" + key + "</td><td>" + val + "</td></tr>"
-    }
-    body += "</table>"
-    $("#variable-table").append(body)
-}
+////////////////////////////////////////////////////////////////////////////////
+//  Graph tab.
+////////////////////////////////////////////////////////////////////////////////
 
-function initHistory(comments, source, variables) {
-    for(var i = 0; i < comments.length; i++) {
-        var body = renderComment(comments[i])
-        $("#history-table").append(body)
-    }
-}
-
-function initGraph(comments, source, variables) {
-    var steps = parseSource(source, variables)
+function initFlow(steps) {
     var dot = "digraph {\n"
     for(var i = 0; i < steps.length; i++) {
         var s = steps[i]
-        dot += '"' + s['id'] + '" [shape=box style=filled fillcolor=green tooltip="' +
-            s['title'] +'" URL="javascript:scrollToStep(\'' + s['id'] +
+        var color = "red"
+        if(s.dstatus == "done") color = "grey"
+        if(s.dstatus == "active") color = "green"
+        dot += '"' + s['id'] + '" [shape=box style=filled ' +
+            'fillcolor=' + color +
+            ' tooltip="' + s['title'] +
+            '" URL="javascript:scrollToStep(\'' + s['id'] +
             '\');"]\n'
         for(var j = 0; j < s['deps'].length; j++) {
             if(s['deps'][j].trim() != '') {
@@ -173,39 +251,128 @@ function initGraph(comments, source, variables) {
         }
     }
     dot += "}"
-    console.log(dot)
-    d3.select("#graph-main").graphviz().fade(false).renderDot(dot)
+    d3.select("#flow-main").graphviz().fade(false).renderDot(dot)
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//  Variables tab.
+////////////////////////////////////////////////////////////////////////////////
+
+function updateVariable() {
+    var name = $("#variable-name").val()
+    var value = $("#variable-value").val()
+    var body = "~> " + name + ": " + value
+    ghPost("issues/" + getIssue() + "/comments", {"body": body},
+          function(reply) { 
+        window.location.href = window.location.pathname +
+            window.location.search + window.location.hash;
+    })
+}
+
+function initVariables(vars) {
+    var body = "<table>"
+    var keys = Object.keys(vars).sort()
+    for(var i = 0; i < keys.length; i++) {
+        var key = keys[i]
+        var val = vars[key]
+        body += "<tr><td>" + key + "</td><td>" + val + "</td></tr>"
+    }
+    body += "</table>"
+    $("#variable-table").append(body)
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//  History tab.
+////////////////////////////////////////////////////////////////////////////////
+
+function renderUser(comment) {
+    return "<img class='avatar' src='" + comment.userAvatar +
+        "&s=44'/><a href='" + comment.userUrl + "'>" + comment.userName +
+        "</a>"
+}
+
+function renderComment(comment) {
+    var body = "<p>" + renderUser(comment) + " commented"
+    if ('step' in comment) {
+        body += " on step <a href='javascript:scrollToStep(\"" + comment.step +
+            "\");'>" + comment.step + "</a>"
+    }
+    body += " at " + comment.createdAt + "</p>"
+    body += "<div class='comment'>"
+    body += mdConvert(comment.body)
+    body += "</div>"
+    return body
+}
+
+function renderVarChange(comment) {
+    var body = "<p>" + renderUser(comment) + " set variables"
+    body += " at " + comment.createdAt + "</p>"
+    body += "<div class='comment'>"
+    var names = Object.keys(comment.vars).sort()
+    for(var i = 0; i < names.length; i++) {
+        body += "<p>Variable " + names[i] + " set to \"" + comment.vars[names[i]] + "\"</p>"
+    }
+    body += "</div>"
+    return body
+}
+
+function renderSysvarChange(comment) {
+    // TODO
+    return ""
+}
+
+function initHistory(comments) {
+    for(var i = 0; i < comments.length; i++) {
+        var c = comments[i]
+        var div = null
+        if(c.type == 'comment') {
+            div = renderComment(c)
+        }
+        else if (c.type == 'vars') {
+            div = renderVarChange(c)
+        }
+        else if (c.type == 'sysvars') {
+            div = renderSysvarChange(c)
+        }
+        $("#history-table").append(div)
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 function init() {
     ghGet('issues/' + getIssue(), null, function(issue) {
         $("#title").text(issue.title)
         ghGet('issues/' + getIssue() + "/comments", null, function(cmnts) {
-            var comments = extractComments(issue, cmnts)
-            var variables = extractVariables(comments)
-            var template = variables["_template"].split(':')
+            cmnts.unshift(issue)
+            var comments = processComments(cmnts)
+            var sysvars = extractVariablesFromComments(comments, "sysvars")
+            var vars = extractVariablesFromComments(comments, "vars")
+            var template = sysvars["_template"].split(':')
             ghGet("contents/" + template[0] + "?ref=" + template[1], {},
                   function(src) {
-                var source = atob(src.content)
-                initFlow(comments, source, variables)
-                initVariables(comments, source, variables)
-                initHistory(comments, source, variables)
-                initGraph(comments, source, variables)
+                var steps = parseSteps(atob(src.content), vars)
+                annotateSteps(steps, sysvars)
+                console.log(steps)
+                initMain(steps)
+                initFlow(steps)
+                initVariables(vars)
+                initHistory(comments)
             })
         })
     })
 }
 
 function switchTab(name) {
-    $("#flow").hide()
+    $("#main").hide()
     $("#variables").hide()
     $("#history").hide()
-    $("#graph").hide()
+    $("#flow").hide()
     $("#" + name).show()
 }
 
 function scrollToStep(id) {
-    switchTab("flow")
+    switchTab("main")
     $("#__" + id)[0].scrollIntoView()
 }
 
@@ -223,33 +390,22 @@ function postStepComment(step) {
     postComment("comment-" + step, prefix)
 }
 
-function updateVariable() {
-    var name = $("#variable-name").val()
-    var value = $("#variable-value").val()
-    var body = "~> " + name + ": " + value
-    ghPost("issues/" + getIssue() + "/comments", {"body": body},
-          function(reply) { 
-        window.location.href = window.location.pathname +
-            window.location.search + window.location.hash;
-    })
-}
-
 </script>
 <body onload="init()">
 <h1 id="title"></h1>
 <p>
+<button onclick="switchTab('main')">Main</button>
 <button onclick="switchTab('flow')">Flow</button>
 <button onclick="switchTab('variables')">Variables</button>
 <button onclick="switchTab('history')">History</button>
-<button onclick="switchTab('graph')">Graph</button>
 </p>
-<div id="flow">
+<div id="main">
    <p>
        <input type='checkbox' checked>Show active</input>
        <input type='checkbox'>Show blocked</input>
        <input type='checkbox'>Show done</input>
    </p>
-   <div id="flow-steps"></div>
+   <div id="main-steps"></div>
 </div>
 <div id="variables" hidden>
     <div id="variable-table"></div>
@@ -261,8 +417,8 @@ function updateVariable() {
     <p><textarea id='comment' cols='40' rows='5'></textarea></p>
     <p><button onclick="postComment('comment', '')">Comment</button></p>
 </div>
-<div id="graph" hidden>
-    <div id="graph-main"></div>
+<div id="flow" hidden>
+    <div id="flow-main"></div>
 </div>
 </body>
 
