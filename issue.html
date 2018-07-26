@@ -270,6 +270,14 @@ function postStepNotDone(step) {
     postComment("comment-" + step, prefix)
 }
 
+function closeIssue() {
+    ghPost("issues/" + getIssue(), {"state": "closed"},
+          function(reply) { 
+        window.location.href = window.location.pathname +
+            window.location.search + window.location.hash;
+    })
+}
+
 function initMain(steps) {
     for(var i = 0; i < steps.length; i++) {
         var div = "<div id='__" + steps[i].id
@@ -312,7 +320,7 @@ function initFlow(steps) {
         dot += '"' + s['id'] + '" [shape=box style=filled ' +
             'fillcolor="' + statusToColor(s.dstatus) +
             '" tooltip="' + s['title'] +
-            '" URL="javascript:scrollToStep(\'' + s['id'] +
+            '" URL="scrollToStep(\'' + s['id'] +
             '\');"]\n'
         for(var j = 0; j < s['deps'].length; j++) {
             if(s['deps'][j].trim() != '') {
@@ -364,7 +372,7 @@ function renderUser(comment) {
 function renderComment(comment) {
     var body = "<p>" + renderUser(comment) + " commented"
     if ('step' in comment) {
-        body += " on step <a href='javascript:scrollToStep(\"" + comment.step +
+        body += " on step <a href='scrollToStep(\"" + comment.step +
             "\");'>" + comment.step + "</a>"
     }
     body += " at " + comment.createdAt + "</p>"
@@ -484,6 +492,7 @@ function postComment(elid, prefix) {
        <input type='checkbox' onchange="showSteps(this.checked, 'done');">Show done</input>
    </p>
    <div id="main-steps"></div>
+   <p><button onclick="closeIssue()">Close the issue</button></p>
 </div>
 <div id="variables" hidden>
     <div id="variable-table"></div>
