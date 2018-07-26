@@ -113,21 +113,22 @@ function annotateStepsWithStatus(steps, sysvars) {
         steps[i]["status"] = status
         statuses[steps[i].id] = status
     }
-    // Steps are not yet done can be also blocked.
+    // Steps that are not yet done can be also blocked.
     for(var i = 0; i != steps.length; i++) {
         if(steps[i].status == "done") {
             steps[i]["dstatus"] = "done"
             continue
         }
         var deps = steps[i].deps
-        var status = "active"
+        var blockedBy = []
         for(j = 0; j < deps.length; j++) {
             if(statuses[deps[j]] != "done") {
-                status = "blocked"
-                break
+                blockedBy.push(deps[j])
             }
         }
-        steps[i]["dstatus"] = status
+        steps[i]["blockedBy"] = blockedBy
+        if(blockedBy.length == 0) steps[i]["dstatus"] = "active"
+        else steps[i]["dstatus"] = "blocked"
     }
 }
 
@@ -285,6 +286,13 @@ function initMain(steps) {
         div += "<div class='status-sign' style='background-color:" 
         div += statusToColor(steps[i].dstatus) + ";'></div>"
         div += "<h2>" + steps[i].title + "</h2>"
+console.log(steps[i].blockedBy)
+        for(var j = 0; j < steps[i].blockedBy.length; j++) {
+            div += "<p><b>Blocked by <a href='javascript:scrollToStep(\"" +
+                steps[i].blockedBy[j] +
+                "\")'>" + steps[i].blockedBy[j] +
+                "</a>.</b></p>"
+        }
         div += mdConvert(steps[i].body)
         for(var j = 0; j != steps[i].comments.length; j++) {
             div += renderComment(steps[i].comments[j])
@@ -320,7 +328,7 @@ function initFlow(steps) {
         dot += '"' + s['id'] + '" [shape=box style=filled ' +
             'fillcolor="' + statusToColor(s.dstatus) +
             '" tooltip="' + s['title'] +
-            '" URL="scrollToStep(\'' + s['id'] +
+            '" URL="javascript:scrollToStep(\'' + s['id'] +
             '\');"]\n'
         for(var j = 0; j < s['deps'].length; j++) {
             if(s['deps'][j].trim() != '') {
@@ -372,7 +380,7 @@ function renderUser(comment) {
 function renderComment(comment) {
     var body = "<p>" + renderUser(comment) + " commented"
     if ('step' in comment) {
-        body += " on step <a href='scrollToStep(\"" + comment.step +
+        body += " on step <a href='javascript:scrollToStep(\"" + comment.step +
             "\");'>" + comment.step + "</a>"
     }
     body += " at " + comment.createdAt + "</p>"
@@ -436,7 +444,6 @@ function init() {
         ghGet('issues/' + getIssue() + "/comments", null, function(cmnts) {
             cmnts.unshift(issue)
             var comments = processComments(cmnts)
-            console.log(comments)
             var sysvars = extractVariablesFromComments(comments, "sysvars")
             var vars = extractVariablesFromComments(comments, "vars")
             var template = sysvars["_template"].split(':')
@@ -445,6 +452,7 @@ function init() {
                 var steps = parseSteps(atob(src.content), vars)
                 annotateStepsWithStatus(steps, sysvars)
                 annotateStepsWithComments(steps, comments)
+                console.log(steps)
                 initMain(steps)
                 initFlow(steps)
                 initVariables(vars)
