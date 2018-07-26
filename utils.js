@@ -108,6 +108,12 @@ function ghPost(url, args, cb) {
 ////////////////////////////////////////////////////////////////////////////////
 // Random functions
 
+function statusToColor(status) {
+    if(status == "done") return "#C0C0C0"
+    if(status == "active") return "#00FF00"
+    return "#FF0000"
+}
+
 function splitOnce(str, delimiter) {
     var i = str.indexOf(delimiter)
     if(i == -1) return [str]

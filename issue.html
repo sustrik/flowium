@@ -225,6 +225,7 @@ function initMain(steps) {
     for(var i = 0; i < steps.length; i++) {
         var div = "<div id='__" + steps[i].id
         div += "' class=" + steps[i].dstatus + ">"
+        div += "<div class='status-sign' style='background-color:" + statusToColor(steps[i].dstatus) + ";'></div>"
         div += "<h2>" + steps[i].title + "</h2>"
         div += mdConvert(steps[i].body)
         div += "<p><textarea id='comment-" + steps[i].id + 
@@ -243,19 +244,16 @@ function initMain(steps) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//  Graph tab.
+//  Flow tab.
 ////////////////////////////////////////////////////////////////////////////////
 
 function initFlow(steps) {
     var dot = "digraph {\n"
     for(var i = 0; i < steps.length; i++) {
         var s = steps[i]
-        var color = "red"
-        if(s.dstatus == "done") color = "grey"
-        if(s.dstatus == "active") color = "green"
         dot += '"' + s['id'] + '" [shape=box style=filled ' +
-            'fillcolor=' + color +
-            ' tooltip="' + s['title'] +
+            'fillcolor="' + statusToColor(s.dstatus) +
+            '" tooltip="' + s['title'] +
             '" URL="javascript:scrollToStep(\'' + s['id'] +
             '\');"]\n'
         for(var j = 0; j < s['deps'].length; j++) {
