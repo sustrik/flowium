@@ -108,6 +108,12 @@ function ghPost(url, args, cb) {
 ////////////////////////////////////////////////////////////////////////////////
 // Random functions
 
+function splitOnce(str, delimiter) {
+    var i = str.indexOf(delimiter)
+    if(i == -1) return [str]
+    return [str.substring(0, i), str.substring(i + delimiter.length)]
+}
+
 function ltrimHash(str) {
     var pos = [...str].findIndex(function (el) {return el != "#"})
     return str.substring(pos)
