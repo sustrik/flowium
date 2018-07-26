@@ -3,6 +3,7 @@ This text should be ignored.
 # Get the bread ~> bread
 
 It's on the link.
+And let's make the instruction continue on the next line.
 
 # Toast the bread ~> toast: bread
 
