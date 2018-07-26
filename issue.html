@@ -156,7 +156,8 @@ function splitCommentsAndVariables(text) {
     for(var i = 0; i < lns.length; i++) {
         if(lns[i].startsWith("~>")) {
             if(!variable && body != "") {
-                res.push({type: 'comment', body: body.trim()})
+                if(body.trim().length > 0)
+                    res.push({type: 'comment', body: body.trim()})
                 body = ""
             }
             variable = true
@@ -172,7 +173,8 @@ function splitCommentsAndVariables(text) {
     if(variable) {
         splitVariables(res, body.trim())
     } else {
-        res.push({type: 'comment', body: body.trim()})
+        if(body.trim().length > 0)
+            res.push({type: 'comment', body: body.trim()})
     }
 
     // Pair comments to steps.
@@ -362,8 +364,20 @@ function renderVarChange(comment) {
 }
 
 function renderSysvarChange(comment) {
-    // TODO
-    return ""
+    body = ""
+    var names = Object.keys(comment.vars).sort()
+    for(var i = 0; i < names.length; i++) {
+        var name = names[i]
+        if(name.startsWith("_status+")) {
+            body += "<p>" + renderUser(comment) + " changed state of a step"
+            body += " at " + comment.createdAt + "</p>"
+            body += "<div class='comment'>"
+            body += "<p>Step " + splitOnce(name, "+")[1] + " was marked as " + comment.vars[name] + "</p>"
+            body += "</div>"
+        }
+        // TODO: Other sysvars
+    }
+    return body
 }
 
 function initHistory(comments) {
@@ -391,6 +405,7 @@ function init() {
         ghGet('issues/' + getIssue() + "/comments", null, function(cmnts) {
             cmnts.unshift(issue)
             var comments = processComments(cmnts)
+            console.log(comments)
             var sysvars = extractVariablesFromComments(comments, "sysvars")
             var vars = extractVariablesFromComments(comments, "vars")
             var template = sysvars["_template"].split(':')
@@ -399,7 +414,6 @@ function init() {
                 var steps = parseSteps(atob(src.content), vars)
                 annotateStepsWithStatus(steps, sysvars)
                 annotateStepsWithComments(steps, comments)
-                console.log(steps)
                 initMain(steps)
                 initFlow(steps)
                 initVariables(vars)
