@@ -91,7 +91,6 @@ function annotateSteps(steps, sysvars) {
         statuses[steps[i].id] = status
     }
     // Steps are not yet done can be also blocked.
-    console.log(statuses)
     for(var i = 0; i != steps.length; i++) {
         if(steps[i].status == "done") {
             steps[i]["dstatus"] = "done"
@@ -212,9 +211,20 @@ function extractVariablesFromComments(comments, type) {
 //  Main tab.
 ////////////////////////////////////////////////////////////////////////////////
 
+function showSteps(show, type) {
+    if(show) $("." + type).show()
+    else $("." + type).hide()
+}
+
+function postStepComment(step) {
+    var prefix = "~> _step: " + step + "\n\n"
+    postComment("comment-" + step, prefix)
+}
+
 function initMain(steps) {
     for(var i = 0; i < steps.length; i++) {
-        var div = "<div id='__" + steps[i].id + "'>"
+        var div = "<div id='__" + steps[i].id
+        div += "' class=" + steps[i].dstatus + ">"
         div += "<h2>" + steps[i].title + "</h2>"
         div += mdConvert(steps[i].body)
         div += "<p><textarea id='comment-" + steps[i].id + 
@@ -226,6 +236,10 @@ function initMain(steps) {
         div += "<hr></div>"
         $("#main-steps").append(div)
     }
+
+    showSteps(true, "active")
+    showSteps(false, "blocked")
+    showSteps(false, "done")
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -385,11 +399,6 @@ function postComment(elid, prefix) {
     })
 }
 
-function postStepComment(step) {
-    var prefix = "~> _step: " + step + "\n\n"
-    postComment("comment-" + step, prefix)
-}
-
 </script>
 <body onload="init()">
 <h1 id="title"></h1>
@@ -401,9 +410,9 @@ function postStepComment(step) {
 </p>
 <div id="main">
    <p>
-       <input type='checkbox' checked>Show active</input>
-       <input type='checkbox'>Show blocked</input>
-       <input type='checkbox'>Show done</input>
+       <input type='checkbox' checked onchange="showSteps(this.checked, 'active');">Show active</input>
+       <input type='checkbox' onchange="showSteps(this.checked, 'blocked');">Show blocked</input>
+       <input type='checkbox' onchange="showSteps(this.checked, 'done');">Show done</input>
    </p>
    <div id="main-steps"></div>
 </div>
