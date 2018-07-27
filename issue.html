@@ -358,15 +358,15 @@ function updateVariable() {
 }
 
 function initVariables(vars) {
-    var body = "<table>"
+    var table = $("<table></table>")
     var keys = Object.keys(vars).sort()
     for(var i = 0; i < keys.length; i++) {
-        var key = keys[i]
-        var val = vars[key]
-        body += "<tr><td>" + key + "</td><td>" + val + "</td></tr>"
+        var key = $("<td></td>").text(keys[i])
+        var val = $("<td></td>").text(vars[keys[i]])
+        var row = $("<tr></tr>").append(key, val)
+        table.append(row)
     }
-    body += "</table>"
-    $("#variable-table").append(body)
+    $("#variable-table").append(table)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
