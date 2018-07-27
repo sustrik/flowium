@@ -322,8 +322,8 @@ function initMain(steps) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function initFlow(steps) {
-    var dot = "digraph {\nnode [fontname=\"Helvetica\" fontsize=10 width=0 " +
-        "height=0 tooltip=\" \"]\n"
+    var dot = "digraph \"\" {\nnode [fontname=\"Helvetica\" fontsize=10 " +
+        "width=0 height=0 tooltip=\" \"]\n"
     for(var i = 0; i < steps.length; i++) {
         var s = steps[i]
         dot += '"' + s['id'] + '" [label="' + s['title'] +
