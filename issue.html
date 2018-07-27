@@ -94,8 +94,10 @@ function parseSteps(source, variables) {
     var keys = Object.keys(variables)
     for(var i = 0; i < steps.length; i++) {
         for(var j = 0; j < keys.length; j++) {
+            var val = variables[keys[j]] 
             steps[i].body = steps[i].body.replace(
-                new RegExp('#{' + keys[j] + '}', 'g'), variables[keys[j]])
+                new RegExp('#{' + keys[j] + '}', 'g'),
+                $("<p></p>").text(val).html())
         }
     }
 
@@ -352,7 +354,6 @@ function initFlow(steps) {
         }
     }
     dot += "}"
-    console.log(dot)
     d3.select("#flow-main").graphviz().fade(false).renderDot(dot)
 }
 
