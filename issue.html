@@ -322,18 +322,32 @@ function initMain(steps) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function initFlow(steps) {
-    var dot = "digraph \"\" {\nnode [fontname=\"Helvetica\" fontsize=10 " +
-        "width=0 height=0 tooltip=\" \"]\n"
+    var dot =`
+        digraph "" {
+        node [
+            shape=box
+            fontname="Helvetica"
+            fontsize=10
+            width=0
+            height=0
+            tooltip=" "
+        ]
+        `
     for(var i = 0; i < steps.length; i++) {
         var s = steps[i]
-        dot += '"' + s['id'] + '" [label="' + s['title'] +
-            '" shape=box style=filled ' +
-            'fillcolor="' + statusToColor(s.dstatus) +
-            '" URL="javascript:scrollToStep(\'' + s['id'] +
-            '\');"]\n'
+        dot += `
+            "${s.id}" [
+                label="${s.title}"
+                style=filled
+                fillcolor="${statusToColor(s.dstatus)}"
+                URL="javascript:scrollToStep('${s.id}');"
+            ]
+            `
         for(var j = 0; j < s['deps'].length; j++) {
             if(s['deps'][j].trim() != '') {
-                dot += "\"" + s['deps'][j] + "\" -> \"" + s['id'] + "\"\n"
+                dot += `
+                    "${s.deps[j]}" -> "${s.id}"
+                `
             }
         }
     }
