@@ -14,10 +14,10 @@
 <script src="utils.js"></script>
 <script>
 
-function init() {
+$(document).ready(function() {
     var template = getParameterByName('template')
     $("#template").text(template)
-}
+})
 
 function create() {
     var template = getParameterByName('template')
@@ -51,7 +51,7 @@ function create() {
 
 
 </script>
-<body onload="init()">
+<body>
 <h1>Create new issue</h1>
 <p>Template: <span id="template">fff</span></p>
 <p>Title: <input type="text" id="title"></p>

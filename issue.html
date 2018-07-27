@@ -440,7 +440,7 @@ function initHistory(comments) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function init() {
+$(document).ready(function() {
     ghGet('issues/' + getIssue(), null, function(issue) {
         $("#title").text(issue.title)
         ghGet('issues/' + getIssue() + "/comments", null, function(cmnts) {
@@ -462,7 +462,7 @@ function init() {
             })
         })
     })
-}
+})
 
 function switchTab(name) {
     $("#main").hide()
@@ -487,7 +487,7 @@ function postComment(elid, prefix) {
 }
 
 </script>
-<body onload="init()">
+<body>
 <h1 id="title"></h1>
 <p>
 <button onclick="switchTab('main')">Main</button>

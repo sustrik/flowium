@@ -13,7 +13,7 @@
 <script src="utils.js"></script>
 <script>
 
-function init() {
+$(document).ready(function() {
     ghGet('issues', null, function(issues) {
         for(var i = 0; i < issues.length; i++) {
             var issue = issues[i]
@@ -40,10 +40,10 @@ function init() {
             $("#create-issue").append(item)
         }
     });
-}
+})
 
 </script>
-<body onload="init()">
+<body>
 <h1>Open an issue</h1>
 <div id='open-issue'></div>
 <h1>Create an issue</h1>
