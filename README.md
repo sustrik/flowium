@@ -21,9 +21,8 @@ Get the butter out of the refrigerator.
 
 Get the jam out of the refrigerator.
 
-What type of jam is it?
-
-~> input jam-type alternative-jam-type
+* What type of jam is it? ~> jam-type
+* Is there any other jam there? ~> alternative-jam-type
 
 # Close the refrigerator ~> close: butter jam
 
