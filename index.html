@@ -55,7 +55,7 @@ function reloadIssues() {
             }
             if(!isFlowiumIssue) continue
             var item = '<p><a href="issue.html' +
-                '?repository=' + repository +
+                '?repository=' + encodeURIComponent(repository) +
                 '&issue=' + issue.number +
                 '">#' + issue.number + ' ' + issue.title + '</a></p>'
             $("#open-issues").append(item)
