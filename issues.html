@@ -21,7 +21,6 @@ $(document).ready(function() {
                 '?username=' + getUsername() +
                 '&repository=' + getRepository() +
                 '&issue=' + issue.number +
-                '&token=' + getToken() +
                 '">#' + issue.number + ' ' + issue.title + '</a></p>'
             $("#open-issue").append(item)
         }
@@ -35,7 +34,6 @@ $(document).ready(function() {
                 '?username=' + getUsername() +
                 '&repository=' + getRepository() +
                 '&template=' + getPath() + f.name +
-                '&token=' + getToken() +
                 '">' + f.name + '</a></p>'
             $("#create-issue").append(item)
         }

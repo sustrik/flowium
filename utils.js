@@ -48,8 +48,7 @@ function httpPost(url, token, args, cb) {
 // These should be eventually stored in cookies.
 
 function getToken() {
-    var token = getParameterByName('token')
-    return token
+    return localStorage.getItem("token")
     //if(token != null) {
     //    setCookie("token", token)
     //    return token
@@ -75,11 +74,11 @@ function getToken() {
 }
 
 function getUsername() {
-    return getParameterByName("username")
+    return localStorage.getItem("username")
 }
 
 function getRepository() {
-    return getParameterByName("repository")
+    return localStorage.getItem("repository")
 }
 
 function getIssue() {

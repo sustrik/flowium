@@ -18,11 +18,13 @@ function goToRepository() {
     var repository = $("#repository").val()
     localStorage.setItem("username", username)
     localStorage.setItem("repository", repository)
+    window.location.href = "issues.html"
 }
 
 $(document).ready(function() {
-    $("username").attr("value", localStorage.getItem("username"))
-    $("username").attr("value", localStorage.getItem("repository"))
+    console.log(localStorage.getItem("username"))
+    $("#username").attr("value", localStorage.getItem("username"))
+    $("#repository").attr("value", localStorage.getItem("repository"))
 })
 
 </script>

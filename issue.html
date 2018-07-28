@@ -489,6 +489,10 @@ function initHistory(comments) {
 ////////////////////////////////////////////////////////////////////////////////
 
 $(document).ready(function() {
+    // Remember username/repository in case user got here through a link.
+    localStorage.setItem("username", getParameterByName("username"))
+    localStorage.setItem("repository", getParameterByName("repository"))
+
     ghGet('issues/' + getIssue(), null, function(issue) {
         $("#title").text(issue.title)
         ghGet('issues/' + getIssue() + "/comments", null, function(cmnts) {
