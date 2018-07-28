@@ -95,6 +95,7 @@ function createIssue() {
         var args = {
             "title": $("#create-title").val(),
             "body": prologue + $("#create-comment").val(),
+            "labels": ["flowium"],
         }
         ghPost(`repos/${repository}/issues`, args, function(reply) {
             var addr = 'issue.html' +
