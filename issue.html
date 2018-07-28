@@ -489,20 +489,22 @@ function initHistory(comments) {
 ////////////////////////////////////////////////////////////////////////////////
 
 $(document).ready(function() {
-    // Remember username/repository in case user got here through a link.
-    localStorage.setItem("username", getParameterByName("username"))
-    localStorage.setItem("repository", getParameterByName("repository"))
-
-    ghGet('issues/' + getIssue(), null, function(issue) {
-        $("#title").text(issue.title)
-        ghGet('issues/' + getIssue() + "/comments", null, function(cmnts) {
+    // Parse query string.
+    var urlParams = new URLSearchParams(window.location.search)
+    var repository = urlParams.get("repository")
+    var issueNumber = urlParams.get("issue")
+    // Get the data from GitHub.
+    ghGet(`repos/${repository}/issues/${issueNumber}`, null, function(issue) {
+        ghGet(`repos/${repository}/issues/${issueNumber}/comments`, null,
+              function(cmnts) {
+            $("#title").text(issue.title)
             cmnts.unshift(issue)
             var comments = processComments(cmnts)
             var sysvars = extractVariablesFromComments(comments, "sysvars")
             var vars = extractVariablesFromComments(comments, "vars")
             var template = sysvars["_template"].split(':')
-            ghGet("contents/" + template[0] + "?ref=" + template[1], {},
-                  function(src) {
+            ghGet(`repos/${repository}/contents/${template[0]}?ref=${template[1]}`,
+                  {}, function(src) {
                 var steps = parseSteps(atob(src.content), vars)
                 annotateStepsWithStatus(steps, sysvars)
                 annotateStepsWithComments(steps, comments)
@@ -511,6 +513,19 @@ $(document).ready(function() {
                 initFlow(steps)
                 initVariables(vars)
                 initHistory(comments)
+                // Add the issue to the list of recent issues.
+                var recent = JSON.parse(localStorage.getItem("recent"))
+                if(recent == null) recent = []
+                recent = recent.filter(function(it) {
+                    return it.repository != repository || it.issue != issueNumber
+                })
+                recent.unshift({
+                    repository: repository,
+                    issue: issueNumber,
+                    title: issue.title,
+                })
+                recent = recent.slice(0, 20)
+                localStorage.setItem("recent", JSON.stringify(recent))
             })
         })
     })

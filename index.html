@@ -13,24 +13,158 @@
 <script src="utils.js"></script>
 <script>
 
-function goToRepository() {
-    var username = $("#username").val()
-    var repository = $("#repository").val()
-    localStorage.setItem("username", username)
-    localStorage.setItem("repository", repository)
-    window.location.href = "issues.html"
+function switchTab(name) {
+    $("#recent").hide()
+    $("#open").hide()
+    $("#create").hide()
+    $("#create2").hide()
+    $("#" + name).show()
 }
 
 $(document).ready(function() {
-    console.log(localStorage.getItem("username"))
-    $("#username").attr("value", localStorage.getItem("username"))
-    $("#repository").attr("value", localStorage.getItem("repository"))
+    // Fill in the "recent" tab.
+    var recent = JSON.parse(localStorage.getItem("recent"))
+    console.log(recent)
+    if(recent == null) {
+        $("#recent").append("<p>No recent issues.</p>")
+    } else {
+        for(var i = 0; i < recent.length; i++) {
+            var issue = recent[i]
+            var t = `${issue.repository} ${issue.title}`
+            var link = $("<a></a>").attr("href", `issue.html?repository=${encodeURIComponent(issue.repository)}&issue=${issue.issue}`).append(t)
+            $("#recent").append($("<p></p>").append(link))
+
+            $("#repositories-open").append($("<option/>").attr("value", issue.repository))
+            $("#repositories-create").append($("<option/>").attr("value", issue.repository))
+        }
+    }
 })
+
+function reloadIssues() {
+    var repository = $("#repository-open").val()
+    $("#open-issues").empty()
+    ghGet(`repos/${repository}/issues`, null, function(issues) {
+        for(var i = 0; i < issues.length; i++) {
+            var issue = issues[i]
+            var isFlowiumIssue = false
+            for(var j = 0; j < issue.labels.length; j++) {
+                if(issue.labels[j].name == "flowium") {
+                    isFlowiumIssue = true
+                    break
+                }
+            }
+            if(!isFlowiumIssue) continue
+            var item = '<p><a href="issue.html' +
+                '?repository=' + repository +
+                '&issue=' + issue.number +
+                '">#' + issue.number + ' ' + issue.title + '</a></p>'
+            $("#open-issues").append(item)
+        }
+    });
+}
+
+var templatePath = ""
+
+function dirUp() {
+    // TODO
+    templatePath = "/"
+    loadTemplates()
+}
+
+function dirDown(dir) {
+    templatePath += dir + "/"
+    loadTemplates()
+}
+
+function createIssueForm(file) {
+    $("#create-repository").text($("#repository-create").val())
+    $("#create-template").text(templatePath + file)
+    $("#create-title").val("")
+    $("#create-comment").val("")
+    switchTab("create2")
+}
+
+function createIssue() {
+    var repository = $("#repository-create").val()
+    var template = $("#create-template").text()
+    // Get the current version of the template.
+    ghGet(`repos/${repository}/commits?path=${template}`, null, function(commits) {
+        var sha = commits[0].sha
+        var prologue = '~> _template: ' + template + ":" + sha + "\n\n"
+        // Create the issue.
+        var args = {
+            "title": $("#create-title").val(),
+            "body": prologue + $("#create-comment").val(),
+        }
+        ghPost(`repos/${repository}/issues`, args, function(reply) {
+            var addr = 'issue.html' +
+                '?repository=' + encodeURIComponent(repository) +
+                '&issue=' + reply.number
+            var body = "View in Flowium: " +
+                "<https://flowium.com/issue.html" +
+                "?repository=" + encodeURIComponent(repository) +
+                "&issue=" + reply.number + ">"
+            ghPost(`repos/${repository}/issues/${reply.number}/comments`, {"body": body},
+                  function(reply) { 
+                window.location.href = addr
+            })
+        })
+    })
+}
+
+function loadTemplates() {
+    var repository = $("#repository-create").val()
+    $("#create-issues").empty()
+    $("#create-issues").append($("<p></p>").text("Path: " + templatePath))
+    if(templatePath != "/") {
+        $("#create-issues").append($("<p><a href=\"javascript:dirUp()\">..</a></p>"))
+    }
+    ghGet(`repos/${repository}/contents` + templatePath, null, function(files) {
+        for(var i = 0; i < files.length; i++) {
+            var f = files[i]
+            if(f.type != "dir") continue
+            var link = $("<a href=\"javascript:dirDown('" + f.name + "')\">" + escapeHtml(f.name) + "</a>")
+            $("#create-issues").append($("<p></p>").append(link))
+        }
+        for(var i = 0; i < files.length; i++) {
+            var f = files[i]
+            if(f.type != "file") continue
+            if(!f.name.endsWith('.md')) continue
+            var link = $("<a href=\"javascript:createIssueForm('" + f.name + "')\">" + escapeHtml(f.name) + "</a>")
+            $("#create-issues").append($("<p></p>").append(link))
+        }
+    })
+}
+
+function reloadTemplates() {
+    templatePath = "/"
+    loadTemplates()
+}
 
 </script>
 <body>
 <h1>Flowium</h1>
-<p>Username: <input id="username"/></p>
-<p>Repository: <input id="repository"/></p>
-<p><button onclick="goToRepository()">Go</button></p>
+<p>
+<button onclick="switchTab('recent')">Recent issues</button>
+<button onclick="switchTab('open')">Open an issue</button>
+<button onclick="switchTab('create')">Create an issue</button>
+</p>
+<div id="recent"></div>
+<div id="open" hidden>
+  <datalist id="repositories-open"></datalist>
+  <p>GitHub repository: <input id="repository-open" list="repositories-open" onchange="reloadIssues()"/></p>
+  <div id="open-issues"></div>
+</div>
+<div id="create" hidden>
+  <datalist id="repositories-create"></datalist>
+  <p>GitHub repository: <input id="repository-create" list="repositories-create" onchange="reloadTemplates()"/></p>
+  <div id="create-issues"></div>
+</div>
+<div id="create2" hidden>
+  <p>Repository: <span id="create-repository"></span></p>
+  <p>Template: <span id="create-template"></span></p>
+  <p>Title: <input type="text" id="create-title"></p>
+  <p><textarea id="create-comment"></textarea></p>
+  <button onclick="createIssue()">Create</button>
+</div>
 </body>

@@ -1,51 +1,33 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Query parameters
+// GitHub requests
 
-function getParameterByName(name) {
-    var url = window.location.href
-    var name = name.replace(/[\[\]]/g, '\\$&')
-    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)')
-    var results = regex.exec(url)
-    if (!results) return null
-    if (!results[2]) return ''
-    return decodeURIComponent(results[2].replace(/\+/g, ' '))
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// HTTP requests
-
-function httpGet(url, token, args, cb) {
+function ghGet(path, args, cb) {
     var anHttpRequest = new XMLHttpRequest();
     anHttpRequest.onreadystatechange = function() { 
         if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
             cb(issues = JSON.parse(anHttpRequest.responseText))
     }
-    anHttpRequest.open('GET', url, true);
-    if(token != null) {
-        anHttpRequest.setRequestHeader('Authorization','token ' + token)
-    }
+    anHttpRequest.open('GET', "https://api.github.com/" + path, true);
+    anHttpRequest.setRequestHeader('Authorization','token ' + getToken())
     anHttpRequest.setRequestHeader('Content-type', 'application/json')
     anHttpRequest.setRequestHeader('Accept', '*/*')
     anHttpRequest.send(args);
 }
 
-function httpPost(url, token, args, cb) {
+function ghPost(path, args, cb) {
     var anHttpRequest = new XMLHttpRequest();
     anHttpRequest.onreadystatechange = function() {
         if (anHttpRequest.readyState == 4 && anHttpRequest.status == 201)
             cb(issues = JSON.parse(anHttpRequest.responseText))
     }
-    anHttpRequest.open('POST', url, true)
-    if(token != null) {
-        anHttpRequest.setRequestHeader('Authorization','token ' + token)
-    }
+    anHttpRequest.open('POST', "https://api.github.com/" + path, true)
+    anHttpRequest.setRequestHeader('Authorization','token ' + getToken())
     anHttpRequest.setRequestHeader('Content-type', 'application/json')
     anHttpRequest.setRequestHeader('Accept', '*/*')
     anHttpRequest.send(JSON.stringify(args))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// These should be eventually stored in cookies.
 
 function getToken() {
     return localStorage.getItem("token")
@@ -73,35 +55,8 @@ function getToken() {
     //})
 }
 
-function getUsername() {
-    return localStorage.getItem("username")
-}
-
 function getRepository() {
     return localStorage.getItem("repository")
-}
-
-function getIssue() {
-    return getParameterByName("issue")
-}
-
-function getPath() {
-    return "/"
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// GitHub helpers
-
-function ghGet(url, args, cb) {
-    var repo = 'https://api.github.com/repos/' + getUsername() + "/" +
-        getRepository() + "/"
-    httpGet(repo + url, getToken(), args, cb)
-}
-
-function ghPost(url, args, cb) {
-    var repo = 'https://api.github.com/repos/' + getUsername() + "/" +
-        getRepository() + "/"
-    httpPost(repo + url, getToken(), args, cb)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
