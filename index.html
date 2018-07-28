@@ -13,39 +13,22 @@
 <script src="utils.js"></script>
 <script>
 
-$(document).ready(function() {
-    ghGet('issues', null, function(issues) {
-        for(var i = 0; i < issues.length; i++) {
-            var issue = issues[i]
-            var item = '<p><a href="issue.html' +
-                '?username=' + getUsername() +
-                '&repository=' + getRepository() +
-                '&issue=' + issue.number +
-                '&token=' + getToken() +
-                '">#' + issue.number + ' ' + issue.title + '</a></p>'
-            $("#open-issue").append(item)
-        }
-    });
+function goToRepository() {
+    var username = $("#username").val()
+    var repository = $("#repository").val()
+    localStorage.setItem("username", username)
+    localStorage.setItem("repository", repository)
+}
 
-    ghGet("contents/" + getPath(), null, function(files) {
-        for(var i = 0; i < files.length; i++) {
-            var f = files[i]
-            if(!f.name.endsWith('.md')) continue
-            var item = '<p><a href="create.html' +
-                '?username=' + getUsername() +
-                '&repository=' + getRepository() +
-                '&template=' + getPath() + f.name +
-                '&token=' + getToken() +
-                '">' + f.name + '</a></p>'
-            $("#create-issue").append(item)
-        }
-    });
+$(document).ready(function() {
+    $("username").attr("value", localStorage.getItem("username"))
+    $("username").attr("value", localStorage.getItem("repository"))
 })
 
 </script>
 <body>
-<h1>Open an issue</h1>
-<div id='open-issue'></div>
-<h1>Create an issue</h1>
-<div id='create-issue'></div>
+<h1>Flowium</h1>
+<p>Username: <input id="username"/></p>
+<p>Repository: <input id="repository"/></p>
+<p><button onclick="goToRepository()">Go</button></p>
 </body>
