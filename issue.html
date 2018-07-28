@@ -10,7 +10,7 @@
     integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
     crossorigin="anonymous">
 </script>
-<script src="https://cdn.rawgit.com/showdownjs/showdown/1.8.5/dist/showdown.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="https://unpkg.com/viz.js@1.8.0/viz.js" type="javascript/worker"></script>
@@ -97,7 +97,7 @@ function parseSteps(source, variables) {
             var val = variables[keys[j]] 
             steps[i].body = steps[i].body.replace(
                 new RegExp('#{' + keys[j] + '}', 'g'),
-                $("<p></p>").text(val).html())
+                escapeHtml(val))
         }
     }
 
@@ -388,32 +388,37 @@ function initVariables(vars) {
 //  History tab.
 ////////////////////////////////////////////////////////////////////////////////
 
-function renderUser(comment) {
+function renderCommentHeader(comment) {
+    var t = $("<div></div>")
+    t.append($("<img/>").attr("src", comment.userAvatar + "&s=44"))
+    t.append($("<a></a>").attr("href", comment.userUrl).text(comment.userName))
+    return t.html()
+
     return "<img class='avatar' src='" + comment.userAvatar +
         "&s=44'/><a href='" + comment.userUrl + "'>" + comment.userName +
         "</a>"
 }
 
 function renderComment(comment) {
-    var body = "<p>" + renderUser(comment) + " commented"
+    var body = "<p>" + renderCommentHeader(comment) + " commented"
     if ('step' in comment) {
         body += " on step <a href='javascript:scrollToStep(\"" + comment.step +
             "\");'>" + comment.step + "</a>"
     }
     body += " at " + comment.createdAt + "</p>"
     body += "<div class='comment'>"
-    body += mdConvert(comment.body)
+    body += mdSanitizeAndConvert(comment.body)
     body += "</div>"
     return body
 }
 
 function renderVarChange(comment) {
-    var body = "<p>" + renderUser(comment) + " set variables"
+    var body = "<p>" + renderCommentHeader(comment) + " set variables"
     body += " at " + comment.createdAt + "</p>"
     body += "<div class='comment'>"
     var names = Object.keys(comment.vars).sort()
     for(var i = 0; i < names.length; i++) {
-        body += "<p>Variable " + names[i] + " set to \"" + comment.vars[names[i]] + "\"</p>"
+        body += "<p>Variable " + names[i] + " set to \"" + escapeHtml(comment.vars[names[i]]) + "\"</p>"
     }
     body += "</div>"
     return body
@@ -425,7 +430,7 @@ function renderSysvarChange(comment) {
     for(var i = 0; i < names.length; i++) {
         var name = names[i]
         if(name.startsWith("_status+")) {
-            body += "<p>" + renderUser(comment) + " changed state of a step"
+            body += "<p>" + renderCommentHeader(comment) + " changed state of a step"
             body += " at " + comment.createdAt + "</p>"
             body += "<div class='comment'>"
             body += "<p>Step " + splitOnce(name, "+")[1] + " was marked as " + comment.vars[name] + "</p>"

@@ -125,13 +125,23 @@ function ltrimHash(str) {
     return str.substring(pos)
 }
 
+function escapeHtml(str) {
+    return $("<p></p>").text(str).html()
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Markdown rendering
 
-var mdConverter = new showdown.Converter()
-mdConverter.setFlavor('github')
-
 function mdConvert(md) {
-    return mdConverter.makeHtml(md)
+    return marked(md, {
+        gfm: true,
+    })
+}
+
+function mdSanitizeAndConvert(md) {
+    return marked(md, {
+        gfm: true,
+        sanitize: true,
+    })
 }
 
