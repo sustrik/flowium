@@ -120,8 +120,8 @@ function splitOnce(str, delimiter) {
     return [str.substring(0, i), str.substring(i + delimiter.length)]
 }
 
-function ltrimHash(str) {
-    var pos = [...str].findIndex(function (el) {return el != "#"})
+function ltrimChar(str, ch) {
+    var pos = [...str].findIndex(function (el) {return el != ch})
     return str.substring(pos)
 }
 
