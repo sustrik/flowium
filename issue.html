@@ -393,35 +393,39 @@ function renderCommentHeader(comment) {
     t.append($("<img/>").attr("src", comment.userAvatar + "&s=44"))
     t.append($("<a></a>").attr("href", comment.userUrl).text(comment.userName))
     return t.html()
-
-    return "<img class='avatar' src='" + comment.userAvatar +
-        "&s=44'/><a href='" + comment.userUrl + "'>" + comment.userName +
-        "</a>"
 }
 
 function renderComment(comment) {
-    var body = "<p>" + renderCommentHeader(comment) + " commented"
-    if ('step' in comment) {
-        body += " on step <a href='javascript:scrollToStep(\"" + comment.step +
-            "\");'>" + comment.step + "</a>"
+    var t = $("<p></p>")
+    t.append(renderCommentHeader(comment))
+    t.append(" commented")
+    if("step" in comment) {
+        t.append(" on step ")
+        t.append($("<a></a>").attr("href",
+            `javascript:scrollToStep("${comment.step}")`).text(comment.step))
     }
-    body += " at " + comment.createdAt + "</p>"
-    body += "<div class='comment'>"
-    body += mdSanitizeAndConvert(comment.body)
-    body += "</div>"
-    return body
+    t.append(" at ").append(escapeHtml(comment.createdAt))
+    var c = $("<div></div>").attr("class", "comment")
+    c.append(mdSanitizeAndConvert(comment.body))
+    return t.prop('outerHTML') + c.prop('outerHTML')
 }
 
 function renderVarChange(comment) {
-    var body = "<p>" + renderCommentHeader(comment) + " set variables"
-    body += " at " + comment.createdAt + "</p>"
-    body += "<div class='comment'>"
+    var t = $("<p></p>")
+    t.append(renderCommentHeader(comment))
+    t.append(" set variables")
+    t.append(" at ").append(escapeHtml(comment.createdAt))
+    var c = $("<p></p>")
     var names = Object.keys(comment.vars).sort()
     for(var i = 0; i < names.length; i++) {
-        body += "<p>Variable " + names[i] + " set to \"" + escapeHtml(comment.vars[names[i]]) + "\"</p>"
+        c.append("Variable ");
+        c.append(escapeHtml(names[i]))
+        c.append(" set to \"")
+        c.append(escapeHtml(comment.vars[names[i]]))
+        c.append("\"")
     }
-    body += "</div>"
-    return body
+    var d = $("<div></div>").attr("class", "comment").append(c)
+    return t.prop('outerHTML') + d.prop('outerHTML')
 }
 
 function renderSysvarChange(comment) {
@@ -430,11 +434,17 @@ function renderSysvarChange(comment) {
     for(var i = 0; i < names.length; i++) {
         var name = names[i]
         if(name.startsWith("_status+")) {
-            body += "<p>" + renderCommentHeader(comment) + " changed state of a step"
-            body += " at " + comment.createdAt + "</p>"
-            body += "<div class='comment'>"
-            body += "<p>Step " + splitOnce(name, "+")[1] + " was marked as " + comment.vars[name] + "</p>"
-            body += "</div>"
+            var t = $("<p></p>")
+            t.append(renderCommentHeader(comment))
+            t.append(" changed state of a step")
+            t.append(" at ").append(escapeHtml(comment.createdAt))
+            var c = $("<p></p>")
+            c.append("Step ")
+            c.append(splitOnce(name, "+")[1])
+            c.append(" was marked as ")
+            c.append(escapeHtml(comment.vars[name]))
+            var d = $("<div></div>").attr("class", "comment").append(c)
+            body += t.prop('outerHTML') + d.prop('outerHTML')
         }
         // TODO: Other sysvars
     }
