@@ -59,19 +59,22 @@ function parseSteps(source, variables) {
         }
         if(ln.startsWith("*") && ln.includes("~>")) {
             var elems = splitOnce(ltrimChar(ln, "*"), "~>")
-            inputs += `<p>${elems[0].trim()} <input/></p>`
+            var varname = elems[1].trim()
+            var val = ""
+            if(varname in variables) val = escapeHtml(variables[varname]) 
+            inputs += `<p>${elems[0].trim()}
+                         <input id="_variable_${varname}" value="${val}"/>
+                       </p>`
             continue
         }
         if(inputs.length > 0) {
-            step += inputs
-            step += "<p><button>Save</button></p>"
+            step += `<div>${inputs}<p><button onclick="saveVariables(this)">Save</button></p></div>`
             inputs = ""
         }
         step += ln + "\n"
     }
     if(inputs.length > 0) {
-        step += inputs
-        step += "<p><button>Save</button></p>"
+        step += `<div>${inputs}<p><button onclick="saveVariables(this)">Save</button></p></div>`
         inputs = ""
     }
     if(stepname != null) {
@@ -265,6 +268,28 @@ function postStepDone(step) {
 function postStepNotDone(step) {
     var prefix = "~> _status+" + step + ": not-done\n\n"
     postComment("comment-" + step, prefix)
+}
+
+function saveVariables(btn) {
+    var vars = {}
+    var inputs = $(btn).parent().parent().find("input").each(function(i, elem) {
+        var e = $(elem)
+        var name = e.attr("id").substring(10)
+        var val = e.val().trim()
+        // TODO: remove unchanged variables
+        if(val.length > 0) vars[name] = val
+    })
+    body = ""
+    var keys = Object.keys(vars)
+    for(var i = 0; i < keys.length; i++) {
+        body += `~> ${keys[i]}: ${vars[keys[i]]}`
+        body += "\n"
+    }
+    ghPost("issues/" + getIssue() + "/comments", {"body": body},
+          function(reply) { 
+        window.location.href = window.location.pathname +
+            window.location.search + window.location.hash;
+    })
 }
 
 function closeIssue() {
