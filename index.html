@@ -22,24 +22,23 @@ function switchTab(name) {
 }
 
 $(document).ready(function() {
-    authenticate(function() {
-        // Fill in the "recent" tab.
-        var recent = JSON.parse(localStorage.getItem("recent"))
-        console.log(recent)
-        if(recent == null) {
-            $("#recent").append("<p>No recent issues.</p>")
-        } else {
-            for(var i = 0; i < recent.length; i++) {
-                var issue = recent[i]
-                var t = `${issue.repository} ${issue.title}`
-                var link = $("<a></a>").attr("href", `issue.html?repository=${encodeURIComponent(issue.repository)}&issue=${issue.issue}`).append(t)
-                $("#recent").append($("<p></p>").append(link))
+    authenticate()
+    // Fill in the "recent" tab.
+    var recent = JSON.parse(localStorage.getItem("recent"))
+    console.log(recent)
+    if(recent == null) {
+        $("#recent").append("<p>No recent issues.</p>")
+    } else {
+        for(var i = 0; i < recent.length; i++) {
+            var issue = recent[i]
+            var t = `${issue.repository} ${issue.title}`
+            var link = $("<a></a>").attr("href", `issue.html?repository=${encodeURIComponent(issue.repository)}&issue=${issue.issue}`).append(t)
+            $("#recent").append($("<p></p>").append(link))
 
-                $("#repositories-open").append($("<option/>").attr("value", issue.repository))
-                $("#repositories-create").append($("<option/>").attr("value", issue.repository))
-            }
+            $("#repositories-open").append($("<option/>").attr("value", issue.repository))
+            $("#repositories-create").append($("<option/>").attr("value", issue.repository))
         }
-    })
+    }
 })
 
 function reloadIssues() {
