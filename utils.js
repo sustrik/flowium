@@ -52,7 +52,7 @@ function getToken() {
     rq.open('GET', "https://flowium.herokuapp.com/authenticate/" + code, true);
     rq.setRequestHeader('Content-type', 'application/json')
     rq.setRequestHeader('Accept', '*/*')
-    rq.send(args);
+    rq.send();
 
     return null
 }
