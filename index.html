@@ -22,22 +22,24 @@ function switchTab(name) {
 }
 
 $(document).ready(function() {
-    // Fill in the "recent" tab.
-    var recent = JSON.parse(localStorage.getItem("recent"))
-    console.log(recent)
-    if(recent == null) {
-        $("#recent").append("<p>No recent issues.</p>")
-    } else {
-        for(var i = 0; i < recent.length; i++) {
-            var issue = recent[i]
-            var t = `${issue.repository} ${issue.title}`
-            var link = $("<a></a>").attr("href", `issue.html?repository=${encodeURIComponent(issue.repository)}&issue=${issue.issue}`).append(t)
-            $("#recent").append($("<p></p>").append(link))
+    authenticate(function() {
+        // Fill in the "recent" tab.
+        var recent = JSON.parse(localStorage.getItem("recent"))
+        console.log(recent)
+        if(recent == null) {
+            $("#recent").append("<p>No recent issues.</p>")
+        } else {
+            for(var i = 0; i < recent.length; i++) {
+                var issue = recent[i]
+                var t = `${issue.repository} ${issue.title}`
+                var link = $("<a></a>").attr("href", `issue.html?repository=${encodeURIComponent(issue.repository)}&issue=${issue.issue}`).append(t)
+                $("#recent").append($("<p></p>").append(link))
 
-            $("#repositories-open").append($("<option/>").attr("value", issue.repository))
-            $("#repositories-create").append($("<option/>").attr("value", issue.repository))
+                $("#repositories-open").append($("<option/>").attr("value", issue.repository))
+                $("#repositories-create").append($("<option/>").attr("value", issue.repository))
+            }
         }
-    }
+    })
 })
 
 function reloadIssues() {
@@ -149,6 +151,7 @@ function reloadTemplates() {
 <button onclick="switchTab('recent')">Recent issues</button>
 <button onclick="switchTab('open')">Open an issue</button>
 <button onclick="switchTab('create')">Create an issue</button>
+<button onclick="logout()">Logout</button>
 </p>
 <div id="recent"></div>
 <div id="open" hidden>

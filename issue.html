@@ -492,43 +492,45 @@ var issueRepository = null
 var issueNumber = null
 
 $(document).ready(function() {
-    // Parse query string.
-    var urlParams = new URLSearchParams(window.location.search)
-    issueRepository = urlParams.get("repository")
-    issueNumber = urlParams.get("issue")
-    // Get the data from GitHub.
-    ghGet(`repos/${issueRepository}/issues/${issueNumber}`, null, function(issue) {
-        ghGet(`repos/${issueRepository}/issues/${issueNumber}/comments`, null,
-              function(cmnts) {
-            $("#title").text(issue.title)
-            cmnts.unshift(issue)
-            var comments = processComments(cmnts)
-            var sysvars = extractVariablesFromComments(comments, "sysvars")
-            var vars = extractVariablesFromComments(comments, "vars")
-            var template = sysvars["_template"].split(':')
-            ghGet(`repos/${issueRepository}/contents/${template[0]}?ref=${template[1]}`,
-                  {}, function(src) {
-                var steps = parseSteps(atob(src.content), vars)
-                annotateStepsWithStatus(steps, sysvars)
-                annotateStepsWithComments(steps, comments)
-                console.log(steps)
-                initMain(steps)
-                initFlow(steps)
-                initVariables(vars)
-                initHistory(comments)
-                // Add the issue to the list of recent issues.
-                var recent = JSON.parse(localStorage.getItem("recent"))
-                if(recent == null) recent = []
-                recent = recent.filter(function(it) {
-                    return it.repository != issueRepository || it.issue != issueNumber
+    authenticate(function() {
+        // Parse query string.
+        var urlParams = new URLSearchParams(window.location.search)
+        issueRepository = urlParams.get("repository")
+        issueNumber = urlParams.get("issue")
+        // Get the data from GitHub.
+        ghGet(`repos/${issueRepository}/issues/${issueNumber}`, null, function(issue) {
+            ghGet(`repos/${issueRepository}/issues/${issueNumber}/comments`, null,
+                  function(cmnts) {
+                $("#title").text(issue.title)
+                cmnts.unshift(issue)
+                var comments = processComments(cmnts)
+                var sysvars = extractVariablesFromComments(comments, "sysvars")
+                var vars = extractVariablesFromComments(comments, "vars")
+                var template = sysvars["_template"].split(':')
+                ghGet(`repos/${issueRepository}/contents/${template[0]}?ref=${template[1]}`,
+                      {}, function(src) {
+                    var steps = parseSteps(atob(src.content), vars)
+                    annotateStepsWithStatus(steps, sysvars)
+                    annotateStepsWithComments(steps, comments)
+                    console.log(steps)
+                    initMain(steps)
+                    initFlow(steps)
+                    initVariables(vars)
+                    initHistory(comments)
+                    // Add the issue to the list of recent issues.
+                    var recent = JSON.parse(localStorage.getItem("recent"))
+                    if(recent == null) recent = []
+                    recent = recent.filter(function(it) {
+                        return it.repository != issueRepository || it.issue != issueNumber
+                    })
+                    recent.unshift({
+                        repository: issueRepository,
+                        issue: issueNumber,
+                        title: issue.title,
+                    })
+                    recent = recent.slice(0, 20)
+                    localStorage.setItem("recent", JSON.stringify(recent))
                 })
-                recent.unshift({
-                    repository: issueRepository,
-                    issue: issueNumber,
-                    title: issue.title,
-                })
-                recent = recent.slice(0, 20)
-                localStorage.setItem("recent", JSON.stringify(recent))
             })
         })
     })

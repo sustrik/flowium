@@ -29,10 +29,13 @@ function ghPost(path, args, cb) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getToken() {
+function authenticate(cb) {
     // First, check whether access token is in the local storage.
     var token = localStorage.getItem("token")
-    if(token != null) return token
+    if(token != null) {
+        cb()
+        return
+    }
 
     // First step of authorization. Redirect to GitHub.
     var urlParams = new URLSearchParams(window.location.search)
@@ -46,8 +49,11 @@ function getToken() {
     // Second step of authorization. Convert code to a token.
     var rq = new XMLHttpRequest();
     rq.onreadystatechange = function() { 
-        if (rq.readyState == 4 && rq.status == 200)
+        if (rq.readyState == 4 && rq.status == 200) {
             console.log(rq.responseText)
+            localStorage.setItem("token", rq.responseText)
+            cb()
+        }
     }
     rq.open('GET', "https://flowium.herokuapp.com/authenticate/" + code, true);
     rq.setRequestHeader('Content-type', 'application/json')
@@ -55,6 +61,15 @@ function getToken() {
     rq.send();
 
     return null
+}
+
+function getToken() {
+    return localStorage.getItem("token")
+}
+
+function logout() {
+    localStorage.clear()
+    window.location.href = "index.html"
 }
 
 function getRepository() {
