@@ -19,10 +19,14 @@
 <script>
 
 function switchTab(name) {
+    $("#recent-nav").removeClass("active")
+    $("#open-nav").removeClass("active")
+    $("#create-nav").removeClass("active")
     $("#recent").hide()
     $("#open").hide()
     $("#create").hide()
     $("#create2").hide()
+    $("#" + name + "-nav").addClass("active")
     $("#" + name).show()
 }
 
@@ -151,12 +155,22 @@ function reloadTemplates() {
 </script>
 <body>
 <h1>Flowium</h1>
-<p>
-<button onclick="switchTab('recent')">Recent issues</button>
-<button onclick="switchTab('open')">Open an issue</button>
-<button onclick="switchTab('create')">Create an issue</button>
-<button onclick="logout()">Logout</button>
-</p>
+
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a id="recent-nav" class="nav-link" href="javascript:switchTab('recent')">Recent issues</a>
+  </li>
+  <li class="nav-item">
+    <a id="open-nav" class="nav-link" href="javascript:switchTab('open')">Open an issue</a>
+  </li>
+  <li class="nav-item">
+    <a id="create-nav" class="nav-link" href="javascript:switchTab('create')">Create an issue</a>
+  </li>
+  <li class="nav-item">
+    <a id="logout-nav" class="nav-link" href="javascript:logout()">Logout</a>
+  </li>
+</ul>
+
 <div id="recent"></div>
 <div id="open">
   <datalist id="repositories-open"></datalist>

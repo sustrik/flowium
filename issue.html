@@ -540,10 +540,15 @@ $(document).ready(function() {
 })
 
 function switchTab(name) {
+    $("#main-nav").removeClass("active")
+    $("#flow-nav").removeClass("active")
+    $("#variables-nav").removeClass("active")
+    $("#history-nav").removeClass("active")
     $("#main").hide()
     $("#variables").hide()
     $("#history").hide()
     $("#flow").hide()
+    $("#" + name + "-nav").addClass("active")
     $("#" + name).show()
 }
 
@@ -564,13 +569,25 @@ function postComment(elid, prefix) {
 </script>
 <body>
 <h1 id="title"></h1>
-<p>
-<button onclick="switchTab('main')">Main</button>
-<button onclick="switchTab('flow')">Flow</button>
-<button onclick="switchTab('variables')">Variables</button>
-<button onclick="switchTab('history')">History</button>
-<button onclick="logout()">Logout</button>
-</p>
+
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a id="main-nav" class="nav-link" href="javascript:switchTab('main')">Main</a>
+  </li>
+  <li class="nav-item">
+    <a id="flow-nav" class="nav-link" href="javascript:switchTab('flow')">Flow</a>
+  </li>
+  <li class="nav-item">
+    <a id="variables-nav" class="nav-link" href="javascript:switchTab('variables')">Variables</a>
+  </li>
+  <li class="nav-item">
+    <a id="history-nav" class="nav-link" href="javascript:switchTab('history')">History</a>
+  </li>
+  <li class="nav-item">
+    <a id="logout-nav" class="nav-link" href="javascript:logout()">Logout</a>
+  </li>
+</ul>
+
 <div id="main">
    <p>
        <input type='checkbox' checked onchange="showSteps(this.checked, 'active');">Show active</input>
