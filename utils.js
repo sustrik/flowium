@@ -51,7 +51,7 @@ function authenticate(cb) {
     rq.onreadystatechange = function() { 
         if (rq.readyState == 4 && rq.status == 200) {
             console.log(rq.responseText)
-            localStorage.setItem("token", rq.responseText)
+            localStorage.setItem("token", rq.responseText.token)
             cb()
         }
     }
