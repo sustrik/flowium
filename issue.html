@@ -308,9 +308,10 @@ function initMain(steps) {
     for(var i = 0; i < steps.length; i++) {
         var div = "<div id='__" + steps[i].id
         div += "' class=" + steps[i].dstatus + ">"
-        div += "<div class='status-sign' style='background-color:" 
-        div += statusToColor(steps[i].dstatus) + ";'></div>"
-        div += "<h2>" + steps[i].title + "</h2>"
+        div += "<h2>" + steps[i].title
+            + "<span class='badge badge-warning' style='background-color: "
+            + statusToColor(steps[i].dstatus) + ";'>" + steps[i].dstatus
+            + "</span></h2>"
         for(var j = 0; j < steps[i].blockedBy.length; j++) {
             div += "<p><b>Blocked by <a href='javascript:scrollToStep(\"" +
                 steps[i].blockedBy[j] +
