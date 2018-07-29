@@ -3,6 +3,11 @@
 <head>
     <meta charset="utf-8">
     <title>flowium</title>
+    <link
+        rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="flowium.css">
 </head>
 <script
@@ -23,6 +28,7 @@ function switchTab(name) {
 
 $(document).ready(function() {
     authenticate()
+    switchTab('recent')
     // Fill in the "recent" tab.
     var recent = JSON.parse(localStorage.getItem("recent"))
     if(recent == null) {
@@ -152,17 +158,17 @@ function reloadTemplates() {
 <button onclick="logout()">Logout</button>
 </p>
 <div id="recent"></div>
-<div id="open" hidden>
+<div id="open">
   <datalist id="repositories-open"></datalist>
   <p>GitHub repository: <input id="repository-open" list="repositories-open" onchange="reloadIssues()"/></p>
   <div id="open-issues"></div>
 </div>
-<div id="create" hidden>
+<div id="create">
   <datalist id="repositories-create"></datalist>
   <p>GitHub repository: <input id="repository-create" list="repositories-create" onchange="reloadTemplates()"/></p>
   <div id="create-issues"></div>
 </div>
-<div id="create2" hidden>
+<div id="create2">
   <p>Repository: <span id="create-repository"></span></p>
   <p>Template: <span id="create-template"></span></p>
   <p>Title: <input type="text" id="create-title"></p>

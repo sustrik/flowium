@@ -3,6 +3,11 @@
 <head>
     <meta charset="utf-8">
     <title>flowium</title>
+    <link
+        rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="flowium.css">
 </head>
 <script
@@ -15,7 +20,6 @@
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="https://unpkg.com/viz.js@1.8.0/viz.js" type="javascript/worker"></script>
 <script src="https://unpkg.com/d3-graphviz@1.4.0/build/d3-graphviz.min.js"></script>
-
 <script src="utils.js"></script>
 <script>
 
@@ -391,7 +395,7 @@ function updateVariable() {
 }
 
 function initVariables(vars) {
-    var table = $("<table></table>")
+    var table = $("<table class='table table-sm'><tr><th>Name</th><th>Value</th></tr></table>")
     var keys = Object.keys(vars).sort()
     for(var i = 0; i < keys.length; i++) {
         var key = $("<td></td>").text(keys[i])
@@ -493,6 +497,7 @@ var issueNumber = null
 
 $(document).ready(function() {
     authenticate()
+    switchTab('main')
     // Parse query string.
     var urlParams = new URLSearchParams(window.location.search)
     issueRepository = urlParams.get("repository")
@@ -575,17 +580,17 @@ function postComment(elid, prefix) {
    <div id="main-steps"></div>
    <p><button onclick="closeIssue()">Close the issue</button></p>
 </div>
-<div id="variables" hidden>
+<div id="variables">
     <div id="variable-table"></div>
     <p>Variable: <input id="variable-name"/> Value: <input id="variable-value"/></p>
     <button onclick="updateVariable()">Update variable</button>
 </div>
-<div id="history" hidden>
+<div id="history">
     <div id="history-table"></div>
     <p><textarea id='comment' cols='40' rows='5'></textarea></p>
     <p><button onclick="postComment('comment', '')">Comment</button></p>
 </div>
-<div id="flow" hidden>
+<div id="flow">
     <div id="flow-main"></div>
 </div>
 </body>
