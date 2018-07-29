@@ -229,7 +229,7 @@ function processComments(comments) {
             sc[j].userName = c.user.login
             sc[j].userUrl = c.user.html_url
             sc[j].userAvatar = c.user.avatar_url
-            sc[j].createdAt = c.created_at
+            sc[j].createdAt = new Date(c.created_at).toLocaleString()
             res.push(sc[j])
         }
     }
