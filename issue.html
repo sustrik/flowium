@@ -285,15 +285,15 @@ function saveVariables(btn) {
         body += `~> ${keys[i]}: ${vars[keys[i]]}`
         body += "\n"
     }
-    ghPost("issues/" + getIssue() + "/comments", {"body": body},
-          function(reply) { 
+    ghPost(`repos/${issueRepository}/issues/${issueNumber}/comments`,
+          {"body": body}, function(reply) { 
         window.location.href = window.location.pathname +
             window.location.search + window.location.hash;
     })
 }
 
 function closeIssue() {
-    ghPost("issues/" + getIssue(), {"state": "closed"},
+    ghPost(`repos/${issueRepository}/issues/${issueNumber}`, {"state": "closed"},
           function(reply) { 
         window.location.href = window.location.pathname +
             window.location.search + window.location.hash;
@@ -383,8 +383,8 @@ function updateVariable() {
     var name = $("#variable-name").val()
     var value = $("#variable-value").val()
     var body = "~> " + name + ": " + value
-    ghPost("issues/" + getIssue() + "/comments", {"body": body},
-          function(reply) { 
+    ghPost(`repos/${issueRepository}/issues/${issueNumber}/comments`,
+          {"body": body}, function(reply) { 
         window.location.href = window.location.pathname +
             window.location.search + window.location.hash;
     })
@@ -488,14 +488,17 @@ function initHistory(comments) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+var issueRepository = null
+var issueNumber = null
+
 $(document).ready(function() {
     // Parse query string.
     var urlParams = new URLSearchParams(window.location.search)
-    var repository = urlParams.get("repository")
-    var issueNumber = urlParams.get("issue")
+    issueRepository = urlParams.get("repository")
+    issueNumber = urlParams.get("issue")
     // Get the data from GitHub.
-    ghGet(`repos/${repository}/issues/${issueNumber}`, null, function(issue) {
-        ghGet(`repos/${repository}/issues/${issueNumber}/comments`, null,
+    ghGet(`repos/${issueRepository}/issues/${issueNumber}`, null, function(issue) {
+        ghGet(`repos/${issueRepository}/issues/${issueNumber}/comments`, null,
               function(cmnts) {
             $("#title").text(issue.title)
             cmnts.unshift(issue)
@@ -503,7 +506,7 @@ $(document).ready(function() {
             var sysvars = extractVariablesFromComments(comments, "sysvars")
             var vars = extractVariablesFromComments(comments, "vars")
             var template = sysvars["_template"].split(':')
-            ghGet(`repos/${repository}/contents/${template[0]}?ref=${template[1]}`,
+            ghGet(`repos/${issueRepository}/contents/${template[0]}?ref=${template[1]}`,
                   {}, function(src) {
                 var steps = parseSteps(atob(src.content), vars)
                 annotateStepsWithStatus(steps, sysvars)
@@ -517,10 +520,10 @@ $(document).ready(function() {
                 var recent = JSON.parse(localStorage.getItem("recent"))
                 if(recent == null) recent = []
                 recent = recent.filter(function(it) {
-                    return it.repository != repository || it.issue != issueNumber
+                    return it.repository != issueRepository || it.issue != issueNumber
                 })
                 recent.unshift({
-                    repository: repository,
+                    repository: issueRepository,
                     issue: issueNumber,
                     title: issue.title,
                 })
@@ -546,8 +549,8 @@ function scrollToStep(id) {
 
 function postComment(elid, prefix) {
     var body = prefix + $("#" + elid).val()
-    ghPost("issues/" + getIssue() + "/comments", {"body": body},
-          function(reply) { 
+    ghPost(`repos/${issueRepository}/issues/${issueNumber}/comments`,
+          {"body": body}, function(reply) { 
         window.location.href = window.location.pathname +
             window.location.search + window.location.hash;
     })
