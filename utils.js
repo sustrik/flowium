@@ -55,8 +55,6 @@ function authenticate() {
     rq.setRequestHeader('Content-type', 'application/json')
     rq.setRequestHeader('Accept', '*/*')
     rq.send();
-
-    return null
 }
 
 function getToken() {
