@@ -30,29 +30,31 @@ function ghPost(path, args, cb) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function getToken() {
-    return localStorage.getItem("token")
-    //if(token != null) {
-    //    setCookie("token", token)
-    //    return token
-    //}
-    //token = getCookie("token")
-    //if(token != null) {
-    //    return token
-    //}
-    //var code = getParameterByName('code')
-    //if(code == null) {
-    //    window.location.replace("https://github.com/login/oauth/authorize?" +
-    //        "scope=repo&client_id=d027578d9cca180f9e0e")
-    //    return
-    //}
-    //httpGet("https://flowium.herokuapp.com/authenticate/" + code,
-    //      token,
-    //      null,
-    //      function(response) {
-    //    console.log("Token retrieved: " + JSON.stringify(response))
-    //    setCookie("token", response)
-    //    token = response
-    //})
+    // First, check whether access token is in the local storage.
+    var token = localStorage.getItem("token")
+    if(token != null) return token
+
+    // First step of authorization. Redirect to GitHub.
+    var urlParams = new URLSearchParams(window.location.search)
+    var code = urlParams.get("code")
+    if(code == null) {
+        window.location.replace("https://github.com/login/oauth/authorize?" +
+            "scope=repo&client_id=d027578d9cca180f9e0e")
+        return
+    }
+
+    // Second step of authorization. Convert code to a token.
+    var rq = new XMLHttpRequest();
+    rq.onreadystatechange = function() { 
+        if (rq.readyState == 4 && rq.status == 200)
+            console.log(rq.responseText)
+    }
+    rq.open('GET', "https://flowium.herokuapp.com/authenticate/" + code, true);
+    rq.setRequestHeader('Content-type', 'application/json')
+    rq.setRequestHeader('Accept', '*/*')
+    rq.send(args);
+
+    return null
 }
 
 function getRepository() {
