@@ -47,7 +47,6 @@ function authenticate() {
     var rq = new XMLHttpRequest();
     rq.onreadystatechange = function() { 
         if (rq.readyState == 4 && rq.status == 200) {
-            console.log(rq.responseText)
             localStorage.setItem("token", JSON.parse(rq.responseText).token)
             window.location.replace("index.html")
         }

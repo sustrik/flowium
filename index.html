@@ -25,7 +25,6 @@ $(document).ready(function() {
     authenticate()
     // Fill in the "recent" tab.
     var recent = JSON.parse(localStorage.getItem("recent"))
-    console.log(recent)
     if(recent == null) {
         $("#recent").append("<p>No recent issues.</p>")
     } else {

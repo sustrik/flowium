@@ -512,7 +512,6 @@ $(document).ready(function() {
                 var steps = parseSteps(atob(src.content), vars)
                 annotateStepsWithStatus(steps, sysvars)
                 annotateStepsWithComments(steps, comments)
-                console.log(steps)
                 initMain(steps)
                 initFlow(steps)
                 initVariables(vars)
