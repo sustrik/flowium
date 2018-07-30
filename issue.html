@@ -293,7 +293,29 @@ function initGraph(steps) {
 //  Input.
 ////////////////////////////////////////////////////////////////////////////////
 
-function initInput(vars) {
+function initInput(repository, issue, vars) {
+    var keys = Object.keys(vars).sort()
+    for(var i = 0; i < keys.length; i++) {
+        var tr = $(`<tr class="clickable-element"></tr>`)
+        tr.click((function(name, value) {return function() {
+            $("#input-name").val(name)
+            $("#input-value").val(value)
+        }})(keys[i], vars[keys[i]]))
+        tr.append($("<td></td>").text(keys[i]))
+        tr.append($("<td></td>").text(vars[keys[i]]))
+        $("#input-table").append(tr)
+    }
+
+    // When the button is pressed one input is updated.
+    $("#input-save").click(function () {
+        var name = $("#input-name").val()
+        var value = $("#input-value").val()
+        var body = `~> ${name}: ${value}`
+        ghPost(`repos/${repository}/issues/${issue}/comments`,
+              {"body": body}, function(reply) { 
+            location.reload();
+        })
+    })
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -331,7 +353,7 @@ $(document).ready(function() {
                 annotateStepsWithComments(steps, comments)
                 initSteps(steps)
                 initGraph(steps)
-                initInput(vars)
+                initInput(issueRepository, issueNumber, vars)
                 initHistory(comments)
                 // Add the issue to the list of recent issues.
                 var recent = JSON.parse(localStorage.getItem("recent"))
@@ -381,20 +403,40 @@ $(document).ready(function() {
   <div class="tab-content">
 
     <div id="steps" class="container tab-pane active"><br>
-      <h3>Steps</h3>
     </div>
 
     <div id="graph" class="container tab-pane fade"><br>
-      <h3>Graph</h3>
+      <h3>Graph of the workflow</h3>
+      <br>
       <div id="graph-main"></div>
     </div>
 
     <div id="input" class="container tab-pane fade"><br>
-      <h3>Input</h3>
+      <h3>Input variables</h3>
+      <br>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody id="input-table"></tbody>
+      </table>
+      <div class="form-group">
+          <label for="input-name">Name:</label>
+          <input type="text" class="form-control" id="input-name"></input>
+      </div>
+      <div class="form-group">
+          <label for="input-value">Value:</label>
+          <input type="text" class="form-control" id="input-value"></input>
+      </div>
+      <button id="input-save" type="button" class="btn btn-primary">
+          Save</button>
     </div>
 
     <div id="history" class="container tab-pane fade"><br>
-      <h3>History</h3>
+      <h3>History of the issue</h3>
     </div>
 
   </div>
