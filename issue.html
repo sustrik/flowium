@@ -344,7 +344,7 @@ function renderComment(comment, icon, iconText, text) {
     return card
 }
 
-function initHistory(comments, steps) {
+function initHistory(repository, issue, comments, steps) {
     for(var i = 0; i < comments.length; i++) {
         var c = comments[i]
         var icon = "fa-exclamation-triangle"
@@ -385,6 +385,14 @@ function initHistory(comments, steps) {
             // TODO: Render different system variables.
         }
         $("#history-main").append(renderComment(c, icon, iconText, text))
+        // Clicking on the button creates a global comment.
+        $("#comment-button").click(function () {
+            var body = $("#history-comment").val()
+            ghPost(`repos/${repository}/issues/${issue}/comments`,
+                  {"body": body}, function(reply) { 
+                location.reload();
+            })
+        })
     }
 }
 
@@ -417,7 +425,7 @@ $(document).ready(function() {
                 initSteps(steps)
                 initGraph(steps)
                 initInput(issueRepository, issueNumber, vars)
-                initHistory(comments, steps)
+                initHistory(issueRepository, issueNumber, comments, steps)
                 // Add the issue to the list of recent issues.
                 var recent = JSON.parse(localStorage.getItem("recent"))
                 if(recent == null) recent = []
@@ -502,6 +510,12 @@ $(document).ready(function() {
       <h3>History of the issue</h3>
       <br>
       <div id="history-main"></div>
+      <br>
+      <div class="form-group">
+        <textarea class="form-control" id="history-comment" rows="6"></textarea>
+      </div>
+      <button id="comment-button" type="button" class="btn btn-primary">
+          Comment</button>
     </div>
 
   </div>
