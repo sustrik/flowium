@@ -5,3 +5,15 @@
 .clickable-element {
     cursor: pointer;
 }
+
+.comment-avatar {
+    margin-right: 1rem;
+}
+
+.flowium-comment {
+    margin-bottom: 0.5rem;
+}
+
+.comment-icon {
+    margin-right: 1rem;
+}

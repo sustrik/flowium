@@ -10,6 +10,8 @@
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="https://unpkg.com/viz.js@1.8.0/viz.js" type="javascript/worker"></script>
   <script src="https://unpkg.com/d3-graphviz@1.4.0/build/d3-graphviz.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="flowium.css">
   <script src="utils.js"></script>
 </head>
@@ -178,7 +180,7 @@ function splitCommentsAndVariables(text) {
         if(lns[i].startsWith("~>")) {
             if(!variable && body != "") {
                 if(body.trim().length > 0)
-                    res.push({type: 'comment', body: body.trim()})
+                    res.push({type: "comment", body: body.trim()})
                 body = ""
             }
             variable = true
@@ -195,7 +197,7 @@ function splitCommentsAndVariables(text) {
         splitVariables(res, body.trim())
     } else {
         if(body.trim().length > 0)
-            res.push({type: 'comment', body: body.trim()})
+            res.push({type: "comment", body: body.trim()})
     }
 
     // Pair comments to steps.
@@ -211,8 +213,10 @@ function splitCommentsAndVariables(text) {
             }
             continue    
         }
-        if(step != null && it.type == "comment")
+        if(step != null && it.type == "comment") {
+            it.type = "step-comment"
             it.step = step
+        }
     }
 
     return res
@@ -322,7 +326,67 @@ function initInput(repository, issue, vars) {
 //  History.
 ////////////////////////////////////////////////////////////////////////////////
 
-function initHistory(comments) {
+function renderComment(comment, icon, iconText, text) {
+    var hdr = $(`<div class="card-header"></div>`)
+    hdr.append($(`<img class="comment-avatar"/>`)
+        .attr("src", comment.userAvatar + "&s=44"))
+    hdr.append($("<a></a>").attr("href", comment.userUrl)
+        .text(comment.userName))
+    hdr.append($(`<span></span>`).text("  " + comment.createdAt))
+    var card = $(`<div class="card flowium-comment"></div>`)
+    card.append(hdr)
+    var body = $(`<div class="card-body"></div>`)
+    var ic = $(`<p><i class="fa ${icon} comment-icon"></i></p>`)
+        .append(iconText)
+    body.append($("<b></b>").html(ic))
+    body.append(text) 
+    card.append(body)
+    return card
+}
+
+function initHistory(comments, steps) {
+    for(var i = 0; i < comments.length; i++) {
+        var c = comments[i]
+        var icon = "fa-exclamation-triangle"
+        var iconText = "Unknown comment type"
+        var text = ""
+        if(c.type == "comment") {
+            icon = "fa-pencil"
+            iconText = "Comment"
+            text = mdSanitizeAndConvert(c.body)
+        }
+        if(c.type == "step-comment") {
+            icon = "fa-pencil-square-o"
+            var step = c.step
+            for(var j = 0; j < steps.length; j++) {
+                if(steps[j].id === c.step) {
+                    step = steps[j].title
+                    break;
+                }
+            } 
+
+            iconText = `Comment on step "${step}"`
+            text = mdSanitizeAndConvert(c.body)
+        }
+        if(c.type == "vars") {
+            console.log(c)
+            icon = "fa-question"
+            iconText = "Input"
+            text = ""
+            var names = Object.keys(c.vars).sort()
+            for(var j = 0; j < names.length; j++) {
+                text += `<p>Input <b>${escapeHtml(names[j])}</b> set to ` +
+                    `<b>${escapeHtml(c.vars[names[j]])}</b>.</p>`
+            }
+        }
+        if(c.type == "sysvars") {
+            var icon = "fa-cog"
+            var iconText = "System variable"
+            var text = ""
+            // TODO: Render different system variables.
+        }
+        $("#history-main").append(renderComment(c, icon, iconText, text))
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -354,7 +418,7 @@ $(document).ready(function() {
                 initSteps(steps)
                 initGraph(steps)
                 initInput(issueRepository, issueNumber, vars)
-                initHistory(comments)
+                initHistory(comments, steps)
                 // Add the issue to the list of recent issues.
                 var recent = JSON.parse(localStorage.getItem("recent"))
                 if(recent == null) recent = []
@@ -437,6 +501,8 @@ $(document).ready(function() {
 
     <div id="history" class="container tab-pane fade"><br>
       <h3>History of the issue</h3>
+      <br>
+      <div id="history-main"></div>
     </div>
 
   </div>

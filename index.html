@@ -46,7 +46,8 @@ function loadTemplates(repository, path) {
             if(f.type != "file") continue
             if(!f.name.endsWith('.md')) continue
             tfiles[f.name] = (function (tname) {return function() {                
-                var li = $(`<li class="breadcrumb-item active"></li>`).text(tname)
+                var li = $(`<li class="breadcrumb-item active"></li>`)
+                li.text(tname)
                 $("#create-path").append(li)
             }})(f.name)
         }
