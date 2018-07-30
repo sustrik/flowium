@@ -1,192 +1,269 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>flowium</title>
-    <link
-        rel="stylesheet"
-        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
-        crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="flowium.css">
+  <title>flowium</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="flowium.css">
+  <script src="utils.js"></script>
 </head>
-<script
-    src="https://code.jquery.com/jquery-3.3.1.min.js"
-    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-    crossorigin="anonymous">
-</script>
-<script src="utils.js"></script>
 <script>
 
-function switchTab(name) {
-    $("#recent-nav").removeClass("active")
-    $("#open-nav").removeClass("active")
-    $("#create-nav").removeClass("active")
-    $("#recent").hide()
-    $("#open").hide()
-    $("#create").hide()
-    $("#create2").hide()
-    $("#" + name + "-nav").addClass("active")
-    $("#" + name).show()
-}
-
-$(document).ready(function() {
-    authenticate()
-    switchTab('recent')
-    // Fill in the "recent" tab.
-    var recent = JSON.parse(localStorage.getItem("recent"))
-    if(recent == null) {
-        $("#recent").append("<p>No recent issues.</p>")
-    } else {
-        for(var i = 0; i < recent.length; i++) {
-            var issue = recent[i]
-            var t = `${issue.repository} ${issue.title}`
-            var link = $("<a></a>").attr("href", `issue.html?repository=${encodeURIComponent(issue.repository)}&issue=${issue.issue}`).append(t)
-            $("#recent").append($("<p></p>").append(link))
-
-            $("#repositories-open").append($("<option/>").attr("value", issue.repository))
-            $("#repositories-create").append($("<option/>").attr("value", issue.repository))
+function loadTemplates(repository, path) {
+    ghGet(`repos/${repository}/contents${path}`, null, function(files) {
+        $("#create-path").empty()
+        $("#file-table").empty()
+        // Fill in the file path.
+        var elems = path.split("/")
+        elems.pop()
+        var partial = ""
+        for(var i = 0; i < elems.length; i++) {
+            partial += elems[i] + "/"
+            var caption = elems[i]
+            if(elems[i] == "") caption = "$"
+            var a = $("<a></a>").text(caption)
+            a.attr("href",
+                `javascript:loadTemplates("${repository}", "${partial}")`)
+            var li = $(`<li class="breadcrumb-item"></li>`).append(a)
+            $("#create-path").append(li)
         }
-    }
-})
-
-function reloadIssues() {
-    var repository = $("#repository-open").val()
-    $("#open-issues").empty()
-    ghGet(`repos/${repository}/issues`, null, function(issues) {
-        for(var i = 0; i < issues.length; i++) {
-            var issue = issues[i]
-            var isFlowiumIssue = false
-            for(var j = 0; j < issue.labels.length; j++) {
-                if(issue.labels[j].name == "flowium") {
-                    isFlowiumIssue = true
-                    break
-                }
-            }
-            if(!isFlowiumIssue) continue
-            var item = '<p><a href="issue.html' +
-                '?repository=' + encodeURIComponent(repository) +
-                '&issue=' + issue.number +
-                '">#' + issue.number + ' ' + issue.title + '</a></p>'
-            $("#open-issues").append(item)
-        }
-    });
-}
-
-var templatePath = ""
-
-function dirUp() {
-    // TODO
-    templatePath = "/"
-    loadTemplates()
-}
-
-function dirDown(dir) {
-    templatePath += dir + "/"
-    loadTemplates()
-}
-
-function createIssueForm(file) {
-    $("#create-repository").text($("#repository-create").val())
-    $("#create-template").text(templatePath + file)
-    $("#create-title").val("")
-    $("#create-comment").val("")
-    switchTab("create2")
-}
-
-function createIssue() {
-    var repository = $("#repository-create").val()
-    var template = $("#create-template").text()
-    // Get the current version of the template.
-    ghGet(`repos/${repository}/commits?path=${template}`, null, function(commits) {
-        var sha = commits[0].sha
-        var prologue = '~> _template: ' + template + ":" + sha + "\n\n"
-        // Create the issue.
-        var args = {
-            "title": $("#create-title").val(),
-            "body": prologue + $("#create-comment").val(),
-            "labels": ["flowium"],
-        }
-        ghPost(`repos/${repository}/issues`, args, function(reply) {
-            var addr = 'issue.html' +
-                '?repository=' + encodeURIComponent(repository) +
-                '&issue=' + reply.number
-            var body = "View in Flowium: " +
-                "<https://flowium.com/issue.html" +
-                "?repository=" + encodeURIComponent(repository) +
-                "&issue=" + reply.number + ">"
-            ghPost(`repos/${repository}/issues/${reply.number}/comments`, {"body": body},
-                  function(reply) { 
-                window.location.href = addr
-            })
-        })
-    })
-}
-
-function loadTemplates() {
-    var repository = $("#repository-create").val()
-    $("#create-issues").empty()
-    $("#create-issues").append($("<p></p>").text("Path: " + templatePath))
-    if(templatePath != "/") {
-        $("#create-issues").append($("<p><a href=\"javascript:dirUp()\">..</a></p>"))
-    }
-    ghGet(`repos/${repository}/contents` + templatePath, null, function(files) {
+        // Fill in the file list.
+        var dirs = {}
         for(var i = 0; i < files.length; i++) {
             var f = files[i]
             if(f.type != "dir") continue
-            var link = $("<a href=\"javascript:dirDown('" + f.name + "')\">" + escapeHtml(f.name) + "</a>")
-            $("#create-issues").append($("<p></p>").append(link))
+            dirs[f.name + " /"] = (function (newpath) {return function() {
+                loadTemplates(repository, newpath)
+            }})(`${path}${f.name}/`)
         }
+        var tfiles = {}
         for(var i = 0; i < files.length; i++) {
             var f = files[i]
             if(f.type != "file") continue
             if(!f.name.endsWith('.md')) continue
-            var link = $("<a href=\"javascript:createIssueForm('" + f.name + "')\">" + escapeHtml(f.name) + "</a>")
-            $("#create-issues").append($("<p></p>").append(link))
+            tfiles[f.name] = (function (tname) {return function() {                
+                var li = $(`<li class="breadcrumb-item active"></li>`).text(tname)
+                $("#create-path").append(li)
+            }})(f.name)
+        }
+        var items = []
+        var keys = Object.keys(dirs).sort()
+        for(var i = 0; i < keys.length; i++)
+            items.push([keys[i], dirs[keys[i]]])
+        keys = Object.keys(tfiles).sort()
+        for(var i = 0; i < keys.length; i++)
+            items.push([keys[i], tfiles[keys[i]]])
+        for(var i = 0; i < items.length; i++) {
+            var t = $(`<tr class="clickable-element"></tr>`).click(items[i][1])
+            t.append($("<td></td>").text(items[i][0]))
+            $("#file-table").append(t)
         }
     })
 }
 
-function reloadTemplates() {
-    templatePath = "/"
-    loadTemplates()
-}
+$(document).ready(function() {
+    // Authenticate with GitHub, as needed.
+    authenticate()
+    // Fill in the "recent issues" tab.
+    var recent = JSON.parse(localStorage.getItem("recent"))
+    var recentRepositories = {}
+    if(recent != null) {
+        for(var i = 0; i < recent.length; i++) {
+            var issue = recent[i]
+            recentRepositories[issue.repository] = null
+            var t = $(`<tr class="clickable-element"></tr>`).click(function() {
+                var cols = $(this).children("td")
+                var repository = cols.eq(0).text()
+                var issue = cols.eq(1).text().substring(1)
+                window.location.href =
+                    `issue.html?repository=${encodeURIComponent(repository)}` +
+                    `&issue=${issue}`
+            })
+            t.append($("<td></td>").text(issue.repository))
+            t.append($("<td></td>").text(`#${issue.issue}`))
+            t.append($("<td></td>").text(issue.title))
+            $("#recent-issue-table").append(t)
+        }
+    }
+    
+    // Use the repositories from the recent issues to pre-fill the repository
+    // drop-down lists.
+    recentRepositories = Object.keys(recentRepositories).sort()
+    for(var i = 0; i < recentRepositories.length; i++) {
+        $("#repository-list")
+            .append($("<option/>")
+            .attr("value", recentRepositories[i]))
+    }
+
+    // Fill in the "find an issue" tab.
+    // When new repository is selected, read all the issues from GitHub
+    // and put them into the table.
+    $("#find-repository").change(function () {
+        var repository = $("#find-repository").val()
+        $("#find-issue-table").empty()
+        ghGet(`repos/${repository}/issues`, null, function(issues) {
+            for(var i = 0; i < issues.length; i++) {
+                var issue = issues[i]
+                // Skip non-flowium issues.
+                var isFlowiumIssue = false
+                for(var j = 0; j < issue.labels.length; j++) {
+                    if(issue.labels[j].name == "flowium") {
+                        isFlowiumIssue = true
+                        break
+                    }
+                }
+                if(!isFlowiumIssue) continue
+                var t = $(`<tr class="clickable-element"></tr>`).click(
+                      function() {
+                    var cols = $(this).children("td")
+                    var repository = cols.eq(0).text()
+                    var issue = cols.eq(1).text().substring(1)
+                    window.location.href =
+                        "issue.html" +
+                        `?repository=${encodeURIComponent(repository)}` +
+                        `&issue=${issue}`
+                })
+                t.append($("<td></td>").text(repository))
+                t.append($("<td></td>").text(`#${issue.number}`))
+                t.append($("<td></td>").text(issue.title))
+                $("#find-issue-table").append(t)
+            }
+        })
+    })
+
+    // Fill in the "create an issue" tab.
+    // When repository is selected, start browsing files.
+    $("#create-repository").change(function () {
+        var repository = $("#create-repository").val()
+        loadTemplates(repository, "/")
+    })
+    $("#create-button").click(function() {
+        // Collect the info from the form.
+        var repository = $("#create-repository").val()
+        var elems = $("#create-path").children()
+        var template = ""
+        for(var i = 1; i < elems.length; i++)
+            template += "/" + elems.eq(i).text()
+        var title = $("#create-title").val()
+        var comment = $("#create-comment").val()
+        // Get the current version of the template.
+        ghGet(`repos/${repository}/commits?path=${template}`, null,
+              function(commits) {
+            var sha = commits[0].sha
+            var prologue = '~> _template: ' + template + ":" + sha + "\n\n"
+            // Create the issue.
+            var args = {
+                "title": title,
+                "body": prologue + comment,
+                "labels": ["flowium"],
+            }
+            ghPost(`repos/${repository}/issues`, args, function(reply) {
+                var addr = 'issue.html' +
+                    '?repository=' + encodeURIComponent(repository) +
+                    '&issue=' + reply.number
+                var body = `View in Flowium: <https://flowium.com/${addr}>`
+                ghPost(`repos/${repository}/issues/${reply.number}/comments`,
+                      {"body": body}, function(reply) { 
+                    window.location.href = addr
+                })
+            })
+        })
+    })
+})
 
 </script>
 <body>
-<h1>Flowium</h1>
+  
+<div class="container-fluid">
 
-<ul class="nav nav-tabs">
-  <li class="nav-item">
-    <a id="recent-nav" class="nav-link" href="javascript:switchTab('recent')">Recent issues</a>
-  </li>
-  <li class="nav-item">
-    <a id="open-nav" class="nav-link" href="javascript:switchTab('open')">Open an issue</a>
-  </li>
-  <li class="nav-item">
-    <a id="create-nav" class="nav-link" href="javascript:switchTab('create')">Create an issue</a>
-  </li>
-  <li class="nav-item">
-    <a id="logout-nav" class="nav-link" href="javascript:logout()">Logout</a>
-  </li>
-</ul>
+    <h1>Flowium</h1>
 
-<div id="recent"></div>
-<div id="open">
-  <datalist id="repositories-open"></datalist>
-  <p>GitHub repository: <input id="repository-open" list="repositories-open" onchange="reloadIssues()"/></p>
-  <div id="open-issues"></div>
+  <ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" data-toggle="tab" href="#recent-issues">
+          Recent issues</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="tab" href="#find-issue">
+          Find an issue</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="tab" href="#create-issue">
+          Create an issue</a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+
+    <datalist id="repository-list"></datalist>
+
+    <div id="recent-issues" class="container tab-pane active"><br>
+      <h3>Recent issues</h3>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Repository</th>
+            <th>Issue</th>
+            <th>Title</th>
+          </tr>
+        </thead>
+        <tbody id="recent-issue-table"></tbody>
+      </table>
+    </div>
+
+    <div id="find-issue" class="container tab-pane fade"><br>
+      <h3>Find an issue</h3>
+      <div class="form-group">
+        <label for="find-repository">
+            GitHub repository (e.g. <i>johndoe/myproject</i>):</label>
+        <input type="text" class="form-control" id="find-repository"
+            list="repository-list">
+      </div>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Repository</th>
+            <th>Issue</th>
+            <th>Title</th>
+          </tr>
+        </thead>
+        <tbody id="find-issue-table"></tbody>
+      </table>
+    </div>
+
+    <div id="create-issue" class="container tab-pane fade"><br>
+      <h3>Create an issue</h3>
+      <div class="form-group">
+        <label for="create-repository">
+            GitHub repository (e.g. <i>johndoe/myproject</i>):</label>
+        <input type="text" class="form-control" id="create-repository"
+            list="repository-list">
+      </div>
+      <div class="form-group">
+        <label for="create-template">Template file:</label>
+        <ul id="create-path" class="breadcrumb"></ul>
+        <table class="table table-hover" id="create-template">
+          <tbody id="file-table"></tbody>
+        </table>
+      <div>
+      <div class="form-group">
+          <label for="create-title">Issue title:</label>
+          <input type="text" class="form-control" id="create-title"></input>
+      </div>
+      <div class="form-group">
+        <label for="create-comment">Comment:</label>
+        <textarea class="form-control" id="create-comment" rows="5"></textarea>
+      </div>
+      <button id="create-button" type="button" class="btn btn-primary">
+          Create</button>
+    </div>
+
+  </div>
+
 </div>
-<div id="create">
-  <datalist id="repositories-create"></datalist>
-  <p>GitHub repository: <input id="repository-create" list="repositories-create" onchange="reloadTemplates()"/></p>
-  <div id="create-issues"></div>
-</div>
-<div id="create2">
-  <p>Repository: <span id="create-repository"></span></p>
-  <p>Template: <span id="create-template"></span></p>
-  <p>Title: <input type="text" id="create-title"></p>
-  <p><textarea id="create-comment"></textarea></p>
-  <button onclick="createIssue()">Create</button>
-</div>
+
 </body>
+</html>
