@@ -270,6 +270,10 @@ function initSteps(steps) {
         var body = $(`<div class="card-body step-body" ` +
             `style="display: none;"></div>`)
             .append(mdConvert(step.body))
+        for(var j = 0; j < step.comments.length; j++) {
+            body.append(renderComment(step.comments[j], null, null,
+                mdSanitizeAndConvert(step.comments[j].body)))
+        }
         card.append(body)
         $("#steps-main").append(card)
     }
@@ -356,8 +360,10 @@ function renderComment(comment, icon, iconText, text) {
     var card = $(`<div class="card flowium-comment"></div>`)
     card.append(hdr)
     var body = $(`<div class="card-body"></div>`)
-    var ic = $(`<p><i class="fa ${icon} comment-icon"></i></p>`)
-        .append(iconText)
+    if(icon != null) {
+        var ic = $(`<p><i class="fa ${icon} comment-icon"></i></p>`)
+            .append(iconText)
+    }
     body.append($("<b></b>").html(ic))
     body.append(text) 
     card.append(body)
@@ -383,8 +389,7 @@ function initHistory(repository, issue, comments, steps) {
                     step = steps[j].title
                     break;
                 }
-            } 
-
+            }
             iconText = `Comment on step "${step}"`
             text = mdSanitizeAndConvert(c.body)
         }
@@ -495,7 +500,7 @@ $(document).ready(function() {
 
     <div id="steps" class="container tab-pane active"><br>
       <h3>Steps</h3>
-      <br>
+      <br> 
       <div id="steps-main"></div>
     </div>
 
