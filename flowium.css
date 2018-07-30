@@ -1,3 +1,7 @@
+.flowium-title {
+    margin: 1rem;
+}
+
 .clickable-element {
     cursor: pointer;
 }
