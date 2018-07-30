@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="flowium.css">
   <script src="utils.js"></script>
 </head>
@@ -35,7 +36,7 @@ function loadTemplates(repository, path) {
         for(var i = 0; i < files.length; i++) {
             var f = files[i]
             if(f.type != "dir") continue
-            dirs[f.name + " /"] = (function (newpath) {return function() {
+            dirs[f.name] = (function (newpath) {return function() {
                 loadTemplates(repository, newpath)
             }})(`${path}${f.name}/`)
         }
@@ -52,12 +53,13 @@ function loadTemplates(repository, path) {
         var items = []
         var keys = Object.keys(dirs).sort()
         for(var i = 0; i < keys.length; i++)
-            items.push([keys[i], dirs[keys[i]]])
+            items.push([keys[i], dirs[keys[i]], "fa-folder-o"])
         keys = Object.keys(tfiles).sort()
         for(var i = 0; i < keys.length; i++)
-            items.push([keys[i], tfiles[keys[i]]])
+            items.push([keys[i], tfiles[keys[i]], "fa-file-o"])
         for(var i = 0; i < items.length; i++) {
             var t = $(`<tr class="clickable-element"></tr>`).click(items[i][1])
+            t.append($(`<td><i class="fa ${items[i][2]}"></i></td>`))
             t.append($("<td></td>").text(items[i][0]))
             $("#file-table").append(t)
         }
