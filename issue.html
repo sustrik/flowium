@@ -253,6 +253,26 @@ function extractVariablesFromComments(comments, type) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function initSteps(steps) {
+    console.log(steps)
+    for(var i = 0; i < steps.length; i++) {
+        var step = steps[i]
+        var card = $(`<div class="card flowium-step"></div>`)
+        var hdr = $(`<div class="card-header step-header"></div>`)
+        hdr.append($(`<h5 class="step-title"></h5>`).text(step.title)
+            .prepend(`<i class="fa fa-circle comment-icon ` +
+            `${step.dstatus}-font">`))
+        hdr.click(function () {
+            var hidden = $(this).next().is(":hidden")
+            $(".step-body").hide()
+            if(hidden) $(this).next().show()
+        })
+        card.append(hdr)
+        var body = $(`<div class="card-body step-body" ` +
+            `style="display: none;"></div>`)
+            .append(mdConvert(step.body))
+        card.append(body)
+        $("#steps-main").append(card)
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -474,6 +494,9 @@ $(document).ready(function() {
   <div class="tab-content">
 
     <div id="steps" class="container tab-pane active"><br>
+      <h3>Steps</h3>
+      <br>
+      <div id="steps-main"></div>
     </div>
 
     <div id="graph" class="container tab-pane fade"><br>

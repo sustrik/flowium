@@ -10,6 +10,10 @@
     margin-right: 1rem;
 }
 
+.flowium-step {
+    margin-bottom: 0.5rem;
+}
+
 .flowium-comment {
     margin-bottom: 0.5rem;
 }
@@ -20,4 +24,42 @@
 
 #graph-main .node {
     cursor: pointer;
+}
+
+.active-state {
+    background-color: #00FF00;
+}
+
+.active-font {
+    color: #00FF00;
+}
+
+.blocked-state {
+    background-color: #FF0000;
+}
+
+.blocked-font {
+    color: #FF0000;
+}
+
+.done-state {
+    background-color: #C0C0C0;
+}
+
+.done-font {
+    color: #C0C0C0;
+}
+
+.badge {
+    margin-right: 0.5rem;
+}
+
+.step-header {
+    cursor: pointer;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.step-title {
+    margin: 0rem;
 }
