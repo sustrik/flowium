@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://unpkg.com/viz.js@1.8.0/viz.js" type="javascript/worker"></script>
+  <script src="https://unpkg.com/d3-graphviz@1.4.0/build/d3-graphviz.min.js"></script>
   <link rel="stylesheet" href="flowium.css">
   <script src="utils.js"></script>
 </head>
@@ -242,20 +245,67 @@ function extractVariablesFromComments(comments, type) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//  Main.
+//  Steps.
 ////////////////////////////////////////////////////////////////////////////////
 
 function initSteps(steps) {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//  Graph.
+////////////////////////////////////////////////////////////////////////////////
+
 function initGraph(steps) {
+    var dot =`
+        digraph "" {
+        node [
+            shape=box
+            fontname="Helvetica"
+            fontsize=10
+            width=0
+            height=0
+            tooltip=" "
+        ]
+        `
+    for(var i = 0; i < steps.length; i++) {
+        var s = steps[i]
+        dot += `
+            "${s.id}" [
+                label="${s.title}"
+                style=filled
+                fillcolor="${statusToColor(s.dstatus)}"
+                URL="javascript:scrollToStep('${s.id}');"
+            ]
+            `
+        for(var j = 0; j < s['deps'].length; j++) {
+            if(s['deps'][j].trim() != '') {
+                dot += `
+                    "${s.deps[j]}" -> "${s.id}"
+                `
+            }
+        }
+    }
+    dot += "}"
+    d3.select("#graph-main").graphviz().fade(false).renderDot(dot)
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//  Input.
+////////////////////////////////////////////////////////////////////////////////
 
 function initInput(vars) {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//  History.
+////////////////////////////////////////////////////////////////////////////////
+
 function initHistory(comments) {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//  Main.
+////////////////////////////////////////////////////////////////////////////////
 
 $(document).ready(function() {
     authenticate()
@@ -336,6 +386,7 @@ $(document).ready(function() {
 
     <div id="graph" class="container tab-pane fade"><br>
       <h3>Graph</h3>
+      <div id="graph-main"></div>
     </div>
 
     <div id="input" class="container tab-pane fade"><br>
