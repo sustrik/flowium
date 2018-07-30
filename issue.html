@@ -1,26 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>flowium</title>
-    <link
-        rel="stylesheet"
-        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
-        crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="flowium.css">
+  <title>flowium</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+  <script src="utils.js"></script>
 </head>
-<script
-    src="https://code.jquery.com/jquery-3.3.1.min.js"
-    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-    crossorigin="anonymous">
-</script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-<script src="https://d3js.org/d3.v4.min.js"></script>
-<script src="https://unpkg.com/viz.js@1.8.0/viz.js" type="javascript/worker"></script>
-<script src="https://unpkg.com/d3-graphviz@1.4.0/build/d3-graphviz.min.js"></script>
-<script src="utils.js"></script>
 <script>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,13 +60,15 @@ function parseSteps(source, variables) {
             continue
         }
         if(inputs.length > 0) {
-            step += `<div>${inputs}<p><button onclick="saveVariables(this)">Save</button></p></div>`
+            step += `<div>${inputs}<p><button onclick="saveVariables(this)">` +
+                `Save</button></p></div>`
             inputs = ""
         }
         step += ln + "\n"
     }
     if(inputs.length > 0) {
-        step += `<div>${inputs}<p><button onclick="saveVariables(this)">Save</button></p></div>`
+        step += `<div>${inputs}<p><button onclick="saveVariables(this)">` +
+            `Save</button></p></div>`
         inputs = ""
     }
     if(stepname != null) {
@@ -251,260 +241,30 @@ function extractVariablesFromComments(comments, type) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//  Main tab.
+//  Main.
 ////////////////////////////////////////////////////////////////////////////////
 
-function showSteps(show, type) {
-    if(show) $("." + type).show()
-    else $("." + type).hide()
+function initSteps(steps) {
 }
 
-function postStepComment(step) {
-    var prefix = "~> _step: " + step + "\n\n"
-    postComment("comment-" + step, prefix)
+function initGraph(steps) {
 }
 
-function postStepDone(step) {
-    var prefix = "~> _status+" + step + ": done\n\n"
-    postComment("comment-" + step, prefix)
-}
-
-function postStepNotDone(step) {
-    var prefix = "~> _status+" + step + ": not-done\n\n"
-    postComment("comment-" + step, prefix)
-}
-
-function saveVariables(btn) {
-    var vars = {}
-    var inputs = $(btn).parent().parent().find("input").each(function(i, elem) {
-        var e = $(elem)
-        var name = e.attr("id").substring(10)
-        var val = e.val().trim()
-        // TODO: remove unchanged variables
-        if(val.length > 0) vars[name] = val
-    })
-    body = ""
-    var keys = Object.keys(vars)
-    for(var i = 0; i < keys.length; i++) {
-        body += `~> ${keys[i]}: ${vars[keys[i]]}`
-        body += "\n"
-    }
-    ghPost(`repos/${issueRepository}/issues/${issueNumber}/comments`,
-          {"body": body}, function(reply) { 
-        window.location.href = window.location.pathname +
-            window.location.search + window.location.hash;
-    })
-}
-
-function closeIssue() {
-    ghPost(`repos/${issueRepository}/issues/${issueNumber}`, {"state": "closed"},
-          function(reply) { 
-        window.location.href = window.location.pathname +
-            window.location.search + window.location.hash;
-    })
-}
-
-function initMain(steps) {
-    for(var i = 0; i < steps.length; i++) {
-        var div = "<div id='__" + steps[i].id
-        div += "' class=" + steps[i].dstatus + ">"
-        div += "<h2>" + steps[i].title
-            + "<span class='badge badge-warning' style='background-color: "
-            + statusToColor(steps[i].dstatus) + ";'>" + steps[i].dstatus
-            + "</span></h2>"
-        for(var j = 0; j < steps[i].blockedBy.length; j++) {
-            div += "<p><b>Blocked by <a href='javascript:scrollToStep(\"" +
-                steps[i].blockedBy[j] +
-                "\")'>" + steps[i].blockedBy[j] +
-                "</a>.</b></p>"
-        }
-        div += mdConvert(steps[i].body)
-        for(var j = 0; j != steps[i].comments.length; j++) {
-            div += renderComment(steps[i].comments[j])
-        }
-        div += "<p><textarea id='comment-" + steps[i].id + 
-            "' cols='40' rows='5'></textarea></p>"
-        div += "<p><button onclick='postStepComment(\"" + steps[i].id +
-            "\")'>Comment</button>"
-        if(steps[i].status == "done") {
-            div += "<button onclick='postStepNotDone(\"" + steps[i].id +
-                "\")'>Mark as not done</button>"
-        } else {
-            div += "<button onclick='postStepDone(\"" + steps[i].id +
-                "\")'>Mark as done</button>"
-        }
-        div += "</p><hr></div>"
-        $("#main-steps").append(div)
-    }
-
-    showSteps(true, "active")
-    showSteps(false, "blocked")
-    showSteps(false, "done")
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//  Flow tab.
-////////////////////////////////////////////////////////////////////////////////
-
-function initFlow(steps) {
-    var dot =`
-        digraph "" {
-        node [
-            shape=box
-            fontname="Helvetica"
-            fontsize=10
-            width=0
-            height=0
-            tooltip=" "
-        ]
-        `
-    for(var i = 0; i < steps.length; i++) {
-        var s = steps[i]
-        dot += `
-            "${s.id}" [
-                label="${s.title}"
-                style=filled
-                fillcolor="${statusToColor(s.dstatus)}"
-                URL="javascript:scrollToStep('${s.id}');"
-            ]
-            `
-        for(var j = 0; j < s['deps'].length; j++) {
-            if(s['deps'][j].trim() != '') {
-                dot += `
-                    "${s.deps[j]}" -> "${s.id}"
-                `
-            }
-        }
-    }
-    dot += "}"
-    d3.select("#flow-main").graphviz().fade(false).renderDot(dot)
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//  Variables tab.
-////////////////////////////////////////////////////////////////////////////////
-
-function updateVariable() {
-    var name = $("#variable-name").val()
-    var value = $("#variable-value").val()
-    var body = "~> " + name + ": " + value
-    ghPost(`repos/${issueRepository}/issues/${issueNumber}/comments`,
-          {"body": body}, function(reply) { 
-        window.location.href = window.location.pathname +
-            window.location.search + window.location.hash;
-    })
-}
-
-function initVariables(vars) {
-    var table = $("<table class='table table-sm'><tr><th>Name</th><th>Value</th></tr></table>")
-    var keys = Object.keys(vars).sort()
-    for(var i = 0; i < keys.length; i++) {
-        var key = $("<td></td>").text(keys[i])
-        var val = $("<td></td>").text(vars[keys[i]])
-        var row = $("<tr></tr>").append(key, val)
-        table.append(row)
-    }
-    $("#variable-table").append(table)
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//  History tab.
-////////////////////////////////////////////////////////////////////////////////
-
-function renderCommentHeader(comment) {
-    var t = $("<div></div>")
-    t.append($("<img/>").attr("src", comment.userAvatar + "&s=44"))
-    t.append($("<a></a>").attr("href", comment.userUrl).text(comment.userName))
-    return t.html()
-}
-
-function renderComment(comment) {
-    var t = $("<p></p>")
-    t.append(renderCommentHeader(comment))
-    t.append(" commented")
-    if("step" in comment) {
-        t.append(" on step ")
-        t.append($("<a></a>").attr("href",
-            `javascript:scrollToStep("${comment.step}")`).text(comment.step))
-    }
-    t.append(" at ").append(escapeHtml(comment.createdAt))
-    var c = $("<div></div>").attr("class", "comment")
-    c.append(mdSanitizeAndConvert(comment.body))
-    return t.prop('outerHTML') + c.prop('outerHTML')
-}
-
-function renderVarChange(comment) {
-    var t = $("<p></p>")
-    t.append(renderCommentHeader(comment))
-    t.append(" set variables")
-    t.append(" at ").append(escapeHtml(comment.createdAt))
-    var c = $("<p></p>")
-    var names = Object.keys(comment.vars).sort()
-    for(var i = 0; i < names.length; i++) {
-        c.append("Variable ");
-        c.append(escapeHtml(names[i]))
-        c.append(" set to \"")
-        c.append(escapeHtml(comment.vars[names[i]]))
-        c.append("\"")
-    }
-    var d = $("<div></div>").attr("class", "comment").append(c)
-    return t.prop('outerHTML') + d.prop('outerHTML')
-}
-
-function renderSysvarChange(comment) {
-    body = ""
-    var names = Object.keys(comment.vars).sort()
-    for(var i = 0; i < names.length; i++) {
-        var name = names[i]
-        if(name.startsWith("_status+")) {
-            var t = $("<p></p>")
-            t.append(renderCommentHeader(comment))
-            t.append(" changed state of a step")
-            t.append(" at ").append(escapeHtml(comment.createdAt))
-            var c = $("<p></p>")
-            c.append("Step ")
-            c.append(splitOnce(name, "+")[1])
-            c.append(" was marked as ")
-            c.append(escapeHtml(comment.vars[name]))
-            var d = $("<div></div>").attr("class", "comment").append(c)
-            body += t.prop('outerHTML') + d.prop('outerHTML')
-        }
-        // TODO: Other sysvars
-    }
-    return body
+function initInput(vars) {
 }
 
 function initHistory(comments) {
-    for(var i = 0; i < comments.length; i++) {
-        var c = comments[i]
-        var div = null
-        if(c.type == 'comment') {
-            div = renderComment(c)
-        }
-        else if (c.type == 'vars') {
-            div = renderVarChange(c)
-        }
-        else if (c.type == 'sysvars') {
-            div = renderSysvarChange(c)
-        }
-        $("#history-table").append(div)
-    }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-var issueRepository = null
-var issueNumber = null
 
 $(document).ready(function() {
     authenticate()
-    switchTab('main')
     // Parse query string.
     var urlParams = new URLSearchParams(window.location.search)
-    issueRepository = urlParams.get("repository")
-    issueNumber = urlParams.get("issue")
+    var issueRepository = urlParams.get("repository")
+    var issueNumber = urlParams.get("issue")
     // Get the data from GitHub.
-    ghGet(`repos/${issueRepository}/issues/${issueNumber}`, null, function(issue) {
+    ghGet(`repos/${issueRepository}/issues/${issueNumber}`, null,
+          function(issue) {
         ghGet(`repos/${issueRepository}/issues/${issueNumber}/comments`, null,
               function(cmnts) {
             $("#title").text(issue.title)
@@ -513,20 +273,21 @@ $(document).ready(function() {
             var sysvars = extractVariablesFromComments(comments, "sysvars")
             var vars = extractVariablesFromComments(comments, "vars")
             var template = sysvars["_template"].split(':')
-            ghGet(`repos/${issueRepository}/contents/${template[0]}?ref=${template[1]}`,
-                  {}, function(src) {
+            ghGet(`repos/${issueRepository}/contents/${template[0]}` +
+                  `?ref=${template[1]}`, {}, function(src) {
                 var steps = parseSteps(atob(src.content), vars)
                 annotateStepsWithStatus(steps, sysvars)
                 annotateStepsWithComments(steps, comments)
-                initMain(steps)
-                initFlow(steps)
-                initVariables(vars)
+                initSteps(steps)
+                initGraph(steps)
+                initInput(vars)
                 initHistory(comments)
                 // Add the issue to the list of recent issues.
                 var recent = JSON.parse(localStorage.getItem("recent"))
                 if(recent == null) recent = []
                 recent = recent.filter(function(it) {
-                    return it.repository != issueRepository || it.issue != issueNumber
+                    return it.repository != issueRepository ||
+                        it.issue != issueNumber
                 })
                 recent.unshift({
                     repository: issueRepository,
@@ -540,76 +301,53 @@ $(document).ready(function() {
     })
 })
 
-function switchTab(name) {
-    $("#main-nav").removeClass("active")
-    $("#flow-nav").removeClass("active")
-    $("#variables-nav").removeClass("active")
-    $("#history-nav").removeClass("active")
-    $("#main").hide()
-    $("#variables").hide()
-    $("#history").hide()
-    $("#flow").hide()
-    $("#" + name + "-nav").addClass("active")
-    $("#" + name).show()
-}
-
-function scrollToStep(id) {
-    switchTab("main")
-    $("#__" + id)[0].scrollIntoView()
-}
-
-function postComment(elid, prefix) {
-    var body = prefix + $("#" + elid).val()
-    ghPost(`repos/${issueRepository}/issues/${issueNumber}/comments`,
-          {"body": body}, function(reply) { 
-        window.location.href = window.location.pathname +
-            window.location.search + window.location.hash;
-    })
-}
-
 </script>
 <body>
-<h1 id="title"></h1>
+  
+<div class="container-fluid">
 
-<ul class="nav nav-tabs">
-  <li class="nav-item">
-    <a id="main-nav" class="nav-link" href="javascript:switchTab('main')">Main</a>
-  </li>
-  <li class="nav-item">
-    <a id="flow-nav" class="nav-link" href="javascript:switchTab('flow')">Flow</a>
-  </li>
-  <li class="nav-item">
-    <a id="variables-nav" class="nav-link" href="javascript:switchTab('variables')">Variables</a>
-  </li>
-  <li class="nav-item">
-    <a id="history-nav" class="nav-link" href="javascript:switchTab('history')">History</a>
-  </li>
-  <li class="nav-item">
-    <a id="logout-nav" class="nav-link" href="javascript:logout()">Logout</a>
-  </li>
-</ul>
+  <h1 id="title">Flowium</h1>
 
-<div id="main">
-   <p>
-       <input type='checkbox' checked onchange="showSteps(this.checked, 'active');">Show active</input>
-       <input type='checkbox' onchange="showSteps(this.checked, 'blocked');">Show blocked</input>
-       <input type='checkbox' onchange="showSteps(this.checked, 'done');">Show done</input>
-   </p>
-   <div id="main-steps"></div>
-   <p><button onclick="closeIssue()">Close the issue</button></p>
+  <ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" data-toggle="tab" href="#steps">
+          Steps</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="tab" href="#graph">
+          Graph</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="tab" href="#input">
+          Input</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="tab" href="#history">
+          History</a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+
+    <div id="steps" class="container tab-pane active"><br>
+      <h3>Steps</h3>
+    </div>
+
+    <div id="graph" class="container tab-pane fade"><br>
+      <h3>Graph</h3>
+    </div>
+
+    <div id="input" class="container tab-pane fade"><br>
+      <h3>Input</h3>
+    </div>
+
+    <div id="history" class="container tab-pane fade"><br>
+      <h3>History</h3>
+    </div>
+
+  </div>
+
 </div>
-<div id="variables">
-    <div id="variable-table"></div>
-    <p>Variable: <input id="variable-name"/> Value: <input id="variable-value"/></p>
-    <button onclick="updateVariable()">Update variable</button>
-</div>
-<div id="history">
-    <div id="history-table"></div>
-    <p><textarea id='comment' cols='40' rows='5'></textarea></p>
-    <p><button onclick="postComment('comment', '')">Comment</button></p>
-</div>
-<div id="flow">
-    <div id="flow-main"></div>
-</div>
+
 </body>
-
+</html>
