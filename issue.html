@@ -137,7 +137,7 @@ function annotateStepsWithComments(steps, comments) {
         var res = []
         for(var j = 0; j != comments.length; j++) {
             var comment = comments[j]
-            if(comment.type != "comment" || !("step" in comment)) continue
+            if(comment.type != "step-comment" || !("step" in comment)) continue
             if(comment.step != step.id) continue
             res.push(comment)
         }
@@ -369,7 +369,6 @@ function initHistory(comments, steps) {
             text = mdSanitizeAndConvert(c.body)
         }
         if(c.type == "vars") {
-            console.log(c)
             icon = "fa-question"
             iconText = "Input"
             text = ""

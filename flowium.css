@@ -17,3 +17,7 @@
 .comment-icon {
     margin-right: 1rem;
 }
+
+#graph-main .node {
+    cursor: pointer;
+}
