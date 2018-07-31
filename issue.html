@@ -313,6 +313,7 @@ function initGraph(steps) {
         digraph "" {
         node [
             shape=box
+            style="filled,rounded"
             fontname="Helvetica"
             fontsize=10
             width=0
@@ -325,7 +326,6 @@ function initGraph(steps) {
         dot += `
             "${s.id}" [
                 label="${s.title}"
-                style=filled
                 fillcolor="${statusToColor(s.dstatus)}"
                 URL="javascript:scrollToStep('${s.id}');"
             ]
