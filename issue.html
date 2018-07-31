@@ -264,7 +264,7 @@ function initSteps(steps) {
     for(var i = 0; i < steps.length; i++) {
         var step = steps[i]
         var card = $(`<div class="card flowium-step"></div>`)
-        var hdr = $(`<div class="card-header step-header"></div>`)
+        var hdr = $(`<div class="card-header flowium-card-header"></div>`)
         hdr.append($(`<h5 class="step-title"></h5>`).text(step.title)
             .prepend(`<i class="fa fa-circle comment-icon ` +
             `${step.dstatus}-font">`))
@@ -376,7 +376,7 @@ function initInput(repository, issue, vars) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function renderComment(comment, icon, iconText, text) {
-    var hdr = $(`<div class="card-header"></div>`)
+    var hdr = $(`<div class="card-header flowium-card-header"></div>`)
     hdr.append($(`<img class="rounded comment-avatar"/>`)
         .attr("src", comment.userAvatar + "&s=32"))
     hdr.append($("<a></a>").attr("href", comment.userUrl)
