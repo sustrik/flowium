@@ -269,11 +269,24 @@ function initSteps(steps) {
         card.append(hdr)
         var body = $(`<div class="card-body step-body" ` +
             `style="display: none;"></div>`)
-            .append(mdConvert(step.body))
+        if(step.blockedBy.length > 0) {
+            var a = $(`<div class="alert alert-danger" role="alert"></div>`)
+            a.append(`This step is blocked by: `)
+            for(var j = 0; j < step.blockedBy.length; j++) {
+                a.append($("<span></span>").text(step.blockedBy[j]+ " "))
+            }
+            body.append(a)
+        }
+        body.append(mdConvert(step.body))
         for(var j = 0; j < step.comments.length; j++) {
             body.append(renderComment(step.comments[j], null, null,
                 mdSanitizeAndConvert(step.comments[j].body)))
         }
+        body.append(`<div class="form-group"><textarea class="form-control"
+            id="history-comment" rows="4"></textarea></div><button type="button"
+            class="btn btn-primary">Comment</button><button type="button"
+            class="btn btn-primary">Done</button><button type="button"
+            class="btn btn-primary">Not done</button>`)
         card.append(body)
         $("#steps-main").append(card)
     }

@@ -50,10 +50,6 @@
     color: #C0C0C0;
 }
 
-.badge {
-    margin-right: 0.5rem;
-}
-
 .step-header {
     cursor: pointer;
     padding-top: 0.5rem;
@@ -62,4 +58,13 @@
 
 .step-title {
     margin: 0rem;
+}
+
+button {
+    margin-right: 0.5rem;
+}
+
+pre {
+    background-color: rgba(0,0,0,.03);
+    padding: 1rem;
 }
