@@ -47,7 +47,7 @@ function parseSteps(source, variables) {
             title = ltrimChar(ruleparts[0], "#").trim()
             var elems = splitOnce(ruleparts[1].trim(), ":")
             stepname = elems[0].trim()
-            if (elems.length > 1) {
+            if(elems.length > 1) {
                 d = elems[1].trim().split(/\s+/)
                 for(var j = 0; j < d.length; j++) {
                     deps.push(d[j])
@@ -462,6 +462,7 @@ $(document).ready(function() {
         ghGet(`repos/${issueRepository}/issues/${issueNumber}/comments`, null,
               function(cmnts) {
             $("#title").text(issue.title)
+            $(document).attr("title", issue.title);
             cmnts.unshift(issue)
             var comments = processComments(cmnts)
             var sysvars = extractVariablesFromComments(comments, "sysvars")
@@ -474,7 +475,7 @@ $(document).ready(function() {
                 annotateStepsWithComments(steps, comments)
                 initSteps(steps)
                 initGraph(steps)
-                initInput(issueRepository, issueNumber, vars)
+                //initInput(issueRepository, issueNumber, vars)
                 initHistory(issueRepository, issueNumber, comments, steps)
                 // Add the issue to the list of recent issues.
                 var recent = JSON.parse(localStorage.getItem("recent"))
@@ -511,10 +512,12 @@ $(document).ready(function() {
       <a class="nav-link" data-toggle="tab" href="#graph">
           Graph</a>
     </li>
+<!--
     <li class="nav-item">
       <a class="nav-link" data-toggle="tab" href="#input">
           Input</a>
     </li>
+-->
     <li class="nav-item">
       <a class="nav-link" data-toggle="tab" href="#history">
           History</a>
@@ -530,11 +533,17 @@ $(document).ready(function() {
     </div>
 
     <div id="graph" class="container tab-pane fade"><br>
-      <h3>Graph of the workflow</h3>
+      <h3>Workflow graph</h3>
+      <p>This graph shows the dependencies between the steps. The steps are clickable.</p>
       <br>
       <div id="graph-main"></div>
+      <br>
+      <p><i class="fa fa-circle comment-icon done-font"></i>Steps that are done are grey.</p>
+      <p><i class="fa fa-circle comment-icon active-font"></i>Active steps are green.</p>
+      <p><i class="fa fa-circle comment-icon blocked-font"></i>Blocked steps are red.</p>
     </div>
 
+<!--
     <div id="input" class="container tab-pane fade"><br>
       <h3>Input variables</h3>
       <br>
@@ -558,6 +567,7 @@ $(document).ready(function() {
       <button id="input-save" type="button" class="btn btn-primary">
           Save</button>
     </div>
+-->
 
     <div id="history" class="container tab-pane fade"><br>
       <h3>History of the issue</h3>
