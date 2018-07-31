@@ -377,8 +377,8 @@ function initInput(repository, issue, vars) {
 
 function renderComment(comment, icon, iconText, text) {
     var hdr = $(`<div class="card-header"></div>`)
-    hdr.append($(`<img class="comment-avatar"/>`)
-        .attr("src", comment.userAvatar + "&s=44"))
+    hdr.append($(`<img class="rounded comment-avatar"/>`)
+        .attr("src", comment.userAvatar + "&s=32"))
     hdr.append($("<a></a>").attr("href", comment.userUrl)
         .text(comment.userName))
     hdr.append($(`<span></span>`).text("  " + comment.createdAt))
