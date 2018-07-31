@@ -4,7 +4,7 @@
 
 This workflow will guide you through the release process of **Frobnicator**.
 
-* Enter the version number you want to release ~> version
+* Enter the version number you want to release: ~> version
 
 ## Get the source code ~> clone
 

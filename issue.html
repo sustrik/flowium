@@ -56,18 +56,25 @@ function parseSteps(source, variables) {
             continue
         }
         if(ln.startsWith("*") && ln.includes("~>")) {
+            if(inputs == "") {
+                inputs = `<div class="card flowium-input">
+                    <div class="card-body">`
+            }
             var elems = splitOnce(ltrimChar(ln, "*"), "~>")
             var varname = elems[1].trim()
             var val = ""
             if(varname in variables) val = escapeHtml(variables[varname]) 
-            inputs += `<p>${elems[0].trim()}
-                         <input id="_variable_${varname}" value="${val}"/>
-                       </p>`
+            inputs += `
+                <div class="form-group">
+                    <label>${elems[0].trim()}</label>
+                    <input type="text" class="form-control" value="${val}"/>
+                </div>`
             continue
         }
         if(inputs.length > 0) {
-            step += `<div>${inputs}<p><button onclick="saveVariables(this)">` +
-                `Save</button></p></div>`
+
+            step += `<div>${inputs}<p><button type="button"
+                class="btn btn-secondary">Save</button></p></div></div></div>`
             inputs = ""
         }
         step += ln + "\n"
