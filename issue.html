@@ -290,10 +290,15 @@ function initSteps(steps) {
                 mdSanitizeAndConvert(step.comments[j].body)))
         }
         body.append(`<div class="form-group"><textarea class="form-control"
-            id="history-comment" rows="4"></textarea></div><button type="button"
-            class="btn btn-primary">Comment</button><button type="button"
-            class="btn btn-primary">Done</button><button type="button"
-            class="btn btn-primary">Not done</button>`)
+            id="history-comment" rows="4"></textarea></div>`)
+        if(step.status == "done") {
+            body.append(`<button type="button"
+                class="btn btn-primary">Not done</button>`)
+        } else {
+            body.append(`<button type="button"
+                class="btn btn-primary">Comment</button><button type="button"
+                class="btn btn-primary">Done</button>`)
+        }
         card.append(body)
         $("#steps-main").append(card)
     }
