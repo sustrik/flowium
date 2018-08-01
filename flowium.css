@@ -70,6 +70,7 @@ button {
 }
 
 pre {
+    border-radius: 8px;
     background-color: rgba(0,0,0,.03);
     padding: 1rem;
 }
