@@ -461,7 +461,7 @@ $(document).ready(function() {
           function(issue) {
         ghGet(`repos/${issueRepository}/issues/${issueNumber}/comments`, null,
               function(cmnts) {
-            $("#title").text(issue.title)
+            $("#title").prepend(issue.title)
             $(document).attr("title", issue.title);
             cmnts.unshift(issue)
             var comments = processComments(cmnts)
@@ -505,9 +505,12 @@ $(document).ready(function() {
                 })
                 $("#gh-link-issue").attr("href",
                     `https://github.com/${issueRepository}/issues/${issueNumber}`)
-                $(".cancel-icon").click(function () {
+                $("#cancel-more").click(function () {
                     $(".more-tab").hide()
                     $("#more-index").show()
+                })
+                $("#cancel-issue").click(function () {
+                    window.location.href = "index.html"
                 })
             })
         })
@@ -519,7 +522,7 @@ $(document).ready(function() {
   
 <div class="container-fluid">
 
-  <h1 id="title" class="flowium-title"></h1>
+  <h1 id="title" class="flowium-title"><i id="cancel-issue" class="float-right fa fa-close cancel-icon"></i></h1>
 
   <ul class="nav nav-tabs" role="tablist">
     <li class="nav-item">
@@ -585,7 +588,7 @@ $(document).ready(function() {
         <p><a id="gh-link-issue" target="_blank">Go to the GitHub issue.</a></p>
       </div>
       <div id="more-input" class="more-tab" style="display: none;">
-        <h3>Input variables<i class="float-right fa fa-close cancel-icon"></i></h3>
+        <h3>Input variables<i id="cancel-more" class="float-right fa fa-close cancel-icon"></i></h3>
         <br>
         <table class="table table-hover">
           <thead>
