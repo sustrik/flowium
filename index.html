@@ -25,11 +25,11 @@ to fully formalize, too volatile to keep any documentation up-to-date.
 It's things like "How do you get a new major release out of the door?",
 "How to reconfigure the company network?" or "How to build a new datacenter?"
 
-These processes often require coordination between many parties, not rarely
-they involve manual steps like "order the machines and wait until they are
-delivered", oftentimes they are long-lived, requiring handing over the work
-as people arrive and leave, and almost always they change and then change
-again, without much warning, while the work is still half-done.
+These processes often require coordination between many parties. Often
+they involve manual steps like "Order the machines and wait until they are
+delivered." oftentimes they are long-lived, requiring handing over the work
+between people, and almost always they change and then change
+again, without much warning, while the work is still in progress.
 
 Once in a while someone gets desparate and writes the process down. But soon
 enough the document becomes outdated, people stop using it and finally it
@@ -143,10 +143,18 @@ function loadTemplates(repository, path) {
     })
 }
 
+
+
 $(document).ready(function() {
     // Authenticate with GitHub, as needed.
     authenticate()
 
+    $(".section-body").hide()
+    $(".section-header").click(function () {
+        var hidden = $(this).next().is(":hidden")
+        $(".section-body").hide()
+        if(hidden) $(this).next().show()
+    })
     $("#intro").append(mdConvert(intro))
     $("#example").append(mdConvert(example))
 
@@ -270,16 +278,28 @@ $(document).ready(function() {
       <h3>Home</h3>
       <br>
       <div class="card flowium-step">
-        <div class="card-header flowium-card-header">
-          <h5>What is Flowium good for?</h5>
+        <div class="card-header flowium-card-header section-header">
+          <h5>What is Flowium?</h5>
         </div>
-        <div id="intro" class="card-body step-body"></div>
+        <div id="intro" class="card-body section-body step-body"></div>
       </div>
       <div class="card flowium-step">
-        <div class="card-header flowium-card-header">
+        <div class="card-header flowium-card-header section-header">
           <h5>Show me an example!</h5>
         </div>
-        <div id="example" class="card-body step-body"></div>
+        <div id="example" class="card-body section-body"></div>
+      </div>
+      <div class="card flowium-step">
+        <div class="card-header flowium-card-header section-header">
+          <h5>How does it work?</h5>
+        </div>
+        <div id="how-it-works" class="card-body section-body"></div>
+      </div>
+      <div class="card flowium-step">
+        <div class="card-header flowium-card-header section-header">
+          <h5>Reference</h5>
+        </div>
+        <div id="reference" class="card-body section-body"></div>
       </div>
     </div>
 

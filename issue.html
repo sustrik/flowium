@@ -381,7 +381,7 @@ function renderComment(comment, icon, iconText, text) {
         .attr("src", comment.userAvatar + "&s=32"))
     hdr.append($("<a></a>").attr("href", comment.userUrl)
         .text(comment.userName))
-    hdr.append($(`<span></span>`).text("  " + comment.createdAt))
+    hdr.append($(`<span class="float-right"></span>`).text(comment.createdAt))
     var card = $(`<div class="card flowium-comment"></div>`)
     card.append(hdr)
     var body = $(`<div class="card-body"></div>`)
@@ -491,6 +491,24 @@ $(document).ready(function() {
                 })
                 recent = recent.slice(0, 20)
                 localStorage.setItem("recent", JSON.stringify(recent))
+
+                $("#inspect-inputs").click(function () {
+                    $(".more-tab").hide()
+                    $("#more-input").show()
+                })
+                $("#gh-link-template").attr("href",
+                    `https://github.com/sustrik/flowium-sandbox/blob/${template[1]}/${template[0]}`)
+                $("#gh-edit-template").attr("href",
+                    `https://github.com/sustrik/flowium-sandbox/edit/master/${template[0]}`)
+                $("#gh-update-template").click(function () {
+                    // TODO
+                })
+                $("#gh-link-issue").attr("href",
+                    `https://github.com/${issueRepository}/issues/${issueNumber}`)
+                $(".cancel-icon").click(function () {
+                    $(".more-tab").hide()
+                    $("#more-index").show()
+                })
             })
         })
     })
@@ -512,28 +530,29 @@ $(document).ready(function() {
       <a class="nav-link" data-toggle="tab" href="#graph">
           Graph</a>
     </li>
-<!--
-    <li class="nav-item">
-      <a class="nav-link" data-toggle="tab" href="#input">
-          Input</a>
-    </li>
--->
     <li class="nav-item">
       <a class="nav-link" data-toggle="tab" href="#history">
           History</a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="tab" href="#more">
+          More</a>
+    </li>
   </ul>
+
+  <br>
 
   <div class="tab-content">
 
-    <div id="steps" class="container tab-pane active"><br>
+    <div id="steps" class="container tab-pane active">
       <h3>Steps</h3>
       <br> 
       <div id="steps-main"></div>
     </div>
 
-    <div id="graph" class="container tab-pane fade"><br>
+    <div id="graph" class="container tab-pane fade">
       <h3>Workflow graph</h3>
+      <br>
       <p>This graph shows the dependencies between the steps. The steps are clickable.</p>
       <br>
       <div id="graph-main"></div>
@@ -543,33 +562,7 @@ $(document).ready(function() {
       <p><i class="fa fa-circle comment-icon blocked-font"></i>Blocked steps are red.</p>
     </div>
 
-<!--
-    <div id="input" class="container tab-pane fade"><br>
-      <h3>Input variables</h3>
-      <br>
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody id="input-table"></tbody>
-      </table>
-      <div class="form-group">
-          <label for="input-name">Name:</label>
-          <input type="text" class="form-control" id="input-name"></input>
-      </div>
-      <div class="form-group">
-          <label for="input-value">Value:</label>
-          <input type="text" class="form-control" id="input-value"></input>
-      </div>
-      <button id="input-save" type="button" class="btn btn-primary">
-          Save</button>
-    </div>
--->
-
-    <div id="history" class="container tab-pane fade"><br>
+    <div id="history" class="container tab-pane fade">
       <h3>History of the issue</h3>
       <br>
       <div id="history-main"></div>
@@ -581,6 +574,40 @@ $(document).ready(function() {
           Comment</button>
     </div>
 
+    <div id="more" class="container tab-pane fade">
+      <div id="more-index" class="more-tab">
+        <h3>More options</h3>
+        <br>
+        <p><a id="inspect-inputs" href="#">Inspect the inputs.</a></p>
+        <p><a id="gh-link-template" target="_blank">Show the version of the template curretly used by this issue.</a></p>
+        <p><a id="gh-edit-template" target="_blank">Edit the newest version of the issue template.</a></p>
+        <p><a id="gh-update-template" href="#">Update to the newest version of the template.</a></p>
+        <p><a id="gh-link-issue" target="_blank">Go to the GitHub issue.</a></p>
+      </div>
+      <div id="more-input" class="more-tab" style="display: none;">
+        <h3>Input variables<i class="float-right fa fa-close cancel-icon"></i></h3>
+        <br>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="input-table"></tbody>
+        </table>
+        <div class="form-group">
+            <label for="input-name">Name:</label>
+            <input type="text" class="form-control" id="input-name"></input>
+        </div>
+        <div class="form-group">
+            <label for="input-value">Value:</label>
+            <input type="text" class="form-control" id="input-value"></input>
+        </div>
+        <button id="input-save" type="button" class="btn btn-primary">
+            Save</button>
+      </div>
+    </div>
   </div>
 
 </div>
