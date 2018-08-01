@@ -70,7 +70,10 @@ button {
 }
 
 pre {
-    border-radius: 8px;
-    background-color: rgba(0,0,0,.03);
+    border-style: solid;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: #CED4DA;
+    background-color: #F8F8F8;
     padding: 1rem;
 }
