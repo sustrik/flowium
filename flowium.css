@@ -10,11 +10,11 @@
     margin-right: 1rem;
 }
 
-.flowium-step {
+.flowium-comment, .flowium-input {
     margin-bottom: 0.5rem;
 }
 
-.flowium-comment, .flowium-input {
+.flowium-step {
     margin-bottom: 0.5rem;
 }
 

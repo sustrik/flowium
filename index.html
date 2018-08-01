@@ -7,11 +7,87 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="flowium.css">
   <script src="utils.js"></script>
 </head>
 <script>
+
+intro = `
+In the IT industry there's a certain kind of knowledge that is never written
+down, knowledge that is passed down by oral tradition, knowledge that slowly
+dissipates at the best of times and is abruptly lost when people move to
+different jobs.
+
+It's knowledge about processes that are too vague to automate, too complex
+to fully formalize, too volatile to keep any documentation up-to-date.
+It's things like "How do you get a new major release out of the door?",
+"How to reconfigure the company network?" or "How to build a new datacenter?"
+
+These processes often require coordination between many parties, not rarely
+they involve manual steps like "order the machines and wait until they are
+delivered", oftentimes they are long-lived, requiring handing over the work
+as people arrive and leave, and almost always they change and then change
+again, without much warning, while the work is still half-done.
+
+Once in a while someone gets desparate and writes the process down. But soon
+enough the document becomes outdated, people stop using it and finally it
+gets lost.
+
+Flowium tries to solve that problem, but it is in no way a silver bullet.
+It doesn't propose anything better than sitting down and writing down a
+document about the process. However, once the document is written it uses that
+document as a tool to guide people through the process, to communicate between
+the involved parties, to keep track of what was and what wasn't done.
+
+The hope is that if the documentation is helpful, in a very down-to-earth and
+practical way, people will be incentivized to use it, to improve it and to keep
+it up-to-date.`
+
+example = `
+Seeing is believing. Have a look for yourself.
+
+[This is a document describing a simple process.](https://raw.githubusercontent.com/sustrik/flowium-sandbox/master/release.md)
+
+It's a standard Markdown document, with a simple extension to define
+dependencies between steps of the process (look for wiggly arrows, ~>).
+It describes how to create a new release of *Frobnicator* application.
+
+[Click here to start the process.](javascript:createSandboxIssue())`
+
+function createIssue(repository, template, title, comment) {
+    // Get the current version of the template.
+    ghGet(`repos/${repository}/commits?path=${template}`, null,
+          function(commits) {
+        var sha = commits[0].sha
+        var prologue = '~> _template: ' + template + ":" + sha + "\n\n"
+        // Create the issue.
+        var args = {
+            "title": title,
+            "body": prologue + comment,
+            "labels": ["flowium"],
+        }
+        ghPost(`repos/${repository}/issues`, args, function(reply) {
+            var addr = 'issue.html' +
+                '?repository=' + encodeURIComponent(repository) +
+                '&issue=' + reply.number
+            var body = `View in Flowium: <https://flowium.com/${addr}>`
+            ghPost(`repos/${repository}/issues/${reply.number}/comments`,
+                  {"body": body}, function(reply) { 
+                window.location.href = addr
+            })
+        })
+    })
+}
+
+function createSandboxIssue() {
+    createIssue(
+        "sustrik/flowium-sandbox",
+        "/release.md",
+        "Release Frobnicator",
+        "It's time to make a new release!")
+}
 
 function loadTemplates(repository, path) {
     ghGet(`repos/${repository}/contents${path}`, null, function(files) {
@@ -70,6 +146,10 @@ function loadTemplates(repository, path) {
 $(document).ready(function() {
     // Authenticate with GitHub, as needed.
     authenticate()
+
+    $("#intro").append(mdConvert(intro))
+    $("#example").append(mdConvert(example))
+
     // Fill in the "recent issues" tab.
     var recent = JSON.parse(localStorage.getItem("recent"))
     var recentRepositories = {}
@@ -152,28 +232,7 @@ $(document).ready(function() {
             template += "/" + elems.eq(i).text()
         var title = $("#create-title").val()
         var comment = $("#create-comment").val()
-        // Get the current version of the template.
-        ghGet(`repos/${repository}/commits?path=${template}`, null,
-              function(commits) {
-            var sha = commits[0].sha
-            var prologue = '~> _template: ' + template + ":" + sha + "\n\n"
-            // Create the issue.
-            var args = {
-                "title": title,
-                "body": prologue + comment,
-                "labels": ["flowium"],
-            }
-            ghPost(`repos/${repository}/issues`, args, function(reply) {
-                var addr = 'issue.html' +
-                    '?repository=' + encodeURIComponent(repository) +
-                    '&issue=' + reply.number
-                var body = `View in Flowium: <https://flowium.com/${addr}>`
-                ghPost(`repos/${repository}/issues/${reply.number}/comments`,
-                      {"body": body}, function(reply) { 
-                    window.location.href = addr
-                })
-            })
-        })
+        createIssue(repository, template, title, comment)
     })
 })
 
@@ -186,7 +245,11 @@ $(document).ready(function() {
 
   <ul class="nav nav-tabs" role="tablist">
     <li class="nav-item">
-      <a class="nav-link active" data-toggle="tab" href="#recent-issues">
+      <a class="nav-link active" data-toggle="tab" href="#home">
+          Home</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="tab" href="#recent-issues">
           Recent</a>
     </li>
     <li class="nav-item">
@@ -203,8 +266,26 @@ $(document).ready(function() {
 
     <datalist id="repository-list"></datalist>
 
-    <div id="recent-issues" class="container tab-pane active"><br>
+    <div id="home" class="container tab-pane active"><br>
+      <h3>Home</h3>
+      <br>
+      <div class="card flowium-step">
+        <div class="card-header flowium-card-header">
+          <h5>What is Flowium good for?</h5>
+        </div>
+        <div id="intro" class="card-body step-body"></div>
+      </div>
+      <div class="card flowium-step">
+        <div class="card-header flowium-card-header">
+          <h5>Show me an example!</h5>
+        </div>
+        <div id="example" class="card-body step-body"></div>
+      </div>
+    </div>
+
+    <div id="recent-issues" class="container tab-pane fade"><br>
       <h3>Recent issues</h3>
+      <br>
       <table class="table table-hover">
         <thead>
           <tr>
@@ -219,6 +300,7 @@ $(document).ready(function() {
 
     <div id="find-issue" class="container tab-pane fade"><br>
       <h3>Find an issue</h3>
+      <br>
       <div class="form-group">
         <label for="find-repository">
             GitHub repository (e.g. <i>johndoe/myproject</i>):</label>
@@ -239,6 +321,7 @@ $(document).ready(function() {
 
     <div id="create-issue" class="container tab-pane fade"><br>
       <h3>Create an issue</h3>
+      <br>
       <div class="form-group">
         <label for="create-repository">
             GitHub repository (e.g. <i>johndoe/myproject</i>):</label>
