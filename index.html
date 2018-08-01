@@ -48,13 +48,59 @@ it up-to-date.`
 example = `
 Seeing is believing. Have a look for yourself.
 
-[This is a document describing a simple process.](https://raw.githubusercontent.com/sustrik/flowium-sandbox/master/release.md)
+[This is a document describing a simple process](https://raw.githubusercontent.com/sustrik/flowium-sandbox/master/release.md)
 
 It's a standard Markdown document, with a simple extension to define
 dependencies between steps of the process (look for wiggly arrows, ~>).
 It describes how to create a new release of *Frobnicator* application.
 
-[Click here to start the process.](javascript:createSandboxIssue())`
+[Click here to start the process](javascript:createSandboxIssue())`
+
+howItWorks = `
+Flowium is a client-side web application, a simple shim on top of GitHub.
+It reads your Markdown document from GitHub and uses it to create an issue in
+GitHub's issue tracker.
+
+It splits the document into sections and allows you to mark those section as
+either done or not done. It also gives you an opportunity to comment on
+individual sections.
+
+Furthermore, there's a simple syntax that you can use to define dependencies
+between the individual steps in the document. If you do so Flowium will also
+show whether a step is active or blocked by an unfinished step that it depends
+on.
+
+At any point you can look at the graph of the workflow to get a quick idea
+about what was already done and what still remains to be done.
+
+Finally, there's a syntax to define variables (user will be asked to fill
+the values in) and syntax to expand those variables in the text of the document.
+`
+
+reference = `
+To define a step:
+
+\`\`\`
+# Title of the step ~> step-id: dependency-1 dependency-2 dependency-3
+\`\`\`
+
+All the text before the first step definition is ignored.
+
+To ask for user input:
+
+\`\`\`
+* First name: ~> first-name
+* Last name: ~> last-name
+* Date of birth: ~> birth-date 
+\`\`\`
+
+To expand the variables filled in by the user:
+
+\`\`\`
+Your name is #{first-name} #{last-name}
+and you were born on #{birth-date}.
+\`\`\`
+`
 
 function createIssue(repository, template, title, comment) {
     // Get the current version of the template.
@@ -157,6 +203,8 @@ $(document).ready(function() {
     })
     $("#intro").append(mdConvert(intro))
     $("#example").append(mdConvert(example))
+    $("#how-it-works").append(mdConvert(howItWorks))
+    $("#reference").append(mdConvert(reference))
 
     // Fill in the "recent issues" tab.
     var recent = JSON.parse(localStorage.getItem("recent"))
