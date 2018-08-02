@@ -343,26 +343,26 @@ function initGraph(steps) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//  Input.
+//  Variables.
 ////////////////////////////////////////////////////////////////////////////////
 
-function initInput(repository, issue, vars) {
+function initVariables(repository, issue, vars) {
     var keys = Object.keys(vars).sort()
     for(var i = 0; i < keys.length; i++) {
         var tr = $(`<tr class="clickable-element"></tr>`)
         tr.click((function(name, value) {return function() {
-            $("#input-name").val(name)
-            $("#input-value").val(value)
+            $("#variable-name").val(name)
+            $("#variable-value").val(value)
         }})(keys[i], vars[keys[i]]))
         tr.append($("<td></td>").text(keys[i]))
         tr.append($("<td></td>").text(vars[keys[i]]))
-        $("#input-table").append(tr)
+        $("#variable-table").append(tr)
     }
 
-    // When the button is pressed one input is updated.
-    $("#input-save").click(function () {
-        var name = $("#input-name").val()
-        var value = $("#input-value").val()
+    // When the button is pressed one variable is updated.
+    $("#variable-save").click(function () {
+        var name = $("#variable-name").val()
+        var value = $("#variable-value").val()
         var body = `~> ${name}: ${value}`
         ghPost(`repos/${repository}/issues/${issue}/comments`,
               {"body": body}, function(reply) { 
@@ -420,11 +420,11 @@ function initHistory(repository, issue, comments, steps) {
         }
         if(c.type == "vars") {
             icon = "fa-question"
-            iconText = "Input"
+            iconText = "Variable"
             text = ""
             var names = Object.keys(c.vars).sort()
             for(var j = 0; j < names.length; j++) {
-                text += `<p>Input <b>${escapeHtml(names[j])}</b> set to ` +
+                text += `<p>Variable <b>${escapeHtml(names[j])}</b> set to ` +
                     `<b>${escapeHtml(c.vars[names[j]])}</b>.</p>`
             }
         }
@@ -475,8 +475,8 @@ $(document).ready(function() {
                 annotateStepsWithComments(steps, comments)
                 initSteps(steps)
                 initGraph(steps)
-                //initInput(issueRepository, issueNumber, vars)
                 initHistory(issueRepository, issueNumber, comments, steps)
+                initVariables(issueRepository, issueNumber, vars)
                 // Add the issue to the list of recent issues.
                 var recent = JSON.parse(localStorage.getItem("recent"))
                 if(recent == null) recent = []
@@ -494,7 +494,7 @@ $(document).ready(function() {
 
                 $("#inspect-variables").click(function () {
                     $(".more-tab").hide()
-                    $("#more-input").show()
+                    $("#more-variables").show()
                 })
                 $("#gh-link-template").attr("href",
                     `https://github.com/sustrik/flowium-sandbox/blob/${template[1]}/${template[0]}`)
@@ -588,8 +588,8 @@ $(document).ready(function() {
         <p><a id="gh-link-issue" target="_blank">Go to the GitHub issue</a></p>
         <p><a href="https://github.com/sustrik/flowium/issues/new" target="_blank">Report a bug in Flowium</a></p>
       </div>
-      <div id="more-input" class="more-tab" style="display: none;">
-        <h3>Input variables<i id="cancel-more" class="float-right fa fa-close cancel-icon"></i></h3>
+      <div id="more-variables" class="more-tab" style="display: none;">
+        <h3>Variables<i id="cancel-more" class="float-right fa fa-close cancel-icon"></i></h3>
         <br>
         <table class="table table-hover">
           <thead>
@@ -598,17 +598,17 @@ $(document).ready(function() {
               <th>Value</th>
             </tr>
           </thead>
-          <tbody id="input-table"></tbody>
+          <tbody id="variable-table"></tbody>
         </table>
         <div class="form-group">
-            <label for="input-name">Name:</label>
-            <input type="text" class="form-control" id="input-name"></input>
+            <label for="variable-name">Name:</label>
+            <input type="text" class="form-control" id="variable-name"></input>
         </div>
         <div class="form-group">
-            <label for="input-value">Value:</label>
-            <input type="text" class="form-control" id="input-value"></input>
+            <label for="variable-value">Value:</label>
+            <input type="text" class="form-control" id="variable-value"></input>
         </div>
-        <button id="input-save" type="button" class="btn btn-primary">
+        <button id="variable-save" type="button" class="btn btn-primary">
             Save</button>
       </div>
     </div>

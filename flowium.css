@@ -69,6 +69,7 @@ button {
     margin-right: 0.5rem;
 }
 
+/* Code blocks should be visually distinguishable from the surrounding text. */
 pre {
     border-style: solid;
     border-radius: 0.25rem;
@@ -77,3 +78,4 @@ pre {
     background-color: #F8F8F8;
     padding: 1rem;
 }
+
