@@ -299,7 +299,8 @@ function initSteps(steps, commentsByStep) {
     for(var i = 0; i < steps.steps.length; i++) {
         var step = steps.steps[i]
         var card = $(`<div class="card flowium-step"></div>`)
-        var hdr = $(`<div class="card-header flowium-card-header"></div>`)
+        var hdr = $(`<div id="__${step.id}" class="card-header ` +
+            `flowium-card-header"></div>`)
         hdr.append($(`<h5 class="step-title"></h5>`).text(step.title)
             .prepend(`<i class="fa fa-circle comment-icon ` +
             `${step.status}-font">`))
@@ -371,7 +372,7 @@ function initGraph(steps) {
             "${s.id}" [
                 label="${s.title}"
                 fillcolor="${statusToColor(s.status)}"
-                URL="javascript:scrollToStep('${s.id}');"
+                URL="javascript:goToStep('${s.id}');"
             ]
             `
         for(var j = 0; j < s['deps'].length; j++) {
@@ -498,6 +499,13 @@ function initHistory(repository, issue, comments, steps) {
 ////////////////////////////////////////////////////////////////////////////////
 //  Main.
 ////////////////////////////////////////////////////////////////////////////////
+
+function goToStep(stepId) {
+    $('#steps-button').click()
+    $("#__" + stepId).click()
+    $("#__" + stepId)[0].scrollIntoView()
+    console.log("here")
+}
 
 $(document).ready(function() {
     authenticate()
@@ -626,20 +634,17 @@ $(document).ready(function() {
 
   <ul class="nav nav-tabs" role="tablist">
     <li class="nav-item">
-      <a class="nav-link active" data-toggle="tab" href="#steps">
-          Steps</a>
+      <a id="steps-button" class="nav-link active" data-toggle="tab"
+          href="#steps">Steps</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" data-toggle="tab" href="#graph">
-          Graph</a>
+      <a class="nav-link" data-toggle="tab" href="#graph">Graph</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" data-toggle="tab" href="#history">
-          History</a>
+      <a class="nav-link" data-toggle="tab" href="#history">History</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" data-toggle="tab" href="#more">
-          More</a>
+      <a class="nav-link" data-toggle="tab" href="#more">More</a>
     </li>
   </ul>
 
