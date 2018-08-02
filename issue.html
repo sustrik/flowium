@@ -18,255 +18,291 @@
 <script>
 
 ////////////////////////////////////////////////////////////////////////////////
-//  Parsing the flow source code.
+//  Parsing the template.
 ////////////////////////////////////////////////////////////////////////////////
 
-function parseSteps(source, variables) {
-    var lns = source.split("\n")
-    var steps = []
-    var stepname = null
-    var step = ""
-    var title = ""
+// Checks whether ID is valid.
+function testId(id) {
+    var re = /^([a-zA-Z0-9-]+)|("[^"]*")$/
+    if(!re.test(id)) throw `Invalid ID ${id}.`
+}
+
+// Function parseHeading gets a line with markdown heading and returns
+// the following object:
+//
+// {
+//     id: <short ID of the step>,
+//     title: <human readable title of the step>,
+//     deps: <array of step IDs of this step depends on>,
+// }
+
+function parseHeading(ln) {
+    // If there is no ID specified by the user we'll user the heading itself
+    // as an ID encolsed in double quotes. If there are double quotes in the
+    // heading text they will be replaced by single quotes.
+    if(!ln.includes("~>"))
+        return {id: '"' + ln.replace('"', '"') + '"', title: ln, deps: []}
+    // Format of the Flowium heading line: Title ~> foo: bar baz
+    var parts = splitOnce(ln, "~>")
+    var title = parts[0].trim()
+    parts = splitOnce(parts[1], ":")
+    var id = parts[0].trim()
+    testId(id)
     var deps = []
-    var inputs = ""
-    for(var i = 0; i < lns.length; i++) {
-        var ln = lns[i]
-        if(ln.startsWith("#") && ln.includes("~>")) {
-            if(stepname != null) {
-                steps.push({
-                    id: stepname,
-                    title: title,
-                    body: step,
-                    deps: deps
-                })
+    if(parts.length > 1) {
+        parts = parts[1].split(/\s+/)
+        for(var i = 0; i < parts.length; i++) {
+            var dep = parts[i].trim()
+            if(dep.length == 0) continue
+            testId(dep)
+            deps.push(dep)
+        }
+    }
+    return {id: id, title: title, deps: deps}
+}
+
+// Function parseField gets a line with markdown field, e.g.
+// "* First name ~> first-name" and returns the following object:
+//
+// {
+//     caption: <caption of the input field in markdown format>,
+//     name: <name of the variable to capture>,
+// }
+
+function parseField(ln) {
+    var parts = splitOnce(ln, "~>")
+    var caption = parts[0].trim()
+    var name = ""
+    if(parts.length > 1) name = parts[1].trim()
+    testId(name)
+    return {caption: caption, name: name}
+}
+
+// Function parseTemplate gets the markdown document and
+// returns the following object:
+//
+// {
+//     steps: <linear sequence of steps>,
+//     stepById: <map from ID to step>,
+// }
+//
+// Individual step looks like this:
+//
+// {
+//     id: <short ID of the step>,
+//     title: <human readable title of the step>,
+//     deps: <array of step IDs of this step depends on>,
+//     parts: <sequence of body parts>,
+// }
+//
+// Each body part can be one of the following:
+//
+// {
+//     type: "html",
+//     body: <HTML content of the part>,
+// }
+//
+// {
+//     type: "form",
+//     fields: <sequnce of input fields>,
+// }
+//
+// Each input field looks like this:
+//
+// {
+//     caption: <caption of the input field in markdown format>,
+//     name: <name of the variable to capture>,
+// }
+
+function parseTemplate(template) {
+    // Convert the template into a list of child nodes.
+    var src = document.createElement('div');
+    src.innerHTML = mdConvert(template)
+    var ch = src.childNodes
+
+    var steps = []
+    var stepById = {}
+
+    var step = null
+    for(var i = 0; i < ch.length; i++) {
+        // Process a step heading.
+        if(/H[1-6]/.test(ch[i].nodeName)) {
+            if(step != null) {
+                steps.push(step)
+                stepById[step.id] = step
             }
-            title = ""
-            step = ""
-            deps = []
-            var ruleparts = splitOnce(ln, "~>")
-            title = ltrimChar(ruleparts[0], "#").trim()
-            var elems = splitOnce(ruleparts[1].trim(), ":")
-            stepname = elems[0].trim()
-            if(elems.length > 1) {
-                d = elems[1].trim().split(/\s+/)
-                for(var j = 0; j < d.length; j++) {
-                    deps.push(d[j])
+            var step = parseHeading($(ch[i]).text())
+            step["parts"] = []
+            continue
+        }
+        // Process a form field.
+        if(ch[i].nodeName == "UL") {
+            // Check whether there's wiggly arrow in at least one subitem.
+            // If so, we'll consider the list to be a form.
+            var subitems = ch[i].childNodes
+            var isForm = false
+            for(var j = 0; j < subitems.length; j++) {
+                if($(subitems[j]).text().includes("~>")) {
+                    isForm = true
+                    break;
                 }
             }
-            continue
-        }
-        if(ln.startsWith("*") && ln.includes("~>")) {
-            if(inputs == "") {
-                inputs = `<div class="card flowium-input">
-                    <div class="card-body">`
-            }
-            var elems = splitOnce(ltrimChar(ln, "*"), "~>")
-            var varname = elems[1].trim()
-            var val = ""
-            if(varname in variables) val = escapeHtml(variables[varname]) 
-            inputs += `
-                <div class="form-group">
-                    <label>${elems[0].trim()}</label>
-                    <input type="text" class="form-control" value="${val}"/>
-                </div>`
-            continue
-        }
-        if(inputs.length > 0) {
-            step += `<div>${inputs}<p><button type="button"
-                class="btn btn-primary">Save</button></p></div></div></div>`
-            inputs = ""
-        }
-        step += ln + "\n"
-    }
-    if(inputs.length > 0) {
-        step += `<div>${inputs}<p><button type="button"
-            class="btn btn-primary">Save</button></p></div></div></div>`
-        inputs = ""
-    }
-    if(stepname != null) {
-        steps.push({
-            id: stepname,
-            title: title,
-            body: step,
-            deps: deps
-        })
-    }
-
-    // Expand the variables.
-    var keys = Object.keys(variables)
-    for(var i = 0; i < steps.length; i++) {
-        for(var j = 0; j < keys.length; j++) {
-            var val = variables[keys[j]] 
-            steps[i].body = steps[i].body.replace(
-                new RegExp('#{' + keys[j] + '}', 'g'),
-                escapeHtml(val))
-        }
-    }
-
-    return steps
-}
-
-function annotateStepsWithStatus(steps, sysvars) {
-    var statuses = {}
-    // Check whether steps are done or not done.
-    for(var i = 0; i != steps.length; i++) {
-        var status = "not-done"
-        var vname = "_status+" + steps[i].id
-        if(vname in sysvars)
-            status = sysvars[vname]
-        steps[i]["status"] = status
-        statuses[steps[i].id] = status
-    }
-    // Steps that are not yet done can be also blocked.
-    for(var i = 0; i != steps.length; i++) {
-        if(steps[i].status == "done") {
-            steps[i]["dstatus"] = "done"
-            steps[i]["blockedBy"] = []
-            continue
-        }
-        var deps = steps[i].deps
-        var blockedBy = []
-        for(j = 0; j < deps.length; j++) {
-            if(statuses[deps[j]] != "done") {
-                blockedBy.push(deps[j])
+            if(isForm) {
+                var field = parseField($(ch[i]).text())
+                if(step.parts.length == 0 ||
+                      step.parts[step.parts.length - 1].type != "form")
+                    step.parts.push({type: "form", fields: []})
+                step.parts[step.parts.length - 1].fields.push(field)
+                continue
             }
         }
-        steps[i]["blockedBy"] = blockedBy
-        if(blockedBy.length == 0) steps[i]["dstatus"] = "active"
-        else steps[i]["dstatus"] = "blocked"
-    }
-}
-
-function annotateStepsWithComments(steps, comments) {
-    for(var i = 0; i != steps.length; i++) {
-        var step = steps[i]
-        var res = []
-        for(var j = 0; j != comments.length; j++) {
-            var comment = comments[j]
-            if(comment.type != "step-comment" || !("step" in comment)) continue
-            if(comment.step != step.id) continue
-            res.push(comment)
+        // Process a common non-Flowium element.
+        var html = ch[i].outerHTML
+        if(step && html) {
+            if(step.parts.length == 0 ||
+                  step.parts[step.parts.length - 1].type != "html")
+                step.parts.push({type: "html", body: ""})
+            step.parts[step.parts.length - 1].body += html
         }
-        step['comments'] = res
     }
+    if(step != null) {
+        steps.push(step)
+        stepById[step.id] = step
+    }
+
+    return {steps: steps, stepById: stepById}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 //  Preprocessing comments.
 ////////////////////////////////////////////////////////////////////////////////
 
-function splitVariables(res, text) {
-    var userVariables = {}
-    var systemVariables = {}
+// This function takes a text of a single comment and splits it into a
+// sequence of objects of the following types:
+//
+// {
+//     type: "comment",
+//     body: <HTML content of the comment>,
+//     step: <step ID that the comment belongs to> (optional)
+// }
+// {
+//     type: "variables",
+//     variables: <map from variable name to variable value>,
+// }
+
+function splitCommentsAndVariables(text) {
+    // Split the comment into text vs. variable blocks.
+    var stepId = null
+    var blocks = []
     var lns = text.split('\n')
     for(var i = 0; i < lns.length; i++) {
         var ln = lns[i]
-        var vdef = splitOnce(lns[i].substring(2), ":")
-        var name = vdef[0].trim()
-        if(vdef.length < 2) {
+        if(ln.startsWith("~>")) {
+            if(blocks.length == 0 ||
+                  blocks[blocks.length - 1].type != "variables")
+                blocks.push({type: "variables", body: ""})
+        } else {
+            if(blocks.length == 0 ||
+                  blocks[blocks.length - 1].type != "comment")
+                blocks.push({type: "comment", body: ""})
+        }
+        blocks[blocks.length - 1].body += ln + "\n"
+    }
+    // Remove blocks with empty bodies.
+    blocks = blocks.filter(function (block) {
+       return block.body.trim().length > 0
+    })
+    // Convert text blocks from markdown to HTML.
+    for(var i = 0; i < blocks.length; i++) {
+        var block = blocks[i]
+        if(block.type != "comment") continue
+        block.body = mdSanitizeAndConvert(block.body)
+    }
+    // Turn variable definitions into a dictionary.
+    // Annotate comments with step IDs along the way.
+    for(var i = 0; i < blocks.length; i++) {
+        var block = blocks[i]
+        if(block.type == "comment") {
+            if(stepId != null) block["step"] = stepId
+            continue
+        }
+        block['variables'] = {}
+        var lns = block.body.split("\n")
+        for(var j = 0; j < lns.length; j++) {
+            var ln = lns[j].substring(2).trimStart()
+            if(ln.length == 0) continue
+            var parts = splitOnce(ln, ":")
+            var name = parts[0].trim()
             var value = ""
-        } else {
-            var value = vdef[1].trim()
+            if(parts.length > 1) value = parts[1].trimStart()
+            if(name == "_step") stepId = value.trim()
+            else block.variables[name] = value
         }
-        if(name.startsWith("_")) systemVariables[name] = value
-        else userVariables[name] = value
-    }
-    if(Object.keys(systemVariables).length > 0)
-        res.push({type: 'sysvars', vars: systemVariables})
-    if(Object.keys(userVariables).length > 0)
-        res.push({type: 'vars', vars: userVariables})
+        delete block["body"]
+    }    
+    return blocks
 }
 
-function splitCommentsAndVariables(text) {
-    var res = []
-    var variable = true
-    var body = ""
-    var lns = text.split('\n')
-    for(var i = 0; i < lns.length; i++) {
-        if(lns[i].startsWith("~>")) {
-            if(!variable && body != "") {
-                if(body.trim().length > 0)
-                    res.push({type: "comment", body: body.trim()})
-                body = ""
-            }
-            variable = true
-        } else {
-            if(variable && body != "") {
-                splitVariables(res, body.trim())
-                body = ""
-            }
-            variable = false
-        }
-        body += "\n" + lns[i]
-    }
-    if(variable) {
-        splitVariables(res, body.trim())
-    } else {
-        if(body.trim().length > 0)
-            res.push({type: "comment", body: body.trim()})
-    }
+// Function processComments gets an issue and a comments object as it was
+// provided by GitHub API and returns the following object:
+//
+// {
+//     comments: <chronological array of comments>,
+//     commentsByStep: <map from step ID to a list of associated comments>,
+// }
+//
+// Each comment can be one of the following:
+//
+// {
+//     type: "comment",
+//     body: <HTML content of the comment>,
+//     user: <GitHub username of the creator of the comment>,
+//     avatar: <link to user's avatar>,
+//     created: <time when the comment was created>,
+//     step: <step ID that the comment belongs to> (optional)
+// }
+// {
+//     type: "variables",
+//     variables: <map from variable name to variable value>,
+//     user: <GitHub username of the creator of the comment>,
+//     avatar: <link to user's avatar>,
+//     created: <time when the comment was created>,
+// }
 
-    // Pair comments to steps.
-    var step = null
-    for(var i = 0; i < res.length; i++) {
-        var it = res[i]
-        if(it.type == 'sysvars' && "_step" in it.vars) {
-            step = it.vars["_step"]
-            delete it.vars["_step"]
-            if(Object.keys(it.vars).length == 0) {
-                res.splice(i, 1)
-                i--
-            }
-            continue    
-        }
-        if(step != null && it.type == "comment") {
-            it.type = "step-comment"
-            it.step = step
-        }
-    }
-
-    return res
-}
-
-function processComments(comments) {
-    var res = []
+function processComments(issue, comments) {
+    comments.unshift(issue)
+    var cmnts = []
+    var cmntsByStep = {}
     for(var i = 0; i < comments.length; i++) {
         var c = comments[i]
         sc = splitCommentsAndVariables(c.body)
         for(var j = 0; j < sc.length; j++) {
-            sc[j].userName = c.user.login
-            sc[j].userUrl = c.user.html_url
-            sc[j].userAvatar = c.user.avatar_url
-            sc[j].createdAt = new Date(c.created_at).toLocaleString()
-            res.push(sc[j])
+            sc[j].user = c.user.login
+            sc[j].avatar = c.user.avatar_url
+            sc[j].created = new Date(c.created_at).toLocaleString()
+            cmnts.push(sc[j])
+            if("step" in sc[j]) {
+                var stepId = sc[j].step
+                if(!(stepId in cmntsByStep)) cmntsByStep[stepId] = []
+                cmntsByStep[stepId].push(sc[j])
+            }
         }
     }
-    return res
-}
-
-function extractVariablesFromComments(comments, type) {
-    var result = {}
-    for(var i = 0; i < comments.length; i++) {
-        if(comments[i].type == type) {
-            result = Object.assign(result, comments[i].vars)
-        }
-    }
-    return result
+    return {comments: cmnts, commentsByStep: cmntsByStep}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 //  Steps.
 ////////////////////////////////////////////////////////////////////////////////
 
-function initSteps(steps) {
-    console.log(steps)
-    for(var i = 0; i < steps.length; i++) {
-        var step = steps[i]
+function initSteps(steps, commentsByStep) {
+    for(var i = 0; i < steps.steps.length; i++) {
+        var step = steps.steps[i]
         var card = $(`<div class="card flowium-step"></div>`)
         var hdr = $(`<div class="card-header flowium-card-header"></div>`)
         hdr.append($(`<h5 class="step-title"></h5>`).text(step.title)
             .prepend(`<i class="fa fa-circle comment-icon ` +
-            `${step.dstatus}-font">`))
+            `${step.status}-font">`))
         hdr.click(function () {
             var hidden = $(this).next().is(":hidden")
             $(".step-body").hide()
@@ -275,19 +311,28 @@ function initSteps(steps) {
         card.append(hdr)
         var body = $(`<div class="card-body step-body" ` +
             `style="display: none;"></div>`)
-        if(step.blockedBy.length > 0) {
-            var a = $(`<div class="alert alert-danger" role="alert"></div>`)
-            a.append(`This step is blocked by: `)
-            for(var j = 0; j < step.blockedBy.length; j++) {
-                a.append($("<span></span>").text(step.blockedBy[j]+ " "))
+        // Render the actual body of the step.
+        for(var j = 0; j < step.parts.length; j++) {
+            var part = step.parts[j]
+            if(part.type == "html") {
+                body.append(part.body)
+                continue
             }
-            body.append(a)
+            if(part.type == "form") {
+                for(var k = 0; k != part.fields.length; k++) {
+                    var field = part.fields[k]
+                }
+            }
         }
-        body.append(mdConvert(step.body))
-        for(var j = 0; j < step.comments.length; j++) {
-            body.append(renderComment(step.comments[j], null, null,
-                mdSanitizeAndConvert(step.comments[j].body)))
+        // Add step-level comments.
+        var comments = commentsByStep[step.id]
+        if(comments != undefined) {
+            for(var j = 0; j < comments.length; j++) {
+                body.append(renderComment(comments[j], null, null,
+                    comments[j].body))
+            }
         }
+        // Add the buttons on the bottom of the step.
         body.append(`<div class="form-group"><textarea class="form-control"
             id="history-comment" rows="4"></textarea></div>`)
         if(step.status == "done") {
@@ -325,7 +370,7 @@ function initGraph(steps) {
         dot += `
             "${s.id}" [
                 label="${s.title}"
-                fillcolor="${statusToColor(s.dstatus)}"
+                fillcolor="${statusToColor(s.status)}"
                 URL="javascript:scrollToStep('${s.id}');"
             ]
             `
@@ -375,74 +420,79 @@ function initVariables(repository, issue, vars) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function renderComment(comment, icon, iconText, text) {
+    // Comment header.
     var hdr = $(`<div class="card-header flowium-card-header"></div>`)
     hdr.append($(`<img class="rounded comment-avatar"/>`)
-        .attr("src", comment.userAvatar + "&s=32"))
-    hdr.append($("<a></a>").attr("href", comment.userUrl)
-        .text(comment.userName))
-    hdr.append($(`<span class="float-right"></span>`).text(comment.createdAt))
-    var card = $(`<div class="card flowium-comment"></div>`)
-    card.append(hdr)
+        .attr("src", comment.avatar + "&s=32"))
+    hdr.append($("<a></a>")
+        .text(comment.user)
+        .attr("href", `https://github.com/${comment.user}`))
+    hdr.append($(`<span class="float-right"></span>`)
+        .text(comment.created))
+    // Comment body.
     var body = $(`<div class="card-body"></div>`)
-    if(icon != null) {
-        var ic = $(`<p><i class="fa ${icon} comment-icon"></i></p>`)
-            .append(iconText)
-    }
+    var ic = $(`<p><i class="fa ${icon} comment-icon"></i></p>`)
+        .append(iconText)
     body.append($("<b></b>").html(ic))
-    body.append(text) 
-    card.append(body)
+    body.append(text)
+    // Entire comment card.
+    var card = $(`<div class="card flowium-comment"></div>`)
+        .append(hdr)
+        .append(body)
     return card
 }
 
 function initHistory(repository, issue, comments, steps) {
+    var cards = []
     for(var i = 0; i < comments.length; i++) {
         var c = comments[i]
-        var icon = "fa-exclamation-triangle"
-        var iconText = "Unknown comment type"
-        var text = ""
+        // Render user's comment.
         if(c.type == "comment") {
-            icon = "fa-pencil"
-            iconText = "Comment"
-            text = mdSanitizeAndConvert(c.body)
+            var info = "Comment"
+            if("step" in c) {
+                info += ` on step "${steps[c.step].title}"`
+            }
+            cards.push(renderComment(c, "fa-pencil", info, c.body))
+            continue
         }
-        if(c.type == "step-comment") {
-            icon = "fa-pencil-square-o"
-            var step = c.step
-            for(var j = 0; j < steps.length; j++) {
-                if(steps[j].id === c.step) {
-                    step = steps[j].title
-                    break;
+        if(c.type == "variables") {
+            // Render system variables.
+            var names = Object.keys(c.variables).sort()
+            for(var j = 0; j < names.length; j++) {
+                var name = names[j]
+                var value = c.variables[names[j]]
+                if(name == "_template") {
+                    var parts = splitOnce(value, ":")
+                    var template = escapeHtml(parts[0].trim())
+                    var version = escapeHtml(parts[1].trim())
+                    cards.push(renderComment(c, "fa-cog", "Template",
+                        `Use template <b>${template}` +
+                        `</b> version <b>${version}</b>.`))
                 }
             }
-            iconText = `Comment on step "${step}"`
-            text = mdSanitizeAndConvert(c.body)
-        }
-        if(c.type == "vars") {
-            icon = "fa-question"
-            iconText = "Variable"
-            text = ""
-            var names = Object.keys(c.vars).sort()
+            // Render user-defined variables.
+            var text = ""
+            var names = Object.keys(c.variables).sort()
             for(var j = 0; j < names.length; j++) {
+                if(names[j].startsWith("_")) continue
                 text += `<p>Variable <b>${escapeHtml(names[j])}</b> set to ` +
-                    `<b>${escapeHtml(c.vars[names[j]])}</b>.</p>`
+                    `<b>${escapeHtml(c.variables[names[j]])}</b>.</p>`
+            }
+            if(text.length > 0) {
+                cards.push(renderComment(c, "fa-question", "Variables", text))
             }
         }
-        if(c.type == "sysvars") {
-            var icon = "fa-cog"
-            var iconText = "System variable"
-            var text = ""
-            // TODO: Render different system variables.
-        }
-        $("#history-main").append(renderComment(c, icon, iconText, text))
-        // Clicking on the button creates a global comment.
-        $("#comment-button").click(function () {
-            var body = $("#history-comment").val()
-            ghPost(`repos/${repository}/issues/${issue}/comments`,
-                  {"body": body}, function(reply) { 
-                location.reload();
-            })
-        })
     }
+    $("#history-main").append(cards)
+
+    // Clicking on the "Comment" button creates a global comment.
+    $("#comment-button").click(function () {
+        var body = $("#history-comment").val()
+        ghPost(`repos/${repository}/issues/${issue}/comments`,
+              {"body": body}, function(reply) { 
+            location.reload();
+        })
+    })
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -460,36 +510,68 @@ $(document).ready(function() {
           function(issue) {
         ghGet(`repos/${issueRepository}/issues/${issueNumber}/comments`, null,
               function(cmnts) {
-            $("#title").prepend(issue.title)
-            $(document).attr("title", issue.title);
-            cmnts.unshift(issue)
-            var comments = processComments(cmnts)
-            var sysvars = extractVariablesFromComments(comments, "sysvars")
-            var vars = extractVariablesFromComments(comments, "vars")
-            var template = sysvars["_template"].split(':')
-            ghGet(`repos/${issueRepository}/contents/${template[0]}` +
-                  `?ref=${template[1]}`, {}, function(src) {
-                var steps = parseSteps(atob(src.content), vars)
-                annotateStepsWithStatus(steps, sysvars)
-                annotateStepsWithComments(steps, comments)
-                initSteps(steps)
-                initGraph(steps)
-                initHistory(issueRepository, issueNumber, comments, steps)
-                initVariables(issueRepository, issueNumber, vars)
-                // Add the issue to the list of recent issues.
-                var recent = JSON.parse(localStorage.getItem("recent"))
-                if(recent == null) recent = []
-                recent = recent.filter(function(it) {
-                    return it.repository != issueRepository ||
-                        it.issue != issueNumber
-                })
-                recent.unshift({
-                    repository: issueRepository,
-                    issue: issueNumber,
-                    title: issue.title,
-                })
-                recent = recent.slice(0, 20)
-                localStorage.setItem("recent", JSON.stringify(recent))
+            var comments = processComments(issue, cmnts)
+            // Merge the variables from comments to get the current status quo.
+            var variables = {}
+            for(var i = 0; i < comments.comments.length; i++) {
+                var comment = comments.comments[i]
+                if(comment.type != "variables") continue
+                variables = Object.assign(variables, comment.variables)
+            }
+            // Get the template file.
+            if(!"_template" in variables) {
+                throw "Template file not specified in the issue!"
+            }
+            var parts = variables["_template"].split(':')
+            var template = parts[0].trim()
+            var version = parts[1].trim()
+            ghGet(`repos/${issueRepository}/contents${template}` +
+                  `?ref=${version}`, {}, function(src) {
+                var steps = parseTemplate(atob(src.content))
+                // Collect statuses from comments.
+                var statusById = {}
+                for(var i = 0; i != steps.steps.length; i++) {
+                    var id = steps.steps[i].id
+                    var status = "not-done"
+                    var vname = "_status+" + id
+                    if(vname in variables)
+                        status = variables[vname]
+                    statusById[id] = status
+                }
+                // Annotate the steps with statuses.
+                for(var i = 0; i != steps.steps.length; i++) {
+                    var step = steps.steps[i]
+                    if(statusById[step.id] == "done") {
+                        step["status"] = "done"
+                        continue
+                    }
+                    // Steps that are not yet done will be either 'active' or
+                    // 'blocked' based on the status of the dependecies.
+                    var deps = step.deps
+                    var blocked = false
+                    for(j = 0; j < step.deps.length; j++) {
+                        var depId = step.deps[j]
+                        if(statusById[depId] != "done") {
+                            blocked = true
+                            break
+                        }
+                    }
+                    if(blocked) step["status"] = "blocked"
+                    else step["status"] = "active"
+                }
+                
+                // At this point we are done with data collection and
+                // preprocessing we can more to rendering the page.
+                
+                // The page title is the title of the GitHub issue.
+                $("#title").prepend(issue.title)
+                $(document).attr("title", issue.title);
+                // Initialize different tabs on the page.
+                initSteps(steps, comments.commentsByStep)
+                initGraph(steps.steps)
+                initHistory(issueRepository, issueNumber, comments.comments,
+                    steps.stepById)
+                initVariables(issueRepository, issueNumber, variables)
 
                 $("#inspect-variables").click(function () {
                     $(".more-tab").hide()
@@ -514,6 +596,21 @@ $(document).ready(function() {
                 $("#back-to-index").click(function () {
                     window.location.href = "index.html"
                 })
+
+                // Add the issue to the list of recent issues.
+                var recent = JSON.parse(localStorage.getItem("recent"))
+                if(recent == null) recent = []
+                recent = recent.filter(function(it) {
+                    return it.repository != issueRepository ||
+                        it.issue != issueNumber
+                })
+                recent.unshift({
+                    repository: issueRepository,
+                    issue: issueNumber,
+                    title: issue.title,
+                })
+                recent = recent.slice(0, 20)
+                localStorage.setItem("recent", JSON.stringify(recent))
             })
         })
     })

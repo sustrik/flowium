@@ -94,6 +94,15 @@ function escapeHtml(str) {
     return $("<p></p>").text(str).html()
 }
 
+function replaceInSet(set, selector, by) {
+    return $('<p>')
+        .append(set)
+        .find(selector)
+        .replaceWith(by)
+        .end()
+        .contents()
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Markdown rendering
 
