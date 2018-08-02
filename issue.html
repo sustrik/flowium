@@ -72,16 +72,15 @@ function parseSteps(source, variables) {
             continue
         }
         if(inputs.length > 0) {
-
             step += `<div>${inputs}<p><button type="button"
-                class="btn btn-secondary">Save</button></p></div></div></div>`
+                class="btn btn-primary">Save</button></p></div></div></div>`
             inputs = ""
         }
         step += ln + "\n"
     }
     if(inputs.length > 0) {
-        step += `<div>${inputs}<p><button onclick="saveVariables(this)">` +
-            `Save</button></p></div>`
+        step += `<div>${inputs}<p><button type="button"
+            class="btn btn-primary">Save</button></p></div></div></div>`
         inputs = ""
     }
     if(stepname != null) {
