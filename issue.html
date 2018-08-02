@@ -497,14 +497,17 @@ $(document).ready(function() {
                     $("#more-variables").show()
                 })
                 $("#gh-link-template").attr("href",
-                    `https://github.com/sustrik/flowium-sandbox/blob/${template[1]}/${template[0]}`)
+                    `https://github.com/sustrik/flowium-sandbox/blob/` +
+                    `${template[1]}/${template[0]}`)
                 $("#gh-edit-template").attr("href",
-                    `https://github.com/sustrik/flowium-sandbox/edit/master/${template[0]}`)
+                    `https://github.com/sustrik/flowium-sandbox/edit/master/` +
+                    `${template[0]}`)
                 $("#gh-update-template").click(function () {
                     // TODO
                 })
                 $("#gh-link-issue").attr("href",
-                    `https://github.com/${issueRepository}/issues/${issueNumber}`)
+                    `https://github.com/${issueRepository}/issues/` +
+                    `${issueNumber}`)
                 $("#cancel-more").click(function () {
                     $(".more-tab").hide()
                     $("#more-index").show()
@@ -557,13 +560,17 @@ $(document).ready(function() {
     <div id="graph" class="container tab-pane fade">
       <h3>Workflow graph</h3>
       <br>
-      <p>This graph shows the dependencies between the steps. The steps are clickable.</p>
+      <p>This graph shows the dependencies between the steps.
+         The steps are clickable.</p>
       <br>
       <div id="graph-main"></div>
       <br>
-      <p><i class="fa fa-circle comment-icon done-font"></i>Steps that are done are grey.</p>
-      <p><i class="fa fa-circle comment-icon active-font"></i>Active steps are green.</p>
-      <p><i class="fa fa-circle comment-icon blocked-font"></i>Blocked steps are red.</p>
+      <p><i class="fa fa-circle comment-icon done-font"></i>
+        Steps that are done are grey.</p>
+      <p><i class="fa fa-circle comment-icon active-font"></i>
+        Active steps are green.</p>
+      <p><i class="fa fa-circle comment-icon blocked-font"></i>
+        Blocked steps are red.</p>
     </div>
 
     <div id="history" class="container tab-pane fade">
@@ -582,15 +589,24 @@ $(document).ready(function() {
       <div id="more-index" class="more-tab">
         <h3>More options</h3>
         <br>
-        <p><a id="inspect-variables" href="#">Inspect the variables</a></p>
-        <p><a id="gh-link-template" target="_blank">Show the version of the template curretly used by this issue</a></p>
-        <p><a id="gh-edit-template" target="_blank">Edit the newest version of the issue template</a></p>
-        <p><a id="gh-update-template" href="#">Update to the different version of the template</a></p>
-        <p><a id="gh-link-issue" target="_blank">Go to the GitHub issue</a></p>
-        <p><a href="https://github.com/sustrik/flowium/issues/new" target="_blank">Report a bug in Flowium</a></p>
+        <p><a id="inspect-variables" href="#">
+          Inspect the variables</a></p>
+        <p><a id="gh-link-template" target="_blank">
+          Show the version of the template currently used by this issue</a></p>
+        <p><a id="gh-edit-template" target="_blank">
+          Edit the newest version of the issue template</a></p>
+        <p><a id="gh-update-template" href="#">
+          Update to the different version of the template</a></p>
+        <p><a id="gh-link-issue" target="_blank">
+          Go to the GitHub issue</a></p>
+        <p><a href="https://github.com/sustrik/flowium/issues/new" target="_blank">
+          Report a bug in Flowium</a></p>
       </div>
       <div id="more-variables" class="more-tab" style="display: none;">
-        <h3>Variables<i id="cancel-more" class="float-right fa fa-close cancel-icon"></i></h3>
+        <h3>
+          Variables
+          <i id="cancel-more" class="float-right fa fa-close cancel-icon"></i>
+        </h3>
         <br>
         <table class="table table-hover">
           <thead>
