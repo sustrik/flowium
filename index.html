@@ -193,12 +193,11 @@ function loadTemplates(repository, path) {
     })
 }
 
-
-
 $(document).ready(function() {
     // Authenticate with GitHub, as needed.
     authenticate()
 
+    // Fill in the "home" tab,
     $(".section-body").hide()
     $(".section-header").click(function () {
         var hidden = $(this).next().is(":hidden")
