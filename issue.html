@@ -295,7 +295,7 @@ function processComments(issue, comments) {
 //  Steps.
 ////////////////////////////////////////////////////////////////////////////////
 
-function initSteps(steps, commentsByStep, stepById) {
+function initSteps(repository, issue, steps, commentsByStep, stepById) {
     for(var i = 0; i < steps.steps.length; i++) {
         var step = steps.steps[i]
 
@@ -362,7 +362,7 @@ function initSteps(steps, commentsByStep, stepById) {
         var comments = commentsByStep[step.id]
         if(comments != undefined) {
             for(var j = 0; j < comments.length; j++) {
-                li.append(renderComment(comments[j], null, null,
+                li.append(renderComment(comments[j], "fa-pencil", "Comment",
                     comments[j].body))
             }
         }
@@ -371,12 +371,24 @@ function initSteps(steps, commentsByStep, stepById) {
         li.append(`<div class="form-group"><textarea class="form-control"
             id="history-comment" rows="4"></textarea></div>`)
         if(step.status == "done") {
-            li.append(`<button type="button"
-                class="btn btn-primary">Not done</button>`)
+            li.append($(`<button type="button" class="btn btn-primary">Not done</button>`).click(function (step) {return function() {
+                var body = `~>_status+${step.id}: not-done`
+                ghPost(`repos/${repository}/issues/${issue}/comments`,
+                      {"body": body}, function(reply) { 
+                    location.reload()
+                })
+            }}(step)))
         } else {
-            li.append(`<button type="button"
-                class="btn btn-primary">Comment</button><button type="button"
-                class="btn btn-primary">Done</button>`)
+            li.append($(`<button type="button" class="btn btn-primary">Comment</button>`).click(function (step) {return function() {
+                console.log(step.id)
+            }}(step)))
+            li.append($(`<button type="button" class="btn btn-primary">Done</button>`).click(function (step) {return function() {
+                var body = `~>_status+${step.id}: done`
+                ghPost(`repos/${repository}/issues/${issue}/comments`,
+                      {"body": body}, function(reply) { 
+                    location.reload()
+                })
+            }}(step)))
         }
         card.append(ul)
 
@@ -466,7 +478,8 @@ function renderComment(comment, icon, iconText, text) {
     hdr.append($(`<span class="float-right"></span>`)
         .text(comment.created))
     // Comment body.
-    var body = $(`<div class="card-body comment-body"></div>`)
+    var body = $(`<div class="card-body"></div>`)
+    if(icon === "fa-pencil") body.addClass("comment-body")
     var ic = $(`<p><i class="fa ${icon} comment-icon"></i></p>`)
         .append(iconText)
     body.append($("<b></b>").html(ic))
@@ -526,7 +539,7 @@ function initHistory(repository, issue, comments, steps) {
         var body = $("#history-comment").val()
         ghPost(`repos/${repository}/issues/${issue}/comments`,
               {"body": body}, function(reply) { 
-            location.reload();
+            location.reload()
         })
     })
 }
@@ -614,7 +627,8 @@ $(document).ready(function() {
                 $("#title").prepend(issue.title)
                 $(document).attr("title", issue.title);
                 // Initialize different tabs on the page.
-                initSteps(steps, comments.commentsByStep)
+                initSteps(issueRepository, issueNumber, steps,
+                    comments.commentsByStep)
                 initGraph(steps.steps)
                 initHistory(issueRepository, issueNumber, comments.comments,
                     steps.stepById)
