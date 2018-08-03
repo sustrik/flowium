@@ -380,7 +380,12 @@ function initSteps(repository, issue, steps, commentsByStep, stepById) {
             }}(step)))
         } else {
             li.append($(`<button type="button" class="btn btn-primary">Comment</button>`).click(function (step) {return function() {
-                console.log(step.id)
+                var text = $(this).prev().children().first().val()
+                var body = `~>_step: ${step.id}` + "\n\n" + text
+                ghPost(`repos/${repository}/issues/${issue}/comments`,
+                      {"body": body}, function(reply) { 
+                    location.reload()
+                })
             }}(step)))
             li.append($(`<button type="button" class="btn btn-primary">Done</button>`).click(function (step) {return function() {
                 var body = `~>_status+${step.id}: done`
@@ -479,7 +484,6 @@ function renderComment(comment, icon, iconText, text) {
         .text(comment.created))
     // Comment body.
     var body = $(`<div class="card-body"></div>`)
-    if(icon === "fa-pencil") body.addClass("comment-body")
     var ic = $(`<p><i class="fa ${icon} comment-icon"></i></p>`)
         .append(iconText)
     body.append($("<b></b>").html(ic))
