@@ -466,7 +466,7 @@ function renderComment(comment, icon, iconText, text) {
     hdr.append($(`<span class="float-right"></span>`)
         .text(comment.created))
     // Comment body.
-    var body = $(`<div class="card-body"></div>`)
+    var body = $(`<div class="card-body comment-body"></div>`)
     var ic = $(`<p><i class="fa ${icon} comment-icon"></i></p>`)
         .append(iconText)
     body.append($("<b></b>").html(ic))
