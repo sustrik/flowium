@@ -371,7 +371,8 @@ function initSteps(repository, issue, steps, commentsByStep, stepById) {
         li.append(`<div class="form-group"><textarea class="form-control"
             id="history-comment" rows="4"></textarea></div>`)
         if(step.status == "done") {
-            li.append($(`<button type="button" class="btn btn-primary">Not done</button>`).click(function (step) {return function() {
+            li.append($(`<button type="button" class="btn btn-primary">
+                  Not done</button>`).click(function (step) {return function() {
                 var body = `~>_status+${step.id}: not-done`
                 ghPost(`repos/${repository}/issues/${issue}/comments`,
                       {"body": body}, function(reply) { 
@@ -379,7 +380,8 @@ function initSteps(repository, issue, steps, commentsByStep, stepById) {
                 })
             }}(step)))
         } else {
-            li.append($(`<button type="button" class="btn btn-primary">Comment</button>`).click(function (step) {return function() {
+            li.append($(`<button type="button" class="btn btn-primary">
+                  Comment</button>`).click(function (step) {return function() {
                 var text = $(this).prev().children().first().val()
                 var body = `~>_step: ${step.id}` + "\n\n" + text
                 ghPost(`repos/${repository}/issues/${issue}/comments`,
@@ -387,7 +389,8 @@ function initSteps(repository, issue, steps, commentsByStep, stepById) {
                     location.reload()
                 })
             }}(step)))
-            li.append($(`<button type="button" class="btn btn-primary">Done</button>`).click(function (step) {return function() {
+            li.append($(`<button type="button" class="btn btn-primary">
+                  Done</button>`).click(function (step) {return function() {
                 var body = `~>_status+${step.id}: done`
                 ghPost(`repos/${repository}/issues/${issue}/comments`,
                       {"body": body}, function(reply) { 
@@ -521,6 +524,19 @@ function initHistory(repository, issue, comments, steps) {
                     cards.push(renderComment(c, "fa-cog", "Template",
                         `Use template <b>${template}` +
                         `</b> version <b>${version}</b>.`))
+                    continue
+                }
+                if(name.startsWith("_status+")) {
+                    var s = name.substring(8)
+                    if(value == "done") {
+                        var info =
+                            `Step "${linkToStep(s, steps)}" marked as done`
+                        cards.push(renderComment(c, "fa-check", info, ""))
+                    } else {
+                        var info =
+                            `Step "${linkToStep(s, steps)}" marked as not done`
+                        cards.push(renderComment(c, "fa-minus", info, ""))
+                    }
                 }
             }
             // Render user-defined variables.
