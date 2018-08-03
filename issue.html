@@ -295,9 +295,11 @@ function processComments(issue, comments) {
 //  Steps.
 ////////////////////////////////////////////////////////////////////////////////
 
-function initSteps(steps, commentsByStep) {
+function initSteps(steps, commentsByStep, stepById) {
     for(var i = 0; i < steps.steps.length; i++) {
         var step = steps.steps[i]
+
+        // Step header.
         var card = $(`<div class="card flowium-step"></div>`)
         var hdr = $(`<div id="__${step.id}" class="card-header ` +
             `flowium-card-header"></div>`)
@@ -308,43 +310,76 @@ function initSteps(steps, commentsByStep) {
             var hidden = $(this).next().is(":hidden")
             $(".step-body").hide()
             if(hidden) $(this).next().show()
+            else $(this).next().hide()
         })
         card.append(hdr)
-        var body = $(`<div class="card-body step-body" ` +
-            `style="display: none;"></div>`)
+
+        var ul = $(`<ul class="list-group list-group-flush step-body" style="display: none;"></ul>`)
+
+        // Prepare alert about blockers, if needed.
+        var alert = ""
+        if(step.deps.length > 0) {
+            alert += `<div class="alert alert-danger" role="alert">` +
+                "This step is blocked by:"
+            for(var j = 0; j < step.deps.length; j++) {
+                var dep = step.deps[j]
+                if(steps.stepById[dep].status == "done") continue
+                alert += " " + linkToStep(dep, steps.stepById)
+                if(j != step.deps.length - 1) alert += ","
+            }
+            alert += ".</div>"
+        }
+
         // Render the actual body of the step.
         for(var j = 0; j < step.parts.length; j++) {
             var part = step.parts[j]
+            var li = $(`<li class="list-group-item"></li>`)
+            if(j == 0 && alert.length != 0) {
+                li.append(alert)
+            }
             if(part.type == "html") {
-                body.append(part.body)
-                continue
+                li.append(part.body)
             }
             if(part.type == "form") {
                 for(var k = 0; k != part.fields.length; k++) {
                     var field = part.fields[k]
+                    var label = $(`<label></label>`).append(field.caption)
+                    var input = $(`<input type="text" class="form-control">` +
+                        `</input>`)
+                    var fg = $(`<div class="form-group"></div>`)
+                        .append(label)
+                        .append(input)
+                    li.append(fg)
                 }
+                li.append(`<button type="button" class="btn btn-primary">` +
+                    `Save</button>`)
             }
+            ul.append(li)
         }
+
         // Add step-level comments.
+        var li = $(`<li class="list-group-item"></li>`)
         var comments = commentsByStep[step.id]
         if(comments != undefined) {
             for(var j = 0; j < comments.length; j++) {
-                body.append(renderComment(comments[j], null, null,
+                li.append(renderComment(comments[j], null, null,
                     comments[j].body))
             }
         }
+        ul.append(li)
         // Add the buttons on the bottom of the step.
-        body.append(`<div class="form-group"><textarea class="form-control"
+        li.append(`<div class="form-group"><textarea class="form-control"
             id="history-comment" rows="4"></textarea></div>`)
         if(step.status == "done") {
-            body.append(`<button type="button"
+            li.append(`<button type="button"
                 class="btn btn-primary">Not done</button>`)
         } else {
-            body.append(`<button type="button"
+            li.append(`<button type="button"
                 class="btn btn-primary">Comment</button><button type="button"
                 class="btn btn-primary">Done</button>`)
         }
-        card.append(body)
+        card.append(ul)
+
         $("#steps-main").append(card)
     }
 }
@@ -451,7 +486,7 @@ function initHistory(repository, issue, comments, steps) {
         if(c.type == "comment") {
             var info = "Comment"
             if("step" in c) {
-                info += ` on step "${steps[c.step].title}"`
+                info += ` on step "${linkToStep(c.step, steps)}"`
             }
             cards.push(renderComment(c, "fa-pencil", info, c.body))
             continue
@@ -504,7 +539,11 @@ function goToStep(stepId) {
     $('#steps-button').click()
     $("#__" + stepId).click()
     $("#__" + stepId)[0].scrollIntoView()
-    console.log("here")
+}
+
+function linkToStep(stepId, stepById) {
+    return $("<a></a>").text(stepById[stepId].title).attr("href",
+        `javascript:goToStep("${stepId}")`)[0].outerHTML
 }
 
 $(document).ready(function() {
