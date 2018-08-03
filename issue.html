@@ -318,16 +318,15 @@ function initSteps(repository, issue, steps, commentsByStep, stepById) {
 
         // Prepare alert about blockers, if needed.
         var alert = ""
-        if(step.deps.length > 0) {
-            alert += `<div class="alert alert-danger" role="alert">` +
-                "This step is blocked by:"
+        if(step.status == "blocked") {
             for(var j = 0; j < step.deps.length; j++) {
                 var dep = step.deps[j]
                 if(steps.stepById[dep].status == "done") continue
                 alert += " " + linkToStep(dep, steps.stepById)
                 if(j != step.deps.length - 1) alert += ","
             }
-            alert += ".</div>"
+            alert = `<div class="alert alert-danger" role="alert">` +
+                `This step is blocked by: ${alert}.</div>`
         }
 
         // Render the actual body of the step.
