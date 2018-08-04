@@ -295,10 +295,9 @@ function processComments(issue, comments) {
 //  Steps.
 ////////////////////////////////////////////////////////////////////////////////
 
-function initSteps(repository, issue, steps, commentsByStep, stepById) {
+function initSteps(repository, issue, steps, commentsByStep, variables) {
     for(var i = 0; i < steps.steps.length; i++) {
         var step = steps.steps[i]
-
         // Step header.
         var card = $(`<div class="card flowium-step"></div>`)
         var hdr = $(`<div id="__${step.id}" class="card-header ` +
@@ -314,7 +313,8 @@ function initSteps(repository, issue, steps, commentsByStep, stepById) {
         })
         card.append(hdr)
 
-        var ul = $(`<ul class="list-group list-group-flush step-body" style="display: none;"></ul>`)
+        var ul = $(`<ul class="list-group list-group-flush step-body" ` +
+            `style="display: none;"></ul>`)
 
         // Prepare alert about blockers, if needed.
         var alert = ""
@@ -345,6 +345,8 @@ function initSteps(repository, issue, steps, commentsByStep, stepById) {
                     var label = $(`<label></label>`).append(field.caption)
                     var input = $(`<input type="text" class="form-control">` +
                         `</input>`)
+                    if(field.name in variables)
+                        input.val(variables[field.name])
                     var fg = $(`<div class="form-group"></div>`)
                         .append(label)
                         .append(input)
@@ -656,7 +658,7 @@ $(document).ready(function() {
                 $(document).attr("title", issue.title);
                 // Initialize different tabs on the page.
                 initSteps(issueRepository, issueNumber, steps,
-                    comments.commentsByStep)
+                    comments.commentsByStep, variables)
                 initGraph(steps.steps)
                 initHistory(issueRepository, issueNumber, comments.comments,
                     steps.stepById)
