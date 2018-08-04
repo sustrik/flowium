@@ -586,7 +586,7 @@ function initHistory(repository, issue, comments, steps) {
                     `${version}/${template}`)
                     cards.push(renderComment(c, "fa-cog", "Template",
                         `Use template <b>${template}` +
-                        `</b> version <b>${link[0].outerHTML}</b>.`))
+                        `</b> version ${link[0].outerHTML}.`))
                     continue
                 }
                 if(name.startsWith("_status+")) {
