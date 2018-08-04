@@ -375,6 +375,7 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
                        updates += `~> ${name}: ${value}` + "\n"
                     }
                     if(updates == "") return
+                    $("flowium-all").hide()
                     ghPost(`repos/${repository}/issues/${issue}/comments`,
                           {"body": updates.trim()}, function(reply) {
                         location.reload()
@@ -401,6 +402,7 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
               Comment</button>`).click(function (step) {return function() {
             var text = $(this).prev().children().first().val()
             var body = `~>_step: ${step.id}` + "\n\n" + text
+            $("flowium-all").hide()
             ghPost(`repos/${repository}/issues/${issue}/comments`,
                   {"body": body}, function(reply) { 
                 location.reload()
@@ -411,6 +413,7 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
                   flowium-active">
                   Not done</button>`).click(function (step) {return function() {
                 var body = `~>_status+${step.id}: not-done`
+                $("flowium-all").hide()
                 ghPost(`repos/${repository}/issues/${issue}/comments`,
                       {"body": body}, function(reply) { 
                     location.reload()
@@ -421,6 +424,7 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
                   flowium-active">
                   Done</button>`).click(function (step) {return function() {
                 var body = `~>_status+${step.id}: done`
+                $("flowium-all").hide()
                 ghPost(`repos/${repository}/issues/${issue}/comments`,
                       {"body": body}, function(reply) { 
                     location.reload()
@@ -436,6 +440,7 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
     if(closed) {
         var btn =$(`<p><button class="btn btn-primary">Reopen</button></p>`)
         btn.click(function () {
+            $("flowium-all").hide()
             ghPost(`repos/${repository}/issues/${issue}`, {"state": "open"},
                   function(reply) { 
                 location.reload()
@@ -447,6 +452,7 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
     } else {
         var btn =$(`<p><button class="btn btn-primary">Close</button></p>`)
         btn.click(function () {
+            $("flowium-all").hide()
             ghPost(`repos/${repository}/issues/${issue}`, {"state": "closed"},
                   function(reply) { 
                 window.location.href = "index.html"
@@ -517,6 +523,7 @@ function initVariables(repository, issue, vars) {
         var name = $("#variable-name").val()
         var value = $("#variable-value").val()
         var body = `~> ${name}: ${value}`
+        $("flowium-all").hide()
         ghPost(`repos/${repository}/issues/${issue}/comments`,
               {"body": body}, function(reply) { 
             location.reload();
@@ -610,6 +617,7 @@ function initHistory(repository, issue, comments, steps) {
     // Clicking on the "Comment" button creates a global comment.
     $("#comment-button").click(function () {
         var body = $("#history-comment").val()
+        $("flowium-all").hide()
         ghPost(`repos/${repository}/issues/${issue}/comments`,
               {"body": body}, function(reply) { 
             location.reload()
@@ -754,6 +762,9 @@ $(document).ready(function() {
                 })
                 recent = recent.slice(0, 20)
                 localStorage.setItem("recent", JSON.stringify(recent))
+
+                // All is done. Let's make the page visible.
+                $("#flowium-all").show()
             })
         })
     })
@@ -762,7 +773,7 @@ $(document).ready(function() {
 </script>
 <body>
   
-<div class="container-fluid">
+<div id="flowium-all" class="container-fluid" style="display: none;">
 
   <h1 id="title" class="flowium-title"><small><i id="back-to-index"
     class="float-right fa fa-close cancel-icon"></i></small></h1>
