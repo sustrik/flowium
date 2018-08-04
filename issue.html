@@ -353,8 +353,8 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
                 for(var k = 0; k != part.fields.length; k++) {
                     var field = part.fields[k]
                     var label = $(`<label></label>`).append(field.caption)
-                    var input = $(`<input type="text" class="form-control">` +
-                        `</input>`).attr("vname", field.name)
+                    var input = $(`<input type="text" class="form-control ` +
+                        `flowium-active"></input>`).attr("vname", field.name)
                     if(field.name in variables)
                         input.val(variables[field.name])
                     var fg = $(`<div class="form-group"></div>`)
@@ -362,8 +362,8 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
                         .append(input)
                     li.append(fg)
                 }
-                li.append($(`<button type="button" class="btn btn-primary">` +
-                      `Save</button>`).click(function () {
+                li.append($(`<button type="button" class="btn btn-primary ` +
+                      `flowium-active">Save</button>`).click(function () {
                     var updates = ""
                     var groups = $(this).parent().children(".form-group")
                     for(var k = 0; k < groups.length; k++) {
@@ -398,7 +398,8 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
         li.append(`<div class="form-group"><textarea class="form-control"
             id="history-comment" rows="4"></textarea></div>`)
         if(step.status == "done") {
-            li.append($(`<button type="button" class="btn btn-primary">
+            li.append($(`<button type="button" class="btn btn-primary
+                  flowium-active">
                   Not done</button>`).click(function (step) {return function() {
                 var body = `~>_status+${step.id}: not-done`
                 ghPost(`repos/${repository}/issues/${issue}/comments`,
@@ -416,7 +417,8 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
                     location.reload()
                 })
             }}(step)))
-            li.append($(`<button type="button" class="btn btn-primary">
+            li.append($(`<button type="button" class="btn btn-primary
+                  flowium-active">
                   Done</button>`).click(function (step) {return function() {
                 var body = `~>_status+${step.id}: done`
                 ghPost(`repos/${repository}/issues/${issue}/comments`,
@@ -440,6 +442,8 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
             })
         })
         $("#steps-main").append("<br>").append(btn)
+        // Disable all the active elements.
+        $(".flowium-active").attr("disabled", "")
     } else {
         var btn =$(`<p><button class="btn btn-primary">Close</button></p>`)
         btn.click(function () {
@@ -838,8 +842,8 @@ $(document).ready(function() {
         <br>
         <h5>Flowium</h5>
         <br>
-        <p><a href="https://github.com/sustrik/flowium/issues/new" target="_blank">
-          Report a bug in Flowium</a></p>
+        <p><a href="https://github.com/sustrik/flowium/issues/new"
+          target="_blank">Report a bug in Flowium</a></p>
       </div>
       <div id="more-variables" class="more-tab" style="display: none;">
         <h3>
@@ -858,14 +862,16 @@ $(document).ready(function() {
         </table>
         <div class="form-group">
             <label for="variable-name">Name:</label>
-            <input type="text" class="form-control" id="variable-name"></input>
+            <input type="text" class="form-control flowium-active"
+                id="variable-name"></input>
         </div>
         <div class="form-group">
             <label for="variable-value">Value:</label>
-            <input type="text" class="form-control" id="variable-value"></input>
+            <input type="text" class="form-control flowium-active"
+                id="variable-value"></input>
         </div>
-        <button id="variable-save" type="button" class="btn btn-primary">
-            Save</button>
+        <button id="variable-save" type="button"
+            class="btn btn-primary flowium-active">Save</button>
       </div>
     </div>
   </div>
