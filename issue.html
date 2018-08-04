@@ -27,7 +27,7 @@ function testId(id) {
     if(!re.test(id)) throw `Invalid ID ${id}.`
 }
 
-// Function parseHeading gets a line with markdown heading and returns
+// Function parseHeading gets a line with the heading and returns
 // the following object:
 //
 // {
@@ -61,8 +61,8 @@ function parseHeading(ln) {
     return {id: id, title: title, deps: deps}
 }
 
-// Function parseField gets a line with markdown field, e.g.
-// "* First name ~> first-name" and returns the following object:
+// Function parseField gets a line with the field, e.g.
+// "First name ~> first-name" and returns the following object:
 //
 // {
 //     caption: <caption of the input field in markdown format>,
@@ -144,15 +144,19 @@ function parseTemplate(template) {
             for(var j = 0; j < subitems.length; j++) {
                 if($(subitems[j]).text().includes("~>")) {
                     isForm = true
-                    break;
+                    break
                 }
             }
             if(isForm) {
-                var field = parseField($(ch[i]).text())
-                if(step.parts.length == 0 ||
-                      step.parts[step.parts.length - 1].type != "form")
-                    step.parts.push({type: "form", fields: []})
-                step.parts[step.parts.length - 1].fields.push(field)
+                for(var j = 0; j < subitems.length; j++) {
+                    if(subitems[j].nodeName != "LI") continue
+                    var field = parseField($(subitems[j]).text())
+                    //console.log(field)
+                    if(step.parts.length == 0 ||
+                          step.parts[step.parts.length - 1].type != "form")
+                        step.parts.push({type: "form", fields: []})
+                    step.parts[step.parts.length - 1].fields.push(field)
+                }
                 continue
             }
         }
@@ -344,7 +348,7 @@ function initSteps(repository, issue, steps, commentsByStep, variables) {
                     var field = part.fields[k]
                     var label = $(`<label></label>`).append(field.caption)
                     var input = $(`<input type="text" class="form-control">` +
-                        `</input>`)
+                        `</input>`).attr("vname", field.name)
                     if(field.name in variables)
                         input.val(variables[field.name])
                     var fg = $(`<div class="form-group"></div>`)
@@ -352,8 +356,24 @@ function initSteps(repository, issue, steps, commentsByStep, variables) {
                         .append(input)
                     li.append(fg)
                 }
-                li.append(`<button type="button" class="btn btn-primary">` +
-                    `Save</button>`)
+                li.append($(`<button type="button" class="btn btn-primary">` +
+                      `Save</button>`).click(function () {
+                    var updates = ""
+                    var groups = $(this).parent().children(".form-group")
+                    for(var k = 0; k < groups.length; k++) {
+                       var input = groups.eq(k).children("input").first()
+                       var name = input.attr("vname")
+                       var value = input.val()
+                       if(name in variables && variables[name] == value)
+                           continue
+                       updates += `~> ${name}: ${value}` + "\n"
+                    }
+                    if(updates == "") return
+                    ghPost(`repos/${repository}/issues/${issue}/comments`,
+                          {"body": updates.trim()}, function(reply) {
+                        location.reload()
+                    })
+                }))
             }
             ul.append(li)
         }
