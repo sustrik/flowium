@@ -17,7 +17,9 @@ function ghGet(path, args, cb) {
 function ghPost(path, args, cb) {
     var anHttpRequest = new XMLHttpRequest();
     anHttpRequest.onreadystatechange = function() {
-        if (anHttpRequest.readyState == 4 && anHttpRequest.status == 201)
+        if (anHttpRequest.readyState == 4 &&
+              anHttpRequest.status >= 200 &&
+              anHttpRequest.status < 300)
             cb(issues = JSON.parse(anHttpRequest.responseText))
     }
     anHttpRequest.open('POST', "https://api.github.com/" + path, true)

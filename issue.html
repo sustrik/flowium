@@ -299,7 +299,13 @@ function processComments(issue, comments) {
 //  Steps.
 ////////////////////////////////////////////////////////////////////////////////
 
-function initSteps(repository, issue, steps, commentsByStep, variables) {
+function initSteps(repository, issue, steps, commentsByStep, variables,
+      closed) {
+    if(closed) {
+        alert = `<div class="alert alert-danger" role="alert">` +
+                `This issue is closed!</div><br>`
+        $("#steps-main").append(alert)
+    }
     for(var i = 0; i < steps.steps.length; i++) {
         var step = steps.steps[i]
         // Step header.
@@ -422,6 +428,27 @@ function initSteps(repository, issue, steps, commentsByStep, variables) {
         card.append(ul)
 
         $("#steps-main").append(card)
+    }
+
+    // The close/reopen button in the bottom of the steps tab.
+    if(closed) {
+        var btn =$(`<p><button class="btn btn-primary">Reopen</button></p>`)
+        btn.click(function () {
+            ghPost(`repos/${repository}/issues/${issue}`, {"state": "open"},
+                  function(reply) { 
+                location.reload()
+            })
+        })
+        $("#steps-main").append("<br>").append(btn)
+    } else {
+        var btn =$(`<p><button class="btn btn-primary">Close</button></p>`)
+        btn.click(function () {
+            ghPost(`repos/${repository}/issues/${issue}`, {"state": "closed"},
+                  function(reply) { 
+                window.location.href = "index.html"
+            })
+        })
+        $("#steps-main").append("<br>").append(btn)
     }
 }
 
@@ -678,7 +705,7 @@ $(document).ready(function() {
                 $(document).attr("title", issue.title);
                 // Initialize different tabs on the page.
                 initSteps(issueRepository, issueNumber, steps,
-                    comments.commentsByStep, variables)
+                    comments.commentsByStep, variables, issue.state == "closed")
                 initGraph(steps.steps)
                 initHistory(issueRepository, issueNumber, comments.comments,
                     steps.stepById)
