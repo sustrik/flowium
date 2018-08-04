@@ -629,6 +629,58 @@ function initHistory(repository, issue, comments, steps) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//  More.
+////////////////////////////////////////////////////////////////////////////////
+
+function initMore(repository, issue, template, version, variables) {
+    $("#inspect-variables").click(function () {
+        $(".more-tab").hide()
+        $("#more-variables").show()
+    })
+    $("#gh-update-template").click(function () {
+        $("#template-file").val(template)
+        $("#template-commit").empty()
+        // Load the history of the template file.
+        ghGet(`repos/${repository}/commits?path=${template}`,
+              {}, function(reply) {
+            for(var i = 0; i < reply.length; i++) {
+                var msg = reply[i].commit.message.split("\n")[0]
+                var sha = reply[i].sha
+                if(sha == version) break
+                var opt = $("<option></option>")
+                    .attr("value", sha)
+                    .text(msg)
+                $("#template-commit").append(opt)
+            }
+            $("#update-button").click(function () {
+                var commit = $("#template-commit").val()
+                $("flowium-all").hide()
+                var body = `~> _template: ${template}:${commit}`
+                ghPost(`repos/${repository}/issues/${issue}/comments`,
+                      {"body": body}, function(reply) { 
+                    location.reload()
+                })
+            })
+            $(".more-tab").hide()
+            $("#more-update").show()
+        })
+    })
+    $("#gh-link-template").attr("href",
+        `https://github.com/${repository}/blob/` +
+        `${version}/${template}`)
+    $("#gh-edit-template").attr("href",
+        `https://github.com/${repository}/edit/master/` +
+        `${template}`)
+    $("#gh-link-issue").attr("href",
+        `https://github.com/${repository}/issues/` +
+        `${issue}`)
+    $(".cancel-more").click(function () {
+        $(".more-tab").hide()
+        $("#more-index").show()
+    })
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //  Main.
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -730,53 +782,8 @@ $(document).ready(function() {
                 initHistory(issueRepository, issueNumber, comments.comments,
                     steps.stepById)
                 initVariables(issueRepository, issueNumber, variables)
-
-                // "More" tab. TODO: Move to a separate function.
-                $("#inspect-variables").click(function () {
-                    $(".more-tab").hide()
-                    $("#more-variables").show()
-                })
-                $("#gh-update-template").click(function () {
-                    $("#template-file").val(template)
-                    $("#template-commit").empty()
-                    // Load the history of the template file.
-                    ghGet(`repos/${issueRepository}/commits?path=${template}`,
-                          {}, function(reply) {
-                        for(var i = 0; i < reply.length; i++) {
-                            var msg = reply[i].commit.message.split("\n")[0]
-                            var sha = reply[i].sha
-                            if(sha == version) break
-                            var opt = $("<option></option>")
-                                .attr("value", sha)
-                                .text(msg)
-                            $("#template-commit").append(opt)
-                        }
-                        $("#update-button").click(function () {
-                            var commit = $("#template-commit").val()
-                            $("flowium-all").hide()
-                            var body = `~> _template: ${template}:${commit}`
-                            ghPost(`repos/${issueRepository}/issues/${issueNumber}/comments`,
-                                  {"body": body}, function(reply) { 
-                                location.reload()
-                            })
-                        })
-                        $(".more-tab").hide()
-                        $("#more-update").show()
-                    })
-                })
-                $("#gh-link-template").attr("href",
-                    `https://github.com/${issueRepository}/blob/` +
-                    `${version}/${template}`)
-                $("#gh-edit-template").attr("href",
-                    `https://github.com/${issueRepository}/edit/master/` +
-                    `${template}`)
-                $("#gh-link-issue").attr("href",
-                    `https://github.com/${issueRepository}/issues/` +
-                    `${issueNumber}`)
-                $(".cancel-more").click(function () {
-                    $(".more-tab").hide()
-                    $("#more-index").show()
-                })
+                initMore(issueRepository, issueNumber, template, version,
+                    variables)
 
                 // Add the issue to the list of recent issues.
                 var recent = JSON.parse(localStorage.getItem("recent"))
