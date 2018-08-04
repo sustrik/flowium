@@ -581,7 +581,7 @@ function initHistory(repository, issue, comments, steps) {
                     var parts = splitOnce(value, ":")
                     var template = escapeHtml(parts[0].trim())
                     var version = escapeHtml(parts[1].trim())
-                    var link = $("<a></a>").text(version).attr("href",
+                    var link = $(`<a target="_blank"></a>`).text(version).attr("href",
                     `https://github.com/${repository}/blob/` +
                     `${version}/${template}`)
                     cards.push(renderComment(c, "fa-cog", "Template",
