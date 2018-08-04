@@ -721,11 +721,11 @@ $(document).ready(function() {
                     $("#more-variables").show()
                 })
                 $("#gh-link-template").attr("href",
-                    `https://github.com/sustrik/flowium-sandbox/blob/` +
-                    `${template[1]}/${template[0]}`)
+                    `https://github.com/${issueRepository}/blob/` +
+                    `${version}/${template}`)
                 $("#gh-edit-template").attr("href",
-                    `https://github.com/sustrik/flowium-sandbox/edit/master/` +
-                    `${template[0]}`)
+                    `https://github.com/${issueRepository}/edit/master/` +
+                    `${template}`)
                 $("#gh-update-template").click(function () {
                     // TODO
                 })
@@ -839,7 +839,7 @@ $(document).ready(function() {
         <p><a id="gh-link-template" target="_blank">
           Currently used version of the template</a></p>
         <p><a id="gh-edit-template" target="_blank">
-          Edit the newest version of the issue template</a></p>
+          Edit the template</a></p>
         <br>
         <h5>Flowium</h5>
         <br>
