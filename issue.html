@@ -41,7 +41,7 @@ function parseHeading(ln) {
     // as an ID encolsed in double quotes. If there are double quotes in the
     // heading text they will be replaced by single quotes.
     if(!ln.includes("~>"))
-        return {id: '"' + ln.replace('"', '"') + '"', title: ln, deps: []}
+        return {id: djbHash(ln), title: ln, deps: []}
     // Format of the Flowium heading line: Title ~> foo: bar baz
     var parts = splitOnce(ln, "~>")
     var title = parts[0].trim()

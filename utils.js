@@ -87,11 +87,6 @@ function splitOnce(str, delimiter) {
     return [str.substring(0, i), str.substring(i + delimiter.length)]
 }
 
-function ltrimChar(str, ch) {
-    var pos = [...str].findIndex(function (el) {return el != ch})
-    return str.substring(pos)
-}
-
 function escapeHtml(str) {
     return $("<p></p>").text(str).html()
 }
@@ -103,6 +98,14 @@ function replaceInSet(set, selector, by) {
         .replaceWith(by)
         .end()
         .contents()
+}
+
+function djbHash(str) {
+  var hash = 5381
+  for(var i = 0; i < str.length; i++) {
+      hash = (hash * 33) ^ str.charCodeAt(i)
+  }
+  return (hash >>> 0).toString(16);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
