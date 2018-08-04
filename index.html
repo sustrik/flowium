@@ -293,12 +293,15 @@ $(document).ready(function() {
         var comment = $("#create-comment").val()
         createIssue(repository, template, title, comment)
     })
+
+    // Now the page is fully loaded, so show it to the user.
+    $("#flowium-all").show()
 })
 
 </script>
 <body>
   
-<div class="container-fluid">
+<div id="flowium-all" class="container-fluid" style="display: none;">
 
   <h1 class="flowium-title">Flowium</h1>
   <h4 class="flowium-title"><span class="badge badge-warning">Under construction</span></h4>
