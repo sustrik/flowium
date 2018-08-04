@@ -612,9 +612,7 @@ $(document).ready(function() {
                 for(var j = 0; j < keys.length; j++) {
                     var name = keys[j]
                     var value = variables[name]
-                    text = text.replace(
-                        new RegExp(`#{${name}}`, 'g'),
-                        escapeHtml(value))
+                    text = text.replace(new RegExp(`#{${name}}`, 'g'), value)
                 }
                 // Do the template parsing.
                 var steps = parseTemplate(text)
