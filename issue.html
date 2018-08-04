@@ -606,7 +606,18 @@ $(document).ready(function() {
             var version = parts[1].trim()
             ghGet(`repos/${issueRepository}/contents${template}` +
                   `?ref=${version}`, {}, function(src) {
-                var steps = parseTemplate(atob(src.content))
+                // Expand variables in the template text.
+                var text = atob(src.content)
+                var keys = Object.keys(variables)
+                for(var j = 0; j < keys.length; j++) {
+                    var name = keys[j]
+                    var value = variables[name]
+                    text = text.replace(
+                        new RegExp(`#{${name}}`, 'g'),
+                        escapeHtml(value))
+                }
+                // Do the template parsing.
+                var steps = parseTemplate(text)
                 // Collect statuses from comments.
                 var statusById = {}
                 for(var i = 0; i != steps.steps.length; i++) {
@@ -638,7 +649,7 @@ $(document).ready(function() {
                     if(blocked) step["status"] = "blocked"
                     else step["status"] = "active"
                 }
-                
+
                 // At this point we are done with data collection and
                 // preprocessing we can more to rendering the page.
                 
