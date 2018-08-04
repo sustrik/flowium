@@ -715,7 +715,11 @@ $(document).ready(function() {
                 
                 // The page title is the title of the GitHub issue.
                 $("#title").prepend(issue.title)
-                $(document).attr("title", issue.title);
+                $(document).attr("title", issue.title)
+                $("#back-to-index").click(function () {
+                    window.location.href = "index.html"
+                })
+
                 // Initialize different tabs on the page.
                 initSteps(issueRepository, issueNumber, steps,
                     comments.commentsByStep, variables, issue.state == "closed")
@@ -724,9 +728,38 @@ $(document).ready(function() {
                     steps.stepById)
                 initVariables(issueRepository, issueNumber, variables)
 
+                // "More" tab. TODO: Move to a separate function.
                 $("#inspect-variables").click(function () {
                     $(".more-tab").hide()
                     $("#more-variables").show()
+                })
+                $("#gh-update-template").click(function () {
+                    $("#template-file").val(template)
+                    $("#template-commit").empty()
+                    // Load the history of the template file.
+                    ghGet(`repos/${issueRepository}/commits?path=${template}`,
+                          {}, function(reply) {
+                        for(var i = 0; i < reply.length; i++) {
+                            var msg = reply[i].commit.message.split("\n")[0]
+                            var sha = reply[i].sha
+                            if(sha == version) break
+                            var opt = $("<option></option>")
+                                .attr("value", sha)
+                                .text(msg)
+                            $("#template-commit").append(opt)
+                        }
+                        $("#update-button").click(function () {
+                            var commit = $("#template-commit").val()
+                            $("flowium-all").hide()
+                            var body = `~> _template: ${template}:${commit}`
+                            ghPost(`repos/${issueRepository}/issues/${issueNumber}/comments`,
+                                  {"body": body}, function(reply) { 
+                                location.reload()
+                            })
+                        })
+                        $(".more-tab").hide()
+                        $("#more-update").show()
+                    })
                 })
                 $("#gh-link-template").attr("href",
                     `https://github.com/${issueRepository}/blob/` +
@@ -734,18 +767,12 @@ $(document).ready(function() {
                 $("#gh-edit-template").attr("href",
                     `https://github.com/${issueRepository}/edit/master/` +
                     `${template}`)
-                $("#gh-update-template").click(function () {
-                    // TODO
-                })
                 $("#gh-link-issue").attr("href",
                     `https://github.com/${issueRepository}/issues/` +
                     `${issueNumber}`)
-                $("#cancel-more").click(function () {
+                $(".cancel-more").click(function () {
                     $(".more-tab").hide()
                     $("#more-index").show()
-                })
-                $("#back-to-index").click(function () {
-                    window.location.href = "index.html"
                 })
 
                 // Add the issue to the list of recent issues.
@@ -837,8 +864,7 @@ $(document).ready(function() {
         <br>
         <p><a id="inspect-variables" href="#">
           Inspect the variables</a></p>
-        <p><a id="gh-update-template" href="#">
-          Update to a different version of the template</a></p>
+        <p><a id="gh-update-template" href="#">Update the template</a></p>
         <br>
         <h5>Links to GitHub</h5>
         <br>
@@ -854,10 +880,11 @@ $(document).ready(function() {
         <p><a href="https://github.com/sustrik/flowium/issues/new"
           target="_blank">Report a bug in Flowium</a></p>
       </div>
+
       <div id="more-variables" class="more-tab" style="display: none;">
         <h3>
           Variables
-          <i id="cancel-more" class="float-right fa fa-close cancel-icon"></i>
+          <i class="float-right fa fa-close cancel-icon cancel-more"></i>
         </h3>
         <br>
         <table class="table table-hover">
@@ -881,6 +908,26 @@ $(document).ready(function() {
         </div>
         <button id="variable-save" type="button"
             class="btn btn-primary flowium-active">Save</button>
+      </div>
+
+      <div id="more-update" class="more-tab" style="display: none;">
+        <h3>
+          Update template
+          <i class="float-right fa fa-close cancel-icon cancel-more"></i>
+        </h3>
+        <br>
+        <div class="form-group">
+            <label for="template-file">Template file:</label>
+            <input type="text" class="form-control" disabled
+                id="template-file"></input>
+        </div>
+        <div class="form-group">
+            <label for="template-commit">Commit:</label>
+            <select class="form-control" id="template-commit"></select>
+        </div>
+        <br/>
+        <button id="update-button" type="button"
+            class="btn btn-primary flowium-active">Update</button>
       </div>
     </div>
   </div>
