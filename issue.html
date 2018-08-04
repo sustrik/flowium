@@ -397,6 +397,15 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
         // Add the buttons on the bottom of the step.
         li.append(`<div class="form-group"><textarea class="form-control"
             id="history-comment" rows="4"></textarea></div>`)
+        li.append($(`<button type="button" class="btn btn-primary">
+              Comment</button>`).click(function (step) {return function() {
+            var text = $(this).prev().children().first().val()
+            var body = `~>_step: ${step.id}` + "\n\n" + text
+            ghPost(`repos/${repository}/issues/${issue}/comments`,
+                  {"body": body}, function(reply) { 
+                location.reload()
+            })
+        }}(step)))
         if(step.status == "done") {
             li.append($(`<button type="button" class="btn btn-primary
                   flowium-active">
@@ -408,15 +417,6 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
                 })
             }}(step)))
         } else {
-            li.append($(`<button type="button" class="btn btn-primary">
-                  Comment</button>`).click(function (step) {return function() {
-                var text = $(this).prev().children().first().val()
-                var body = `~>_step: ${step.id}` + "\n\n" + text
-                ghPost(`repos/${repository}/issues/${issue}/comments`,
-                      {"body": body}, function(reply) { 
-                    location.reload()
-                })
-            }}(step)))
             li.append($(`<button type="button" class="btn btn-primary
                   flowium-active">
                   Done</button>`).click(function (step) {return function() {
