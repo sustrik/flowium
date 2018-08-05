@@ -17,13 +17,13 @@
 intro = `
 In the IT industry there is certain kind of processes that are rarely executed
 without a lot of trouble. They are complex, volatile, often vaguely defined
-and not rarely long-lived. They have many participants and stakeholders. They
+and often long-lived. They have many participants and stakeholders. They
 are processes like "How to get a new major release out of the door?", "How to
 reconfigure the company network?" or "How to build a new datacenter?"
 
 These processes require a huge amount of highly technical knowledge, yet they
-are rarely documented and even if they are the documentation is often couple
-of years out of date. The knowledge is passed down by oral tradition, it
+are rarely documented. And even if they are the documentation is often couple
+of years out of date. The knowledge is passed down by oral tradition. It
 gradually dissipates and when people leave the company it is lost forever.
 
 Flowium is an attempt to help with this problem.
@@ -77,14 +77,14 @@ on here?
 
 The main design principle behind Flowium is that complex processes are
 inherently quirky and full of exceptions. Trying to enforce the process stricly
-would just put obstacles into the user's way. The shopping list may work for
+would just put obstacles in the user's way. The shopping list may work for
 most users but once in a while you are going to run into a user who hates jam.
 Or (too terrible to contemplate!) a user who eats butter and jam without bread.
 
 Therefore, Flowium adopts a liberal attitude, allowing for arbitrary violations
 of the process.
 
-Working with Flowium thus requires a particular mindset. The user has to
+Working with Flowium thus requires a particular mindset. The users have to
 understand that the tool is, for better or worse, not going to police them.
 It is there to guide, to help with tracking and communication, but it's not
 going to hold them back. If they screw up, there's no one else to shift the
@@ -100,7 +100,7 @@ Technically, the entire process is stored as a GitHub issue and is thus
 accessible to any user with appropriate access rights.
 
 The easiest way to send the issue to a colleague is to pass them the URL from
-your browser. When they open it they will see which steps were already done
+your browser. When they open it they will see which steps have already been done
 (marked grey) and which are still to be done (marked green). They can check
 the comments and understand what kinds of obstacles you've encountered when
 trying to execute the step.
@@ -148,7 +148,15 @@ Don't use too much butter or it will drip from the toast.
 Be generous with jam.
 \`\`\`
 
+You can
+<a href="index.html?action=create&repository=sustrik%2Fflowium-sandbox&template=%2Fmake-a-toast.md&title=My%20toast&comment=Make%20a%20toast!" target="_blank">play with this process here</a>.
+
 The first step has short name "toast", the second one "butter" and so on.
+
+<div class="alert alert-warning" role="alert">
+The short names of the steps can contain letters, digits
+and dashes. All the other characters are invalid.
+</div>
 
 What comes after colon are the steps that the current step depends on.
 For example, \`butter: toast\` means that step \`butter\` should not be executed
@@ -159,9 +167,6 @@ For those familiar with make tool, yes, this is exactly the same syntax.
 You can even think of Flowium as of make where individual steps are executed
 by human beings rather than by a computer.
 </div>
-
-You can
-<a href="index.html?action=create&repository=sustrik%2Fflowium-sandbox&template=%2Fmake-a-toast.md&title=My%20toast&comment=Make%20a%20toast!" target="_blank">play with this process here</a>.
 
 Note that some steps are now colored red. These are the blocked steps, i.e.
 steps that have at least one step they are depending on that is not yet done.
@@ -270,7 +275,7 @@ switch to get the entire datacenter alive.
 `
 
 variables = `
-It is possible to gather some data about the process from the user.
+It is possible to gather data about the process from the user.
 The data can then be used to customize further steps of the process. This is
 especially usefuly when we want to construct complex commands such as
 command lines. Consider this example:
@@ -305,7 +310,7 @@ versioning = `
 Complex processes are naturally subject to change. The more complex the process
 the more likely it is to change.
 
-This can be a problem if the processes changes while some of its instances are
+This can be a problem if the process changes while some of its instances are
 being executed. It's unclear what should happen. Should those in-flight
 instances automatically upgrade to the new version of the process? Should they
 continue using the old version?
@@ -314,7 +319,7 @@ When an issue is created with Flowium, the issue is associated with the newest
 version of the process. From there on, though, it sticks with that version.
 
 If the process (also known as "template file") is changed it doesn't effect
-the issue in any way.
+in-flight issues in any way.
 
 That in turn means that there can be multiple versions of the same process
 executed at the same time. For example, one datacenter may be still being built
