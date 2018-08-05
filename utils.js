@@ -50,13 +50,13 @@ function authenticate() {
     var token = localStorage.getItem("token")
     if(token != null) return
 
-    // Store the URL so that it can be reused once the authorization is over.
-    localStorage.setItem("url", window.location.href)
-
     // First step of authorization. Redirect to GitHub.
     var urlParams = new URLSearchParams(window.location.search)
     var code = urlParams.get("code")
     if(code == null) {
+        // Store URL so that it can be reused once the authorization is over.
+        localStorage.setItem("url", window.location.href)
+        // Redirect to GitHub to authorize.
         window.location.replace("https://github.com/login/oauth/authorize?" +
             "scope=repo&client_id=d027578d9cca180f9e0e")
         return
