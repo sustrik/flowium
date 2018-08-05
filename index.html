@@ -125,7 +125,9 @@ $(document).ready(function() {
     // Fill in the "recent issues" tab.
     var recent = JSON.parse(localStorage.getItem("recent"))
     var recentRepositories = {}
-    if(recent != null) {
+    if(recent == null || recent.length == 0) {
+        $("#no-recent-issues").show()
+    } else {
         for(var i = 0; i < recent.length; i++) {
             var issue = recent[i]
             recentRepositories[issue.repository] = null
@@ -140,7 +142,8 @@ $(document).ready(function() {
             t.append($("<td></td>").text(issue.repository))
             t.append($("<td></td>").text(`#${issue.issue}`))
             t.append($("<td></td>").text(issue.title))
-            $("#recent-issue-table").append(t)
+            $("#recent-issue-table-body").append(t)
+            $("#recent-issue-table").show()
         }
     }
     
@@ -244,7 +247,8 @@ $(document).ready(function() {
     <div id="recent-issues" class="container tab-pane active"><br>
       <h3>Recent issues</h3>
       <br>
-      <table class="table table-hover">
+      <table id="recent-issue-table" class="table table-hover"
+          style="display: none;">
         <thead>
           <tr>
             <th>Repository</th>
@@ -252,8 +256,11 @@ $(document).ready(function() {
             <th>Title</th>
           </tr>
         </thead>
-        <tbody id="recent-issue-table"></tbody>
+        <tbody id="recent-issue-table-body"></tbody>
       </table>
+      <div id="no-recent-issues" style="display: none;">
+        <p>There are no recent issues.</p>
+      </div>
     </div>
 
     <div id="find-issue" class="container tab-pane fade"><br>
