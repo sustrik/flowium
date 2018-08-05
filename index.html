@@ -122,6 +122,26 @@ $(document).ready(function() {
     // Authenticate with GitHub, as needed.
     authenticate()
 
+    // This page can be used to create issues by passing the parameters
+    // in the URL query string.
+    var urlParams = new URLSearchParams(window.location.search)
+    var action = urlParams.get("action")
+    if(action == "create") {
+        var repository = urlParams.get("repository")
+        if(repository == null) throw Error(
+            "Issue creation request is missing repository in the URL.")
+        var template = urlParams.get("template")
+        if(template == null) throw Error(
+            "Issue creation request is missing temlate in the URL.")
+        var title = urlParams.get("title")
+        if(title == null) throw Error(
+            "Issue creation request is missing title in the URL.")
+        var comment = urlParams.get("comment")
+        if(comment == null) comment = ""
+        createIssue(repository, template, title, comment)
+        return
+    }
+
     // Fill in the "recent issues" tab.
     var recent = JSON.parse(localStorage.getItem("recent"))
     var recentRepositories = {}

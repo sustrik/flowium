@@ -15,95 +15,49 @@
 <script>
 
 intro = `
-In the IT industry there's a certain kind of knowledge that is never written
-down, knowledge that is passed down by oral tradition, knowledge that slowly
-dissipates at the best of times and is abruptly lost when people move to
-different jobs.
+In the IT industry there is certain kind of processes that are rarely executed
+without a lot of troubles. They are complex, volatile, often vaguely defined
+and sometimes long-lived processes with many participants. They are
+processes like "How to get a new major release out of the door?", "How to
+reconfigure the company network?" or "How to build a new datacenter?"
 
-It's knowledge about processes that are too vague to automate, too complex
-to fully formalize, too volatile to keep any documentation up-to-date.
-It's things like "How do you get a new major release out of the door?",
-"How to reconfigure the company network?" or "How to build a new datacenter?"
+These processes require a huge amount of highly technical knowledge, yet they
+are rarely documented and even if they are the documentation is often couple
+of years out of date. The knowledge is passed down by oral tradition, it
+gradually dissipates and when people leave the company it is lost forever.
 
-These processes often require coordination between many parties. Often
-they involve manual steps like "Order the machines and wait until they are
-delivered." oftentimes they are long-lived, requiring handing over the work
-between people, and almost always they change and then change
-again, without much warning, while the work is still in progress.
+Flowium is an attempt to help with this problem. It assumes that the process
+is written down as a markdown document. Then it turns the document into a tool
+to guide people through the process, to track what has already been done, to
+collect all the available context and to provide a well-defined communication
+channel for all the participants in the process. Last but not least it tries
+to encourage updating and maintenance of the original markdown document.
 
-Once in a while someone gets desparate and writes the process down. But soon
-enough the document becomes outdated, people stop using it and finally it
-gets lost.
-
-Flowium tries to solve that problem, but it is in no way a silver bullet.
-It doesn't propose anything better than sitting down and writing down a
-document about the process. However, once the document is written it uses that
-document as a tool to guide people through the process, to communicate between
-the involved parties, to keep track of what was and what wasn't done.
-
-The hope is that if the documentation is helpful, in a very down-to-earth and
-practical way, people will be incentivized to use it, to improve it and to keep
-it up-to-date.
-
-All that being said, Flowium is not a tool to impose strict processes on the
-users. It provides guidance but defers the decision to users. If you are looking
-for a way to enforce rules it is not the tool you are looking for.`
-
-example = `
-Seeing is believing. Have a look for yourself.
-
-[This is a document describing a simple process](https://raw.githubusercontent.com/sustrik/flowium-sandbox/master/release.md)
-
-It's a standard Markdown document, with a simple extension to define
-dependencies between steps of the process (look for wiggly arrows, ~>).
-It describes how to create a new release of *Frobnicator* application.
-
-[Click here to start the process](javascript:createSandboxIssue())`
-
-howItWorks = `
-Flowium is a client-side web application, a simple shim on top of GitHub.
-It reads your Markdown document from GitHub and uses it to create an issue in
-GitHub's issue tracker.
-
-It splits the document into sections and allows you to mark those section as
-either done or not done. It also gives you an opportunity to comment on
-individual sections.
-
-Furthermore, there's a simple syntax that you can use to define dependencies
-between the individual steps in the document. If you do so Flowium will also
-show whether a step is active or blocked by an unfinished step that it depends
-on.
-
-At any point you can look at the graph of the workflow to get a quick idea
-about what was already done and what still remains to be done.
-
-Finally, there's a syntax to define variables (user will be asked to fill
-the values in) and syntax to expand those variables in the text of the document.
+Technically, Flowium is a thin shim on top of GitHub issue tracker. It runs
+entirely in the user's browser and speaks only to GitHub at the backend.
 `
 
-reference = `
-To define a step:
+shoping = `
+Let's start with the most trivial example. A list of items to buy at a grocery.
+Here's the markdown document:
 
 \`\`\`
-# Title of the step ~> step-id: dependency-1 dependency-2 dependency-3
+# Bread
+
+Choose a nice, crusty one.
+
+# Butter
+
+Don't buy to much of it else it'll get stale.
+
+# Jam
+
+Either strawberry or raspberry jam.
 \`\`\`
 
-All the text before the first step definition is ignored.
-
-To ask for user input:
-
-\`\`\`
-* First name: ~> first-name
-* Last name: ~> last-name
-* Date of birth: ~> birth-date 
-\`\`\`
-
-To expand the variables filled in by the user:
-
-\`\`\`
-Your name is #{first-name} #{last-name}
-and you were born on #{birth-date}.
-\`\`\`
+You are supposed to upload your document to your GitHub repository, however,
+the examples in this tutorial have already been uploaded for you, so you can
+[start shopping straight away](index.html?action=create&repository=sustrik%2Fflowium-sandbox&template=%2Fshopping-list.md&title=My%20shopping%20list&comment=Go%20shopping!).
 `
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,6 +83,11 @@ $(document).ready(function() {
     // This page deliberately doesn't do authorization so that even the users
     // who haven't authorized Flowium can still read the documentation.
 
+    var addr = 'issue.html' +
+        '?repository=' + encodeURIComponent("sustrik/flowium-sandbox") +
+        '&template=' + encodeURIComponent("/shopping-list.md") + "&title=" + encodeURIComponent("My shopping list") + "&comment=" + encodeURIComponent("Go shopping!")
+    console.log(addr)
+
     $("#back-to-index").click(function () {
         window.location.href = "index.html"
     })
@@ -140,9 +99,7 @@ $(document).ready(function() {
         if(hidden) $(this).next().show()
     })
     $("#intro").append(mdConvert(intro))
-    $("#example").append(mdConvert(example))
-    $("#how-it-works").append(mdConvert(howItWorks))
-    $("#reference").append(mdConvert(reference))
+    $("#shoping").append(mdConvert(shoping))
 
     // Now the page is fully loaded, so show it to the user.
     $("#flowium-all").show()
@@ -168,21 +125,9 @@ $(document).ready(function() {
     </div>
     <div class="card flowium-step">
       <div class="card-header flowium-card-header section-header">
-        <h5 class="step-title">Show me an example!</h5>
+        <h5 class="step-title">Shoping list</h5>
       </div>
-      <div id="example" class="card-body section-body"></div>
-    </div>
-    <div class="card flowium-step">
-      <div class="card-header flowium-card-header section-header">
-        <h5 class="step-title">How does it work?</h5>
-      </div>
-      <div id="how-it-works" class="card-body section-body"></div>
-    </div>
-    <div class="card flowium-step">
-      <div class="card-header flowium-card-header section-header">
-        <h5 class="step-title">Reference</h5>
-      </div>
-      <div id="reference" class="card-body section-body"></div>
+      <div id="shoping" class="card-body section-body step-body"></div>
     </div>
   </div>
 </div>
