@@ -129,6 +129,10 @@ $(document).ready(function() {
     // This page deliberately doesn't do authorization so that even the users
     // who haven't authorized Flowium can still read the documentation.
 
+    $("#back-to-index").click(function () {
+        window.location.href = "index.html"
+    })
+
     $(".section-body").hide()
     $(".section-header").click(function () {
         var hidden = $(this).next().is(":hidden")
@@ -148,7 +152,13 @@ $(document).ready(function() {
 <body>
   
 <div id="flowium-all" class="container-fluid" style="display: none;">
-  <h1 class="flowium-title">Flowium (Under construction)</h1>
+
+  <h1 class="flowium-title">Flowium (Under construction)
+    <small>
+      <i id="back-to-index" class="float-right fa fa-close cancel-icon"></i>
+    </small>
+  </h1>
+
   <div class="container tab-pane active"><br>
     <div class="card flowium-step">
       <div class="card-header flowium-card-header section-header">
