@@ -14,98 +14,6 @@
 </head>
 <script>
 
-intro = `
-In the IT industry there's a certain kind of knowledge that is never written
-down, knowledge that is passed down by oral tradition, knowledge that slowly
-dissipates at the best of times and is abruptly lost when people move to
-different jobs.
-
-It's knowledge about processes that are too vague to automate, too complex
-to fully formalize, too volatile to keep any documentation up-to-date.
-It's things like "How do you get a new major release out of the door?",
-"How to reconfigure the company network?" or "How to build a new datacenter?"
-
-These processes often require coordination between many parties. Often
-they involve manual steps like "Order the machines and wait until they are
-delivered." oftentimes they are long-lived, requiring handing over the work
-between people, and almost always they change and then change
-again, without much warning, while the work is still in progress.
-
-Once in a while someone gets desparate and writes the process down. But soon
-enough the document becomes outdated, people stop using it and finally it
-gets lost.
-
-Flowium tries to solve that problem, but it is in no way a silver bullet.
-It doesn't propose anything better than sitting down and writing down a
-document about the process. However, once the document is written it uses that
-document as a tool to guide people through the process, to communicate between
-the involved parties, to keep track of what was and what wasn't done.
-
-The hope is that if the documentation is helpful, in a very down-to-earth and
-practical way, people will be incentivized to use it, to improve it and to keep
-it up-to-date.
-
-All that being said, Flowium is not a tool to impose strict processes on the
-users. It provides guidance but defers the decision to users. If you are looking
-for a way to enforce rules it is not the tool you are looking for.`
-
-example = `
-Seeing is believing. Have a look for yourself.
-
-[This is a document describing a simple process](https://raw.githubusercontent.com/sustrik/flowium-sandbox/master/release.md)
-
-It's a standard Markdown document, with a simple extension to define
-dependencies between steps of the process (look for wiggly arrows, ~>).
-It describes how to create a new release of *Frobnicator* application.
-
-[Click here to start the process](javascript:createSandboxIssue())`
-
-howItWorks = `
-Flowium is a client-side web application, a simple shim on top of GitHub.
-It reads your Markdown document from GitHub and uses it to create an issue in
-GitHub's issue tracker.
-
-It splits the document into sections and allows you to mark those section as
-either done or not done. It also gives you an opportunity to comment on
-individual sections.
-
-Furthermore, there's a simple syntax that you can use to define dependencies
-between the individual steps in the document. If you do so Flowium will also
-show whether a step is active or blocked by an unfinished step that it depends
-on.
-
-At any point you can look at the graph of the workflow to get a quick idea
-about what was already done and what still remains to be done.
-
-Finally, there's a syntax to define variables (user will be asked to fill
-the values in) and syntax to expand those variables in the text of the document.
-`
-
-reference = `
-To define a step:
-
-\`\`\`
-# Title of the step ~> step-id: dependency-1 dependency-2 dependency-3
-\`\`\`
-
-All the text before the first step definition is ignored.
-
-To ask for user input:
-
-\`\`\`
-* First name: ~> first-name
-* Last name: ~> last-name
-* Date of birth: ~> birth-date 
-\`\`\`
-
-To expand the variables filled in by the user:
-
-\`\`\`
-Your name is #{first-name} #{last-name}
-and you were born on #{birth-date}.
-\`\`\`
-`
-
 ////////////////////////////////////////////////////////////////////////////////
 //  Error handling.
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,18 +122,6 @@ $(document).ready(function() {
     // Authenticate with GitHub, as needed.
     authenticate()
 
-    // Fill in the "home" tab,
-    $(".section-body").hide()
-    $(".section-header").click(function () {
-        var hidden = $(this).next().is(":hidden")
-        $(".section-body").hide()
-        if(hidden) $(this).next().show()
-    })
-    $("#intro").append(mdConvert(intro))
-    $("#example").append(mdConvert(example))
-    $("#how-it-works").append(mdConvert(howItWorks))
-    $("#reference").append(mdConvert(reference))
-
     // Fill in the "recent issues" tab.
     var recent = JSON.parse(localStorage.getItem("recent"))
     var recentRepositories = {}
@@ -324,11 +220,7 @@ $(document).ready(function() {
 
   <ul class="nav nav-tabs" role="tablist">
     <li class="nav-item">
-      <a class="nav-link active" data-toggle="tab" href="#home">
-          Home</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" data-toggle="tab" href="#recent-issues">
+      <a class="nav-link active" data-toggle="tab" href="#recent-issues">
           Recent</a>
     </li>
     <li class="nav-item">
@@ -339,42 +231,17 @@ $(document).ready(function() {
       <a class="nav-link" data-toggle="tab" href="#create-issue">
           Create</a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link" href="help.html">
+          Help</a>
+    </li>
   </ul>
 
   <div class="tab-content">
 
     <datalist id="repository-list"></datalist>
 
-    <div id="home" class="container tab-pane active"><br>
-      <h3>Home</h3>
-      <br>
-      <div class="card flowium-step">
-        <div class="card-header flowium-card-header section-header">
-          <h5 class="step-title">What is Flowium?</h5>
-        </div>
-        <div id="intro" class="card-body section-body step-body"></div>
-      </div>
-      <div class="card flowium-step">
-        <div class="card-header flowium-card-header section-header">
-          <h5 class="step-title">Show me an example!</h5>
-        </div>
-        <div id="example" class="card-body section-body"></div>
-      </div>
-      <div class="card flowium-step">
-        <div class="card-header flowium-card-header section-header">
-          <h5 class="step-title">How does it work?</h5>
-        </div>
-        <div id="how-it-works" class="card-body section-body"></div>
-      </div>
-      <div class="card flowium-step">
-        <div class="card-header flowium-card-header section-header">
-          <h5 class="step-title">Reference</h5>
-        </div>
-        <div id="reference" class="card-body section-body"></div>
-      </div>
-    </div>
-
-    <div id="recent-issues" class="container tab-pane fade"><br>
+    <div id="recent-issues" class="container tab-pane active"><br>
       <h3>Recent issues</h3>
       <br>
       <table class="table table-hover">

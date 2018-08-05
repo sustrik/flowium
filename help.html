@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>flowium</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="flowium.css">
+  <script src="utils.js"></script>
+</head>
+<script>
+
+intro = `
+In the IT industry there's a certain kind of knowledge that is never written
+down, knowledge that is passed down by oral tradition, knowledge that slowly
+dissipates at the best of times and is abruptly lost when people move to
+different jobs.
+
+It's knowledge about processes that are too vague to automate, too complex
+to fully formalize, too volatile to keep any documentation up-to-date.
+It's things like "How do you get a new major release out of the door?",
+"How to reconfigure the company network?" or "How to build a new datacenter?"
+
+These processes often require coordination between many parties. Often
+they involve manual steps like "Order the machines and wait until they are
+delivered." oftentimes they are long-lived, requiring handing over the work
+between people, and almost always they change and then change
+again, without much warning, while the work is still in progress.
+
+Once in a while someone gets desparate and writes the process down. But soon
+enough the document becomes outdated, people stop using it and finally it
+gets lost.
+
+Flowium tries to solve that problem, but it is in no way a silver bullet.
+It doesn't propose anything better than sitting down and writing down a
+document about the process. However, once the document is written it uses that
+document as a tool to guide people through the process, to communicate between
+the involved parties, to keep track of what was and what wasn't done.
+
+The hope is that if the documentation is helpful, in a very down-to-earth and
+practical way, people will be incentivized to use it, to improve it and to keep
+it up-to-date.
+
+All that being said, Flowium is not a tool to impose strict processes on the
+users. It provides guidance but defers the decision to users. If you are looking
+for a way to enforce rules it is not the tool you are looking for.`
+
+example = `
+Seeing is believing. Have a look for yourself.
+
+[This is a document describing a simple process](https://raw.githubusercontent.com/sustrik/flowium-sandbox/master/release.md)
+
+It's a standard Markdown document, with a simple extension to define
+dependencies between steps of the process (look for wiggly arrows, ~>).
+It describes how to create a new release of *Frobnicator* application.
+
+[Click here to start the process](javascript:createSandboxIssue())`
+
+howItWorks = `
+Flowium is a client-side web application, a simple shim on top of GitHub.
+It reads your Markdown document from GitHub and uses it to create an issue in
+GitHub's issue tracker.
+
+It splits the document into sections and allows you to mark those section as
+either done or not done. It also gives you an opportunity to comment on
+individual sections.
+
+Furthermore, there's a simple syntax that you can use to define dependencies
+between the individual steps in the document. If you do so Flowium will also
+show whether a step is active or blocked by an unfinished step that it depends
+on.
+
+At any point you can look at the graph of the workflow to get a quick idea
+about what was already done and what still remains to be done.
+
+Finally, there's a syntax to define variables (user will be asked to fill
+the values in) and syntax to expand those variables in the text of the document.
+`
+
+reference = `
+To define a step:
+
+\`\`\`
+# Title of the step ~> step-id: dependency-1 dependency-2 dependency-3
+\`\`\`
+
+All the text before the first step definition is ignored.
+
+To ask for user input:
+
+\`\`\`
+* First name: ~> first-name
+* Last name: ~> last-name
+* Date of birth: ~> birth-date 
+\`\`\`
+
+To expand the variables filled in by the user:
+
+\`\`\`
+Your name is #{first-name} #{last-name}
+and you were born on #{birth-date}.
+\`\`\`
+`
+
+////////////////////////////////////////////////////////////////////////////////
+//  Error handling.
+////////////////////////////////////////////////////////////////////////////////
+
+window.addEventListener('error', function (e) {
+    $("#flowium-all").hide()
+    console.log(e)
+    if("error" in e && e.error != null) var text = e.error.stack
+    else var text = e.message
+    var alert = $(`<pre class="alert alert-danger" role="alert"></pre>`)
+        .text(text)
+    $("#flowium-error-text").append(alert)
+    $("#flowium-error").show()
+})
+
+////////////////////////////////////////////////////////////////////////////////
+// Main.
+////////////////////////////////////////////////////////////////////////////////
+
+$(document).ready(function() {
+    // This page deliberately doesn't do authorization so that even the users
+    // who haven't authorized Flowium can still read the documentation.
+
+    $(".section-body").hide()
+    $(".section-header").click(function () {
+        var hidden = $(this).next().is(":hidden")
+        $(".section-body").hide()
+        if(hidden) $(this).next().show()
+    })
+    $("#intro").append(mdConvert(intro))
+    $("#example").append(mdConvert(example))
+    $("#how-it-works").append(mdConvert(howItWorks))
+    $("#reference").append(mdConvert(reference))
+
+    // Now the page is fully loaded, so show it to the user.
+    $("#flowium-all").show()
+})
+
+</script>
+<body>
+  
+<div id="flowium-all" class="container-fluid" style="display: none;">
+  <h1 class="flowium-title">Flowium (Under construction)</h1>
+  <div class="container tab-pane active"><br>
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">What is Flowium?</h5>
+      </div>
+      <div id="intro" class="card-body section-body step-body"></div>
+    </div>
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">Show me an example!</h5>
+      </div>
+      <div id="example" class="card-body section-body"></div>
+    </div>
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">How does it work?</h5>
+      </div>
+      <div id="how-it-works" class="card-body section-body"></div>
+    </div>
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">Reference</h5>
+      </div>
+      <div id="reference" class="card-body section-body"></div>
+    </div>
+  </div>
+</div>
+
+<div id="flowium-error" class="container-fluid" style="display: none;">
+    <br>
+    <h3>Flowium encountered an error</h3>
+    <br>
+    <div id="flowium-error-text"></div>
+    <p>If this doesn't look like a user error please do
+      <a href="https://github.com/sustrik/flowium/issues/new"
+          target="_blank">report the problem</a>.
+    </p>
+</div>
+
+</body>
+</html>
