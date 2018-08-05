@@ -57,7 +57,125 @@ Either strawberry or raspberry jam.
 
 You are supposed to upload your document to your GitHub repository, however,
 the examples in this tutorial have already been uploaded for you, so you can
-[start shopping straight away](index.html?action=create&repository=sustrik%2Fflowium-sandbox&template=%2Fshopping-list.md&title=My%20shopping%20list&comment=Go%20shopping!).
+<a href="index.html?action=create&repository=sustrik%2Fflowium-sandbox&template=%2Fshopping-list.md&title=My%20shopping%20list&comment=Go%20shopping!" target="_blank">start shopping straight away</a>.
+
+As you can see you can comment on individual steps and mark them as either
+done or not done. When a step is marked as done it's color changes from green
+to grey.
+`
+
+responsibility = `
+Imagine that the user bought both bread and butter and marked the corresponding
+steps as done. However, they've left following comment on the last step:
+"I hate jam!" Then they've closed the issue.
+
+A proper authoritarian tool would require all steps to be marked as done before
+the issue could be closed. However, Flowium allows to do that. What's going
+on here?
+
+The main design principle behind Flowium is that complex processes are
+inherently quirky and full of exceptions. Trying to enforce the process stricly
+would just put obstacles into the user's way. The shopping list may work for
+most users but once in a while you are going to run into a user who hates jam.
+Or (too terrible to contemplate!) a user who eats butter and jam without bread.
+
+Therefore, Flowium adopts a liberal attitude, allowing for arbitrary violations
+of the process.
+
+Working with Flowium thus requires a particular mindset. The user has to
+understand that the tool is, for better or worse, not going to police them.
+It is there to guide, to help with tracking and communication, but it's not
+going to hold them back. If they screw up, there's no one else to shift the
+responsibility to.
+`
+
+communication = `
+Flowium is, above all, a communication tool. If, after all, there was only
+one participant in the process, they could just keep the entire context in
+their mind and be done with it.
+
+Technically, the entire process is stored as a GitHub issue and is thus
+accessible to any user with appropriate access rights.
+
+The easiest way to send the issue to a colleague is to pass them the URL from
+your browser. When they open it they will see which steps were already done
+(marked grey) and which are still to be done (marked green). They can check
+the comments and understand what kinds of obstacles you've encountered when
+trying to execute the step.
+
+An alternative way to notify a co-worker is to take advantage of GitHub
+notifications. If you put someone's GitHub nick into a comment, they'll get
+notified:
+
+\`\`\`
+@johndoe: Can you please take a look at this?
+\`\`\`
+`
+
+audit = `
+Sometimes, when investigating a failure or writing a post-mortem, you want
+to see all that happened in chronological order.
+
+Click on the "History" tab in Flowium and you'll get exactly that.
+
+<div class="alert alert-warning" role="alert">
+Flowium does not allow you to edit or delete comments. Please refrain from
+doing so directly via GitHub GUI. It may not only obscure the audit trail but
+also break the Flowium process.
+</div>
+`
+
+dependencies = `
+More often than not a step cannot be done unless a previous step was finished.
+
+Flowium allows to formalize these dependencies by assigning short names to
+individual steps and then defining which depends on which:
+
+\`\`\`
+# Make a toast ~> toast
+
+Insert the bread into the toaster and press the lever. If the toast gets stuck
+in the toaster release it by banging on the side of the toaster.
+
+# Spread the butter ~> butter: toast
+
+Don't use too much butter or it will drip from the toast.
+
+# Spread the jam ~> jam: butter
+
+Be generous with jam.
+\`\`\`
+
+The first step has short name "toast", the second one "butter" and so on.
+
+What comes after colon are the steps that the current step depends on.
+For example, \`butter: toast\` means that step \`butter\` should not be executed
+before step \`toast\` is done.
+
+<div class="alert alert-primary" role="alert">
+For those familiar with make tool, yes, this is exactly the same syntax.
+You can even think of Flowium as of make where individual steps are executed
+by human beings rather than by computer.
+</div>
+
+You can
+<a href="index.html?action=create&repository=sustrik%2Fflowium-sandbox&template=%2Fmake-a-toast.md&title=My%20toast&comment=Make%20a%20toast!" target="_blank">play with this process here</a>.
+
+Note that some steps are now colored red. These are the blocked steps, i.e.
+steps that have at least one step they are depending on that is not yet done.
+That being said, Flowium is liberal and you can mark even a blocked step as
+done.
+
+Now that we have dependencies between the steps the "Graph" tab start to make
+sense. It gives you quick overview of the process, what states the individual
+steps are in and what's blocking what. Clicking on a step in the graph will
+navigate you the corresponding step.
+
+<div class="alert alert-warning" role="alert">
+While you may define steps without short names it's preferable not to do so.
+If there's no short name, the full title of the step (or rather a hash of it)
+is used as a step identifier and changing the title can break the workflow.
+</div>
 `
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,10 +201,10 @@ $(document).ready(function() {
     // This page deliberately doesn't do authorization so that even the users
     // who haven't authorized Flowium can still read the documentation.
 
-    var addr = 'issue.html' +
-        '?repository=' + encodeURIComponent("sustrik/flowium-sandbox") +
-        '&template=' + encodeURIComponent("/shopping-list.md") + "&title=" + encodeURIComponent("My shopping list") + "&comment=" + encodeURIComponent("Go shopping!")
-    console.log(addr)
+    //var addr = 'issue.html' +
+    //    '?repository=' + encodeURIComponent("sustrik/flowium-sandbox") +
+    //    '&template=' + encodeURIComponent("/shopping-list.md") + "&title=" + encodeURIComponent("My shopping list") + "&comment=" + encodeURIComponent("Go shopping!")
+    //console.log(addr)
 
     $("#back-to-index").click(function () {
         window.location.href = "index.html"
@@ -100,6 +218,10 @@ $(document).ready(function() {
     })
     $("#intro").append(mdConvert(intro))
     $("#shoping").append(mdConvert(shoping))
+    $("#responsibility").append(mdConvert(responsibility))
+    $("#communication").append(mdConvert(communication))
+    $("#audit").append(mdConvert(audit))
+    $("#dependencies").append(mdConvert(dependencies))
 
     // Now the page is fully loaded, so show it to the user.
     $("#flowium-all").show()
@@ -117,18 +239,49 @@ $(document).ready(function() {
   </h1>
 
   <div class="container tab-pane active"><br>
+
     <div class="card flowium-step">
       <div class="card-header flowium-card-header section-header">
         <h5 class="step-title">What is Flowium?</h5>
       </div>
       <div id="intro" class="card-body section-body step-body"></div>
     </div>
+
     <div class="card flowium-step">
       <div class="card-header flowium-card-header section-header">
         <h5 class="step-title">Shoping list</h5>
       </div>
       <div id="shoping" class="card-body section-body step-body"></div>
     </div>
+
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">With great power comes great responsibility</h5>
+      </div>
+      <div id="responsibility" class="card-body section-body step-body"></div>
+    </div>
+
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">Flowium as a communication tool</h5>
+      </div>
+      <div id="communication" class="card-body section-body step-body"></div>
+    </div>
+
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">Flowium as an audit trail</h5>
+      </div>
+      <div id="audit" class="card-body section-body step-body"></div>
+    </div>
+
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">Managing dependencies</h5>
+      </div>
+      <div id="dependencies" class="card-body section-body step-body"></div>
+    </div>
+
   </div>
 </div>
 
