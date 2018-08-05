@@ -64,7 +64,7 @@ function authenticate() {
     rq.onreadystatechange = function() { 
         if (rq.readyState == 4 && rq.status == 200) {
             localStorage.setItem("token", JSON.parse(rq.responseText).token)
-            window.location.replace("index.html")
+            location.reload()
         }
     }
     rq.open('GET', "https://flowium.herokuapp.com/authenticate/" + code, true);
