@@ -2,36 +2,45 @@
 // GitHub requests
 
 function ghGet(path, args, cb) {
-    var anHttpRequest = new XMLHttpRequest();
-    anHttpRequest.onreadystatechange = function() { 
-        if (anHttpRequest.readyState == 4) {
-            if(anHttpRequest.status == 200) {
-                cb(issues = JSON.parse(anHttpRequest.responseText))
+    var request = new XMLHttpRequest();
+    request.onerror = function() {
+        throw Error(request.responseText || "Network request failed.")
+    }
+    request.onreadystatechange = function() { 
+        if (request.readyState == 4) {
+            if (request.status >= 200 &&
+                  request.status < 300) {
+                cb(issues = JSON.parse(request.responseText))
             }
         }
     }
-    anHttpRequest.open('GET', "https://api.github.com/" + path, true);
-    anHttpRequest.setRequestHeader('Authorization','token ' + getToken())
-    anHttpRequest.setRequestHeader('Content-type', 'application/json')
-    anHttpRequest.setRequestHeader('Accept', '*/*')
-    anHttpRequest.send(args);
+    request.open('GET', "https://api.github.com/" + path, true);
+    request.setRequestHeader('Authorization','token ' + getToken())
+    request.setRequestHeader('Content-type', 'application/json')
+    request.setRequestHeader('Accept', '*/*')
+    request.send(args);
 }
 
 function ghPost(path, args, cb) {
-    var anHttpRequest = new XMLHttpRequest();
-    anHttpRequest.onreadystatechange = function() {
-        if (anHttpRequest.readyState == 4) {
-            if (anHttpRequest.status >= 200 &&
-                  anHttpRequest.status < 300) {
-                cb(issues = JSON.parse(anHttpRequest.responseText))
+    var request = new XMLHttpRequest()
+    request.onerror = function() {
+        throw Error(request.responseText || "Network request failed.")
+    }
+    request.onreadystatechange = function() {
+        if (request.readyState == 4) {
+            if (request.status >= 200 &&
+                  request.status < 300) {
+                cb(issues = JSON.parse(request.responseText))
+            } else {
+                console.log(request)
             }
         }
     }
-    anHttpRequest.open('POST', "https://api.github.com/" + path, true)
-    anHttpRequest.setRequestHeader('Authorization','token ' + getToken())
-    anHttpRequest.setRequestHeader('Content-type', 'application/json')
-    anHttpRequest.setRequestHeader('Accept', '*/*')
-    anHttpRequest.send(JSON.stringify(args))
+    request.open('POST', "https://api.github.com/" + path, true)
+    request.setRequestHeader('Authorization','token ' + getToken())
+    request.setRequestHeader('Content-type', 'application/json')
+    request.setRequestHeader('Accept', '*/*')
+    request.send(JSON.stringify(args))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
