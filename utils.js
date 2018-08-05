@@ -50,6 +50,9 @@ function authenticate() {
     var token = localStorage.getItem("token")
     if(token != null) return
 
+    // Store the URL so that it can be reused once the authorization is over.
+    localStorage.setItem("url", window.location.href)
+
     // First step of authorization. Redirect to GitHub.
     var urlParams = new URLSearchParams(window.location.search)
     var code = urlParams.get("code")
@@ -64,7 +67,8 @@ function authenticate() {
     rq.onreadystatechange = function() { 
         if (rq.readyState == 4 && rq.status == 200) {
             localStorage.setItem("token", JSON.parse(rq.responseText).token)
-            location.reload()
+            // Restore the original URL.
+            window.location.href = localStorage.getItem("url")
         }
     }
     rq.open('GET', "https://flowium.herokuapp.com/authenticate/" + code, true);
