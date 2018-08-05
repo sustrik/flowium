@@ -16,14 +16,14 @@
 
 intro = `
 In the IT industry there is certain kind of processes that are rarely executed
-without a lot of trouble. They are complex, volatile, often vaguely defined
-and often long-lived. They have many participants and stakeholders. They
+without running into a lot of trouble. They are complex, volatile, often vaguely
+defined and often long-lived. They have many participants and stakeholders. They
 are processes like "How to get a new major release out of the door?", "How to
 reconfigure the company network?" or "How to build a new datacenter?"
 
 These processes require a huge amount of highly technical knowledge, yet they
-are rarely documented. And even if they are the documentation is often couple
-of years out of date. The knowledge is passed down by oral tradition. It
+are rarely documented. And even if they are the documentation is often
+years out of date. The knowledge is passed down by oral tradition. It
 gradually dissipates and when people leave the company it is lost forever.
 
 Flowium is an attempt to help with this problem.
@@ -69,17 +69,18 @@ to grey.
 responsibility = `
 Imagine that the user bought both bread and butter and marked the corresponding
 steps as done. However, they've left following comment on the last step:
-"I hate jam!" Then they've closed the issue.
+"I hate jam! I am not going to buy it." Then they've closed the issue.
 
 A proper authoritarian tool would require all steps to be marked as done before
-the issue could be closed. However, Flowium allows to do that. What's going
+the issue could be closed. However, Flowium is lax about that. What's going
 on here?
 
-The main design principle behind Flowium is that complex processes are
-inherently quirky and full of exceptions. Trying to enforce the process stricly
-would just put obstacles in the user's way. The shopping list may work for
-most users but once in a while you are going to run into a user who hates jam.
-Or (too terrible to contemplate!) a user who eats butter and jam without bread.
+The main design principle behind Flowium is the acceptance of the fact that
+complex processes are inherently quirky and full of exceptions. Trying to
+enforce the process stricly would just put obstacles in the user's way.
+The shopping list may work for most users but once in a while you are going to
+run into a user who hates jam. Or (too terrible to contemplate!) a user who eats
+butter and jam without bread.
 
 Therefore, Flowium adopts a liberal attitude, allowing for arbitrary violations
 of the process.
@@ -87,16 +88,15 @@ of the process.
 Working with Flowium thus requires a particular mindset. The users have to
 understand that the tool is, for better or worse, not going to police them.
 It is there to guide, to help with tracking and communication, but it's not
-going to hold them back. If they screw up, there's no one else to shift the
-responsibility to.
+going to hold them back. If they screw up, there's no one else to blame.
 `
 
 communication = `
 Flowium is, above all, a communication tool. If, after all, there was only
 one participant in the process, they could just keep the entire context in
-their mind and be done with it.
+their head and be done with it.
 
-Technically, the entire process is stored as a GitHub issue and is thus
+Technically, the entire process is stored as a GitHub issue and it is thus
 accessible to any user with appropriate access rights.
 
 The easiest way to send the issue to a colleague is to pass them the URL from
@@ -131,7 +131,7 @@ dependencies = `
 More often than not a step cannot be done unless a previous step was finished.
 
 Flowium allows to formalize these dependencies by assigning short names to
-individual steps and then defining which depends on which:
+individual steps and then defining which step depends on which:
 
 \`\`\`
 # Make a toast ~> toast
@@ -151,7 +151,7 @@ Be generous with jam.
 You can
 <a href="index.html?action=create&repository=sustrik%2Fflowium-sandbox&template=%2Fmake-a-toast.md&title=My%20toast&comment=Make%20a%20toast!" target="_blank">play with this process here</a>.
 
-The first step has short name "toast", the second one "butter" and so on.
+The first step has short name \`toast\`, the second one \`butter\` and so on.
 
 <div class="alert alert-warning" role="alert">
 The short names of the steps can contain letters, digits
@@ -163,7 +163,7 @@ For example, \`butter: toast\` means that step \`butter\` should not be executed
 before step \`toast\` is done.
 
 <div class="alert alert-primary" role="alert">
-For those familiar with make tool, yes, this is exactly the same syntax.
+For those familiar with make tool, yes, this is make's syntax.
 You can even think of Flowium as of make where individual steps are executed
 by human beings rather than by a computer.
 </div>
@@ -174,20 +174,20 @@ That being said, Flowium is liberal and you can mark even a blocked step as
 done.
 
 Now that we have dependencies between the steps the "Graph" tab start to make
-sense. It gives you quick overview of the process, what states the individual
-steps are in and what's blocking what. Clicking on a step in the graph will
+sense. It gives you quick overview of the process, the states the individual
+steps and what's blocking what. Clicking on a step in the graph will
 navigate you the corresponding step.
 
 <div class="alert alert-warning" role="alert">
 While you may define steps without short names it's preferable not to do so.
-If there's no short name, the full title of the step (or rather a hash of it)
-is used as a step identifier and changing the title can break the workflow.
+If there's no short name, the full title of the step is used as a step
+identifier and changing the title can break the workflow.
 </div>
 `
 
 parallel = `
 Especially for long-lived processes, executing all the steps one-by-one would
-make the process stretch forever. We do want to execute as many steps as
+make the process stretch forever. Instead, we want to execute as many steps as
 possible in parallel.
 
 Here's an example of how to do that:
@@ -242,7 +242,7 @@ the delegation of work is done.
 
 Let's consider an example.
 
-Carol the CEO decides to build a new datacenter. She comments on the \`quotes\'
+Carol the CEO decides to build a new datacenter. She comments on the \`quotes\`
 step:
 
 \`\`\`
@@ -275,10 +275,10 @@ switch to get the entire datacenter alive.
 `
 
 variables = `
-It is possible to gather data about the process from the user.
+It is possible to gather arbitrary data from the user.
 The data can then be used to customize further steps of the process. This is
-especially usefuly when we want to construct complex commands such as
-command lines. Consider this example:
+especially useful when we want to construct complex content such as
+program snippets or command lines. Consider this example:
 
 \`\`\`
 # Install Frobnicator
@@ -307,28 +307,35 @@ there.
 `
 
 versioning = `
-Complex processes are naturally subject to change. The more complex the process
-the more likely it is to change.
+Complex processes are, unsurprisingly, subject to change. The more complex
+the process the more likely it is to change.
 
-This can be a problem if the process changes while some of its instances are
-being executed. It's unclear what should happen. Should those in-flight
+That can be a problem if the process changes while some of its instances are
+still being executed. It's unclear what should happen. Should those in-flight
 instances automatically upgrade to the new version of the process? Should they
 continue using the old version?
 
-When an issue is created with Flowium, the issue is associated with the newest
-version of the process. From there on, though, it sticks with that version.
-
-If the process (also known as "template file") is changed it doesn't effect
-in-flight issues in any way.
+Flowium opts for the latter. When an issue is created with Flowium it is
+associated with the newest version of the process. From there on, though,
+it sticks with that particular version. If the process (or, more precisely,
+its "template file") is changed it doesn't effect in-flight issues in any way.
 
 That in turn means that there can be multiple versions of the same process
-executed at the same time. For example, one datacenter may be still being built
-using the old process, while a more recent construction follows the new version
-of the process.
+that are being executed at the same time. For example, one datacenter may be
+still being built using the old process, while a more recent construction
+follows the new version of the process.
 
 All that being said, user can update the process version manually. Go to "More"
 tab and click on "Update the template" link. Then choose the version to
 upgrade to.
+
+<div class="alert alert-warning" role="alert">
+When upgrading to a new version of the template file take caution. Think about
+the consequences. If the process had changed a lot, upgrading to a new
+version may result in weird behaviour such as steps being done twice or not
+at all. Oftentimes, sticking to the old version of the process may be
+preferrable to upgrading.
+</div>
 `
 
 editing = `
@@ -336,7 +343,7 @@ Template files (the markdown files with process documentation) are just normal
 files stored in GitHub repositories. As such they can be edited and updated
 using the standard Git means.
 
-However, it may often be less painful to go to the "More" tab and click on
+However, it is often less painful to go to the "More" tab and click on
 "Edit the template" link. It opens GitHub's online editor, where the file can be
 updated and then committed by pressing a single button.
 
