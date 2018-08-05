@@ -4,8 +4,11 @@
 function ghGet(path, args, cb) {
     var anHttpRequest = new XMLHttpRequest();
     anHttpRequest.onreadystatechange = function() { 
-        if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
-            cb(issues = JSON.parse(anHttpRequest.responseText))
+        if (anHttpRequest.readyState == 4) {
+            if(anHttpRequest.status == 200) {
+                cb(issues = JSON.parse(anHttpRequest.responseText))
+            }
+        }
     }
     anHttpRequest.open('GET', "https://api.github.com/" + path, true);
     anHttpRequest.setRequestHeader('Authorization','token ' + getToken())
@@ -17,10 +20,12 @@ function ghGet(path, args, cb) {
 function ghPost(path, args, cb) {
     var anHttpRequest = new XMLHttpRequest();
     anHttpRequest.onreadystatechange = function() {
-        if (anHttpRequest.readyState == 4 &&
-              anHttpRequest.status >= 200 &&
-              anHttpRequest.status < 300)
-            cb(issues = JSON.parse(anHttpRequest.responseText))
+        if (anHttpRequest.readyState == 4) {
+            if (anHttpRequest.status >= 200 &&
+                  anHttpRequest.status < 300) {
+                cb(issues = JSON.parse(anHttpRequest.responseText))
+            }
+        }
     }
     anHttpRequest.open('POST', "https://api.github.com/" + path, true)
     anHttpRequest.setRequestHeader('Authorization','token ' + getToken())
