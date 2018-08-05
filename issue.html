@@ -24,7 +24,7 @@
 // Checks whether ID is valid.
 function testId(id) {
     var re = /^([a-zA-Z0-9-]+)|("[^"]*")$/
-    if(!re.test(id)) throw Error(`Invalid ID ${id}.`)
+    if(!re.test(id)) throw `Invalid ID ${id}.`
 }
 
 // Function parseHeading gets a line with the heading and returns
@@ -691,14 +691,6 @@ function initMore(repository, issue, template, version, variables) {
 //  Main.
 ////////////////////////////////////////////////////////////////////////////////
 
-function onError(e) {
-    $("#flowium-all").hide()
-    var alert = $(`<div class="alert alert-danger" role="alert"></div>`)
-        .text(e.toString())
-    $("#flowium-error").append("<br>").append(alert)
-    $("#flowium-error").show()
-}
-
 function goToStep(stepId) {
     $('#steps-button').click()
     $("#__" + stepId).click()
@@ -711,7 +703,6 @@ function linkToStep(stepId, stepById) {
 }
 
 $(document).ready(function() {
-  try {
     authenticate()
     // Parse query string.
     var urlParams = new URLSearchParams(window.location.search)
@@ -720,10 +711,8 @@ $(document).ready(function() {
     // Get the data from GitHub.
     ghGet(`repos/${issueRepository}/issues/${issueNumber}`, null,
           function(issue) {
-      try {
         ghGet(`repos/${issueRepository}/issues/${issueNumber}/comments`, null,
               function(cmnts) {
-          try {
             var comments = processComments(issue, cmnts)
             // Merge the variables from comments to get the current status quo.
             var variables = {}
@@ -734,14 +723,13 @@ $(document).ready(function() {
             }
             // Get the template file.
             if(!"_template" in variables) {
-                throw Error("Template file not specified in the issue!")
+                throw "Template file not specified in the issue!"
             }
             var parts = variables["_template"].split(':')
             var template = parts[0].trim()
             var version = parts[1].trim()
             ghGet(`repos/${issueRepository}/contents${template}` +
                   `?ref=${version}`, {}, function(src) {
-              try {
                 // Expand variables in the template text.
                 var text = atob(src.content)
                 var keys = Object.keys(variables)
@@ -769,7 +757,7 @@ $(document).ready(function() {
                         step["status"] = "done"
                         continue
                     }
-                    // Steps that are notr yet done will be either 'active' or
+                    // Steps that are not yet done will be either 'active' or
                     // 'blocked' based on the status of the dependecies.
                     var deps = step.deps
                     var blocked = false
@@ -821,14 +809,9 @@ $(document).ready(function() {
 
                 // All is done. Let's make the page visible.
                 $("#flowium-all").show()
-
-              } catch(e) {onError(e)}
             })
-          } catch(e) {onError(e)}
         })
-      } catch(e) {onError(e)}
     })
-  } catch(e) {onError(e)}
 })
 
 </script>
@@ -967,8 +950,6 @@ $(document).ready(function() {
   </div>
 
 </div>
-
-<div id="flowium-error" class="container-fluid" style="display: none;"></div>
 
 </body>
 </html>
