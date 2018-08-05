@@ -354,6 +354,11 @@ template" link to start using the new version of the process.
 </div>
 `
 
+example = `
+To get a better feel of how Flowium works in real world try a
+<a href="index.html?action=create&repository=sustrik%2Fflowium-sandbox&template=%2Frelease.md&title=Install%20Frobnicator" target="_blank">somehow more elaborated example here</a>.
+`
+
 ////////////////////////////////////////////////////////////////////////////////
 //  Error handling.
 ////////////////////////////////////////////////////////////////////////////////
@@ -397,6 +402,7 @@ $(document).ready(function() {
     $("#variables").append(mdConvert(variables))
     $("#versioning").append(mdConvert(versioning))
     $("#editing").append(mdConvert(editing))
+    $("#example").append(mdConvert(example))
 
     // Now the page is fully loaded, so show it to the user.
     $("#flowium-all").show()
@@ -483,6 +489,13 @@ $(document).ready(function() {
         <h5 class="step-title">Editing the processes</h5>
       </div>
       <div id="editing" class="card-body section-body step-body"></div>
+    </div>
+
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">Example</h5>
+      </div>
+      <div id="example" class="card-body section-body step-body"></div>
     </div>
 
   </div>
