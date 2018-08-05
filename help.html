@@ -16,9 +16,9 @@
 
 intro = `
 In the IT industry there is certain kind of processes that are rarely executed
-without a lot of troubles. They are complex, volatile, often vaguely defined
-and sometimes long-lived processes with many participants. They are
-processes like "How to get a new major release out of the door?", "How to
+without a lot of trouble. They are complex, volatile, often vaguely defined
+and not rarely long-lived. They have many participants and stakeholders. They
+are processes like "How to get a new major release out of the door?", "How to
 reconfigure the company network?" or "How to build a new datacenter?"
 
 These processes require a huge amount of highly technical knowledge, yet they
@@ -26,14 +26,16 @@ are rarely documented and even if they are the documentation is often couple
 of years out of date. The knowledge is passed down by oral tradition, it
 gradually dissipates and when people leave the company it is lost forever.
 
-Flowium is an attempt to help with this problem. It assumes that the process
+Flowium is an attempt to help with this problem.
+
+It assumes that the process
 is written down as a markdown document. Then it turns the document into a tool
 to guide people through the process, to track what has already been done, to
 collect all the available context and to provide a well-defined communication
 channel for all the participants in the process. Last but not least it tries
 to encourage updating and maintenance of the original markdown document.
 
-Technically, Flowium is a thin shim on top of GitHub issue tracker. It runs
+Technically, Flowium is a shim on top of GitHub issue tracker. It runs
 entirely in the user's browser and speaks only to GitHub at the backend.
 `
 
@@ -155,7 +157,7 @@ before step \`toast\` is done.
 <div class="alert alert-primary" role="alert">
 For those familiar with make tool, yes, this is exactly the same syntax.
 You can even think of Flowium as of make where individual steps are executed
-by human beings rather than by computer.
+by human beings rather than by a computer.
 </div>
 
 You can
@@ -175,6 +177,168 @@ navigate you the corresponding step.
 While you may define steps without short names it's preferable not to do so.
 If there's no short name, the full title of the step (or rather a hash of it)
 is used as a step identifier and changing the title can break the workflow.
+</div>
+`
+
+parallel = `
+Especially for long-lived processes, executing all the steps one-by-one would
+make the process stretch forever. We do want to execute as many steps as
+possible in parallel.
+
+Here's an example of how to do that:
+
+\`\`\`
+# Make a decision to build a datacenter ~> decide
+
+Be frank with yourself. Do we **really** need a new datacenter?
+
+Anyway, if we do, notify the procurement to order machines and the
+construction dept. to start building the damn thing.
+
+# Build it ~> build: decide
+
+Build the walls first. Then the roof.
+
+# Connect it to the grid ~> grid: build
+
+Plug the cable in.
+
+# Ask for quotes ~> quotes: decide
+
+To order the machines, first ask for quotes from different vendors.
+
+# Select a vendor ~> vendor: quotes
+
+Pick the cheapest one.
+
+# Make sure the machines are delivered in time ~> delivery: vendor
+
+Contact the vendor once in a while to make sure there are no slippages.
+
+# Install the machines ~> install: delivery grid
+
+Machines go to racks. You also have to plug the cables in.
+
+# Flip the switch ~> switch: install
+
+Wait for a stormy night. Then flip the big switch.
+\`\`\`
+
+<a href="index.html?action=create&repository=sustrik%2Fflowium-sandbox&template=%2Fbuild-a-datacenter.md&title=Build%20datacenter&comment=Build%20a%20new%20one." target="_blank">Play with this process</a>.
+
+As can be seen, splitting a flow into parallel flows requires only making
+mutliple steps depend on a single one. Joining the flows is done by listing
+multiple dependencies for the step.
+
+The important thing to understand here is how parallel flows allow multiple
+people to work on the same issue, to share the context, yet be sufficiently
+isolated not to interfere each with another. Also, it's important to see how
+the delegation of work is done.
+
+Let's consider an example.
+
+Carol the CEO decides to build a new datacenter. She comments on the \`quotes\'
+step:
+
+\`\`\`
+@patty: Can you please order the machines for the new datacenter?
+\`\`\`
+
+Patty the Purchaser gets a GitHub notification and starts the procurement
+process.
+
+Carol also comments on the \`build\` step and asks Bob the Builder to start
+building the datacenter:
+
+\`\`\`
+@bob: Hey, Bob! Can we start building it ASAP?
+\`\`\`
+
+Then she marks \`decide\` step as done.
+
+Patty and Bob can now execute their own steps without interfering each with
+another. Comments are attached to individual steps and thus Bob doesn't even
+have to be aware of what's going on on the procurement side unless, of course,
+he choses to have a look at those particular steps.
+
+After they finish their work, both Patty and Bob can comment on the \`install\`
+step notifying Igor the Installer that the building or, respectively,
+the machines are ready.
+
+Igor takes it from there, installs the machines and finally flips the big
+switch to get the entire datacenter alive.
+`
+
+variables = `
+It is possible to gather some data about the process from the user.
+The data can then be used to customize further steps of the process. This is
+especially usefuly when we want to construct complex commands such as
+command lines. Consider this example:
+
+\`\`\`
+# Install Frobnicator
+
+* Which version do you want to install? ~> version
+* Which directory do you want to install it to? ~> directory
+
+Execute the following line in your shell:
+
+\`install frobnicator-#{version} --path #{directory}\`
+
+\`\`\`
+
+<a href="index.html?action=create&repository=sustrik%2Fflowium-sandbox&template=%2Ffrobnicator.md&title=Install%20Frobnicator" target="_blank">Play with this process</a>.
+
+<div class="alert alert-warning" role="alert">
+The names of the variables used to collect the input can contain letters, digits
+and dashes. All the other characters are invalid.
+</div>
+
+<div class="alert alert-primary" role="alert">
+Occasionally, you may want to inspect all the variables collected in the issue.
+You may do so by opening the "More" tab, then clicking on
+"Inspect the variables" link. You can also change the values of the variables
+there.
+`
+
+versioning = `
+Complex processes are naturally subject to change. The more complex the process
+the more likely it is to change.
+
+This can be a problem if the processes changes while some of its instances are
+being executed. It's unclear what should happen. Should those in-flight
+instances automatically upgrade to the new version of the process? Should they
+continue using the old version?
+
+When an issue is created with Flowium, the issue is associated with the newest
+version of the process. From there on, though, it sticks with that version.
+
+If the process (also known as "template file") is changed it doesn't effect
+the issue in any way.
+
+That in turn means that there can be multiple versions of the same process
+executed at the same time. For example, one datacenter may be still being built
+using the old process, while a more recent construction follows the new version
+of the process.
+
+All that being said, user can update the process version manually. Go to "More"
+tab and click on "Update the template" link. Then choose the version to
+upgrade to.
+`
+
+editing = `
+Template files (the markdown files with process documentation) are just normal
+files stored in GitHub repositories. As such they can be edited and updated
+using the standard Git means.
+
+However, it may often be less painful to go to the "More" tab and click on
+"Edit the template" link. It opens GitHub's online editor, where the file can be
+updated and then committed by pressing a single button.
+
+<div class="alert alert-warning" role="alert">
+Recall that Flowium processes stick to the version of the template file they
+were created with. After editing the file you still have to click "Update the
+template" link to start using the new version of the process.
 </div>
 `
 
@@ -222,6 +386,10 @@ $(document).ready(function() {
     $("#communication").append(mdConvert(communication))
     $("#audit").append(mdConvert(audit))
     $("#dependencies").append(mdConvert(dependencies))
+    $("#parallel").append(mdConvert(parallel))
+    $("#variables").append(mdConvert(variables))
+    $("#versioning").append(mdConvert(versioning))
+    $("#editing").append(mdConvert(editing))
 
     // Now the page is fully loaded, so show it to the user.
     $("#flowium-all").show()
@@ -280,6 +448,34 @@ $(document).ready(function() {
         <h5 class="step-title">Managing dependencies</h5>
       </div>
       <div id="dependencies" class="card-body section-body step-body"></div>
+    </div>
+
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">Parallel flows</h5>
+      </div>
+      <div id="parallel" class="card-body section-body step-body"></div>
+    </div>
+
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">Gathering user input</h5>
+      </div>
+      <div id="variables" class="card-body section-body step-body"></div>
+    </div>
+
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">Versioning of the processes</h5>
+      </div>
+      <div id="versioning" class="card-body section-body step-body"></div>
+    </div>
+
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">Editing the processes</h5>
+      </div>
+      <div id="editing" class="card-body section-body step-body"></div>
     </div>
 
   </div>
