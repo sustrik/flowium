@@ -697,6 +697,9 @@ function initMore(repository, issue, template, version, variables) {
     $("#gh-link-issue").attr("href",
         `https://github.com/${repository}/issues/` +
         `${issue}`)
+    $("#more-clean-state").click(function () {
+        localStorage.clear()
+    })
     $(".cancel-more").click(function () {
         $(".more-tab").hide()
         $("#more-index").show()
@@ -914,6 +917,7 @@ $(document).ready(function() {
         <br>
         <p><a href="https://github.com/sustrik/flowium/issues/new"
           target="_blank">Report a bug in Flowium</a></p>
+        <p><a id="more-clean-state" href="#">Clean the local state</a></p>
       </div>
 
       <div id="more-variables" class="more-tab" style="display: none;">
