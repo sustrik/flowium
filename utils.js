@@ -126,6 +126,10 @@ function djbHash(str) {
   return (hash >>> 0).toString(16);
 }
 
+function trimLeft(str) {
+    return str.replace(/^\s+/, "")
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Markdown rendering
 
