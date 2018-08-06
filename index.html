@@ -42,7 +42,6 @@ function createIssue(repository, template, title, comment) {
         var args = {
             "title": title,
             "body": prologue + comment,
-            "labels": ["flowium"],
         }
         ghPost(`repos/${repository}/issues`, args, function(reply) {
             var addr = 'issue.html' +
@@ -186,15 +185,6 @@ $(document).ready(function() {
         ghGet(`repos/${repository}/issues`, null, function(issues) {
             for(var i = 0; i < issues.length; i++) {
                 var issue = issues[i]
-                // Skip non-flowium issues.
-                var isFlowiumIssue = false
-                for(var j = 0; j < issue.labels.length; j++) {
-                    if(issue.labels[j].name == "flowium") {
-                        isFlowiumIssue = true
-                        break
-                    }
-                }
-                if(!isFlowiumIssue) continue
                 var t = $(`<tr class="clickable-element"></tr>`).click(
                       function() {
                     var cols = $(this).children("td")
