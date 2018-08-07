@@ -1,5 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // GitHub requests
+////////////////////////////////////////////////////////////////////////////////
 
 function ghGet(path, args, cb) {
     var request = new XMLHttpRequest();
@@ -15,7 +16,8 @@ function ghGet(path, args, cb) {
         }
     }
     request.open('GET', "https://api.github.com/" + path, true);
-    request.setRequestHeader('Authorization','token ' + getToken())
+    request.setRequestHeader('Authorization','token ' +
+        localStorage.getItem("token"))
     request.setRequestHeader('Content-type', 'application/json')
     request.setRequestHeader('Accept', '*/*')
     request.send(args);
@@ -37,12 +39,15 @@ function ghPost(path, args, cb) {
         }
     }
     request.open('POST', "https://api.github.com/" + path, true)
-    request.setRequestHeader('Authorization','token ' + getToken())
+    request.setRequestHeader('Authorization','token ' +
+        localStorage.getItem("token"))
     request.setRequestHeader('Content-type', 'application/json')
     request.setRequestHeader('Accept', '*/*')
     request.send(JSON.stringify(args))
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//  Authenticate with GitHub, authorize Flowium application.
 ////////////////////////////////////////////////////////////////////////////////
 
 function authenticate() {
@@ -77,61 +82,9 @@ function authenticate() {
     rq.send();
 }
 
-function getToken() {
-    return localStorage.getItem("token")
-}
-
-function logout() {
-    localStorage.clear()
-    window.location.href = "index.html"
-}
-
-function getRepository() {
-    return localStorage.getItem("repository")
-}
-
 ////////////////////////////////////////////////////////////////////////////////
-// Random functions
-
-function statusToColor(status) {
-    if(status == "done") return "#C0C0C0"
-    if(status == "active") return "#00FF00"
-    return "#FF0000"
-}
-
-function splitOnce(str, delimiter) {
-    var i = str.indexOf(delimiter)
-    if(i == -1) return [str]
-    return [str.substring(0, i), str.substring(i + delimiter.length)]
-}
-
-function escapeHtml(str) {
-    return $("<p></p>").text(str).html()
-}
-
-function replaceInSet(set, selector, by) {
-    return $('<p>')
-        .append(set)
-        .find(selector)
-        .replaceWith(by)
-        .end()
-        .contents()
-}
-
-function djbHash(str) {
-  var hash = 5381
-  for(var i = 0; i < str.length; i++) {
-      hash = (hash * 33) ^ str.charCodeAt(i)
-  }
-  return (hash >>> 0).toString(16);
-}
-
-function trimLeft(str) {
-    return str.replace(/^\s+/, "")
-}
-
+// Markdown rendering.
 ////////////////////////////////////////////////////////////////////////////////
-// Markdown rendering
 
 function mdConvert(md) {
     return marked(md, {
@@ -144,5 +97,31 @@ function mdSanitizeAndConvert(md) {
         gfm: true,
         sanitize: true,
     })
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Random helper functions.
+////////////////////////////////////////////////////////////////////////////////
+
+function splitOnce(str, delimiter) {
+    var i = str.indexOf(delimiter)
+    if(i == -1) return [str]
+    return [str.substring(0, i), str.substring(i + delimiter.length)]
+}
+
+function escapeHtml(str) {
+    return $("<p></p>").text(str).html()
+}
+
+function djbHash(str) {
+  var hash = 5381
+  for(var i = 0; i < str.length; i++) {
+      hash = (hash * 33) ^ str.charCodeAt(i)
+  }
+  return (hash >>> 0).toString(16);
+}
+
+function trimLeft(str) {
+    return str.replace(/^\s+/, "")
 }
 

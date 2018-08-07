@@ -490,6 +490,12 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
 //  Graph.
 ////////////////////////////////////////////////////////////////////////////////
 
+function statusToColor(status) {
+    if(status == "done") return "#C0C0C0"
+    if(status == "active") return "#00FF00"
+    return "#FF0000"
+}
+
 function initGraph(steps) {
     var dot =`
         digraph "" {
