@@ -363,6 +363,131 @@ To get a better feel of how Flowium works in real world try a
 <a href="index.html?action=create&repository=sustrik%2Fflowium-sandbox&template=%2Frelease.md&title=Install%20Frobnicator" target="_blank">somehow more elaborated example here</a>.
 `
 
+selfhosting = `
+Flowium runs in the browser and speaks directly to GitHub. There is no
+Flowium-specific backend, except for the minimal gatekeeper (see below).
+The security tokens are stored in local storage and they are never sent
+anywhere.
+
+All in all, the application is reasonably secure.
+
+Still, it requires you to give it GitHub access so that it can create issues
+in the GitHub issue tracker. That can, obviously, make you uncomfortable.
+
+If that's the case you can host Flowium yourself. It will still use GitHub
+for issue tracking but there will be no third party (namely flowium.com)
+involved.
+
+While having to self-host may be a pain, the good news is that even if you
+have 1000 employees, you only have to do it once.
+
+What follows are step-by-step instructions to self-host Flowium.
+
+----
+
+##### Create an OAuth application
+<br>
+
+On GitHub, go to your profile and select \`Developer Settings\`, then
+choose \`OAuth Apps\` tab.
+
+Press \`New OAuth App\` button.
+
+Fill in the form as follows (assuming your GitHub nick is \`acmeinc\`):
+
+\`\`\`
+Application name: acmeinc-flowium
+Homepage URL: https://acmeinc.github.io/flowium
+Authorization callback URL: https://acmeinc.github.io/flowium
+\`\`\`
+
+Click on \`Register Application\` button.
+
+In the resulting page find \`Client ID\` and \`Client Secret\` fields.
+
+Note down the values (both should be hexadecimal strings) and store them at
+some secure place.
+
+-----
+
+##### Run your own gatekeeper
+<br>
+
+Unfortunately, GitHub doesn't allow applications to do entirely without a
+backend. The backend can be fairly minimal though, used only to convert
+temporary codes issued by GitHub into more permanent security tokens.
+
+Luckily there exists
+[vanilla implementation](https://github.com/prose/gatekeeper) of such a backend.
+
+To install it, follow
+[the steps here](https://github.com/prose/gatekeeper/blob/development/README.md#deploy-on-heroku).
+
+To keep it simple, you can use their \`Deploy to Heroku\` button to do
+a single-click installation hosted on Heroku (for free).
+
+You'll be asked for the application name (set it to \`acmeinc-flowium\`) and
+for the client ID and the client sercret which are the values you've got when
+registering the application at GitHub.
+
+Wait until the application is fully installed at Heroku, then procceed
+to the next step.
+
+-----
+
+##### Fork the repository
+<br>
+
+First, go to [Flowium repository at GitHub](https://github.com/sustrik/flowium)
+and press \`Fork\` button.
+
+Then delete the \`CNAME\` file.
+
+If you did not, the repository would collide with the original Flowium website
+and you would get the following warning:
+
+![](cname-warning.png)
+
+Modify \`config.js\` file like this:
+
+\`\`\`
+flowiumConfig = {
+    URL: "https://acmeinc.github.io/flowium",
+    clientID: "d8ee3245ca4c030b0efe",
+    gatekeeperURL: "https://acmeinc-flowium.herokuapp.com"
+}
+\`\`\`
+
+Where the hexadecimal string is the client ID you've got when registering
+the OAuth application.
+
+Commit the changes and push them to GitHub.
+
+-----
+
+##### Publish the website
+<br>
+
+On GitHub go to project settings and find \`GitHub Pages\` section.
+
+Select \`master\` branch from the "source" drop-down list.
+
+This should publish you website at \`https://acmeinc.github.io/flowium\`.
+
+-----
+
+##### Test it
+<br>
+
+Open \`https://acmeinc.github.io/flowium\` in your browser,  authorize it
+to use GitHub and you are ready to go.
+
+To check that everything works as expected you may try to create an issue
+based on one of the template files in
+[sustrik/flowium-sandbox](https://github.com/sustrik/flowium-sandbox)
+repository.
+`
+
 ////////////////////////////////////////////////////////////////////////////////
 //  Error handling.
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,6 +532,7 @@ $(document).ready(function() {
     $("#versioning").append(mdConvert(versioning))
     $("#editing").append(mdConvert(editing))
     $("#example").append(mdConvert(example))
+    $("#self-hosting").append(mdConvert(selfhosting))
 
     // Now the page is fully loaded, so show it to the user.
     $("#flowium-all").show()
@@ -500,6 +626,13 @@ $(document).ready(function() {
         <h5 class="step-title">Example</h5>
       </div>
       <div id="example" class="card-body section-body step-body"></div>
+    </div>
+
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">Appendix: Self-hosting</h5>
+      </div>
+      <div id="self-hosting" class="card-body section-body step-body"></div>
     </div>
 
   </div>
