@@ -10,6 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="flowium.css">
+  <script src="config.js"></script>
   <script src="utils.js"></script>
 </head>
 <script>
@@ -47,7 +48,7 @@ function createIssue(repository, template, title, comment) {
             var addr = 'issue.html' +
                 '?repository=' + encodeURIComponent(repository) +
                 '&issue=' + reply.number
-            var body = `View in Flowium: <https://flowium.com/${addr}>`
+            var body = `View in Flowium: <${flowiumConfig.URL}/${addr}>`
             ghPost(`repos/${repository}/issues/${reply.number}/comments`,
                   {"body": body}, function(reply) { 
                 window.location.href = addr

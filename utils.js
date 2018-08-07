@@ -1,4 +1,40 @@
 ////////////////////////////////////////////////////////////////////////////////
+//  Authenticate with GitHub, authorize Flowium application.
+////////////////////////////////////////////////////////////////////////////////
+
+function authenticate() {
+    // First, check whether access token is in the local storage.
+    var token = localStorage.getItem("token")
+    if(token != null) return
+
+    // First step of authorization. Redirect to GitHub.
+    var urlParams = new URLSearchParams(window.location.search)
+    var code = urlParams.get("code")
+    if(code == null) {
+        // Store URL so that it can be reused once the authorization is over.
+        localStorage.setItem("url", window.location.href)
+        // Redirect to GitHub to authorize.
+        window.location.replace("https://github.com/login/oauth/authorize?" +
+            "scope=repo&client_id=" + flowiumConfig.clientID)
+        return
+    }
+
+    // Second step of authorization. Convert code to a token.
+    var rq = new XMLHttpRequest();
+    rq.onreadystatechange = function() {
+        if (rq.readyState == 4 && rq.status == 200) {
+            localStorage.setItem("token", JSON.parse(rq.responseText).token)
+            // Restore the original URL.
+            window.location.href = localStorage.getItem("url")
+        }
+    }
+    rq.open('GET', `${flowiumConfig.gatekeeperURL}/authenticate/${code}`, true)
+    rq.setRequestHeader('Content-type', 'application/json')
+    rq.setRequestHeader('Accept', '*/*')
+    rq.send();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // GitHub requests
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,42 +80,6 @@ function ghPost(path, args, cb) {
     request.setRequestHeader('Content-type', 'application/json')
     request.setRequestHeader('Accept', '*/*')
     request.send(JSON.stringify(args))
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//  Authenticate with GitHub, authorize Flowium application.
-////////////////////////////////////////////////////////////////////////////////
-
-function authenticate() {
-    // First, check whether access token is in the local storage.
-    var token = localStorage.getItem("token")
-    if(token != null) return
-
-    // First step of authorization. Redirect to GitHub.
-    var urlParams = new URLSearchParams(window.location.search)
-    var code = urlParams.get("code")
-    if(code == null) {
-        // Store URL so that it can be reused once the authorization is over.
-        localStorage.setItem("url", window.location.href)
-        // Redirect to GitHub to authorize.
-        window.location.replace("https://github.com/login/oauth/authorize?" +
-            "scope=repo&client_id=d027578d9cca180f9e0e")
-        return
-    }
-
-    // Second step of authorization. Convert code to a token.
-    var rq = new XMLHttpRequest();
-    rq.onreadystatechange = function() { 
-        if (rq.readyState == 4 && rq.status == 200) {
-            localStorage.setItem("token", JSON.parse(rq.responseText).token)
-            // Restore the original URL.
-            window.location.href = localStorage.getItem("url")
-        }
-    }
-    rq.open('GET', "https://flowium.herokuapp.com/authenticate/" + code, true);
-    rq.setRequestHeader('Content-type', 'application/json')
-    rq.setRequestHeader('Accept', '*/*')
-    rq.send();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
