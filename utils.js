@@ -2,20 +2,39 @@
 //  Authenticate with GitHub, authorize Flowium application.
 ////////////////////////////////////////////////////////////////////////////////
 
+var flowiumService = null
+
 function authenticate() {
+    // First, select the service to use.
+    var urlParams = new URLSearchParams(window.location.search)
+    var service = urlParams.get("service")
+    if(service == null) {
+        if(flowiumConfig.services.length == 0)
+            throw Error("No services in the config file.")
+        flowiumService = flowiumConfig.services[0]
+    } else {
+        for(var i = 0; i < flowiumConfig.services.length; i++) {
+            if(flowiumConfig.services[i].name == service) {
+                flowiumService = flowiumConfig.services[i]
+                break
+            }
+        }
+        if(flowiumService == null)
+            throw Error(`Service "${service}" not found in the config file.`)
+    }
+
     // First, check whether access token is in the local storage.
     var token = localStorage.getItem("token")
     if(token != null) return
 
     // First step of authorization. Redirect to GitHub.
-    var urlParams = new URLSearchParams(window.location.search)
     var code = urlParams.get("code")
     if(code == null) {
         // Store URL so that it can be reused once the authorization is over.
         localStorage.setItem("url", window.location.href)
         // Redirect to GitHub to authorize.
         window.location.replace("https://github.com/login/oauth/authorize?" +
-            "scope=repo&client_id=" + flowiumConfig.clientID)
+            "scope=repo&client_id=" + flowiumService.clientID)
         return
     }
 
@@ -28,7 +47,7 @@ function authenticate() {
             window.location.href = localStorage.getItem("url")
         }
     }
-    rq.open('GET', `${flowiumConfig.gatekeeperURL}/authenticate/${code}`, true)
+    rq.open('GET', `${flowiumService.gatekeeperURL}/authenticate/${code}`, true)
     rq.setRequestHeader('Content-type', 'application/json')
     rq.setRequestHeader('Accept', '*/*')
     rq.send();
