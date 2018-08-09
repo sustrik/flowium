@@ -57,14 +57,6 @@ function createIssue(repository, template, title, comment) {
     })
 }
 
-function createSandboxIssue() {
-    createIssue(
-        "sustrik/flowium-sandbox",
-        "/release.md",
-        "Release Frobnicator",
-        "It's time to make a new release!")
-}
-
 function loadTemplates(repository, path) {
     ghGet(`repos/${repository}/contents${path}`, null, function(files) {
         $("#create-path").empty()
