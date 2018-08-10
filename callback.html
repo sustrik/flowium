@@ -30,7 +30,18 @@
 <script>
 
 function authenticationDone(token) {
-   console.log(token)
+   var service = localStorage.getItem("service")
+   var url = localStorage.getItem("url")
+
+   // Delete the temporary data from the local storage.
+   localStorage.removeItem("service")
+   localStorage.removeItem("url")
+
+   // Store the token.
+   var tokens = localStorage.getItem("tokens")
+   if(tokens != null) tokens = {}
+   tokens[flowiumService.name] = token
+   localStorage.setItem("tokens", tokens)
 }
 
 $(document).ready(function() {
