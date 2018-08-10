@@ -23,6 +23,16 @@ function authenticate() {
             throw Error(`Service "${service}" not found in the config file.`)
     }
 
+    if(flowiumService.type == "GitLab") {
+        window.location.replace(`https://gitlab.com/oauth/authorize` +
+            `?client_id=` +
+            `4dbe6da72b8954701424c1439519d1debe60211f7294547e111787b1e340544b` +
+             `&redirect_uri=` +
+             encodeURIComponent(`https://flowium.com/gitlab.html`) +
+             `&response_type=token`)
+        return
+    }
+
     // First, check whether access token is in the local storage.
     var token = localStorage.getItem("token")
     if(token != null) return
