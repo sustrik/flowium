@@ -43,6 +43,9 @@ function authenticationDone(token) {
    else tokens = JSON.parse(tokens)
    tokens[flowiumService.name] = token
    localStorage.setItem("tokens", JSON.stringify(tokens))
+
+   // Redirect back to the original URL.
+   window.location.replace(url)
 }
 
 $(document).ready(function() {
