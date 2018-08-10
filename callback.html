@@ -29,7 +29,9 @@
 </head>
 <script>
 
-////////////////////////////////////////////////////////////////////////////////
+function authenticationDone(token) {
+   console.log("done")
+}
 
 $(document).ready(function() {
     var service = localStorage.getItem("service")
@@ -40,6 +42,16 @@ $(document).ready(function() {
     }
 
     if(flowiumService.type == "GitLab") {
+        var hash = window.location.hash
+        var params = hash.split("&")
+        var accessToken = null
+        for(var i = 0; i < params.length; i++) {
+            var param = splitOnce(params[i], "=")
+            if(param[0] == "access_token") {
+                authenticationDone(param[1])
+                return
+            }
+        }
         return
     }
 
