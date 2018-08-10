@@ -35,7 +35,7 @@ function authenticate() {
     var urlParams = new URLSearchParams(window.location.search)
 
     // First, check whether access token is in the local storage.
-    var tokens = localStorage.getItem("tokens")
+    var tokens = JSON.parse(localStorage.getItem("tokens"))
     if(tokens != null && flowiumService.name in tokens) {
         flowiumService["token"] = tokens[flowiumService.name]
         return

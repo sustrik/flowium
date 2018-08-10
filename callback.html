@@ -39,9 +39,10 @@ function authenticationDone(token) {
 
    // Store the token.
    var tokens = localStorage.getItem("tokens")
-   if(tokens != null) tokens = {}
+   if(tokens == null) tokens = {}
+   else tokens = JSON.parse(tokens)
    tokens[flowiumService.name] = token
-   localStorage.setItem("tokens", tokens)
+   localStorage.setItem("tokens", JSON.stringify(tokens))
 }
 
 $(document).ready(function() {
