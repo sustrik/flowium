@@ -731,6 +731,7 @@ function linkToStep(stepId, stepById) {
 
 $(document).ready(function() {
     // Authenticate with GitHub, as needed.
+    chooseService()
     authenticate()
     // Parse query string.
     var urlParams = new URLSearchParams(window.location.search)

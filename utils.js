@@ -4,8 +4,7 @@
 
 var flowiumService = null
 
-function authenticate() {
-    // First, select the service to use.
+function chooseService() {
     var urlParams = new URLSearchParams(window.location.search)
     var service = urlParams.get("service")
     if(service == null) {
@@ -22,7 +21,9 @@ function authenticate() {
         if(flowiumService == null)
             throw Error(`Service "${service}" not found in the config file.`)
     }
+}
 
+function authenticate() {
     if(flowiumService.type == "GitLab") {
         window.location.replace(`https://gitlab.com/oauth/authorize` +
             `?client_id=` +
