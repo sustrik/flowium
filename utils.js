@@ -85,7 +85,7 @@ function ghGet(path, args, cb) {
     }
     request.open('GET', "https://api.github.com/" + path, true);
     request.setRequestHeader('Authorization','token ' +
-        localStorage.getItem("token"))
+        flowiumService.token)
     request.setRequestHeader('Content-type', 'application/json')
     request.setRequestHeader('Accept', '*/*')
     request.send(args);
@@ -108,7 +108,7 @@ function ghPost(path, args, cb) {
     }
     request.open('POST', "https://api.github.com/" + path, true)
     request.setRequestHeader('Authorization','token ' +
-        localStorage.getItem("token"))
+        flowiumService.token)
     request.setRequestHeader('Content-type', 'application/json')
     request.setRequestHeader('Accept', '*/*')
     request.send(JSON.stringify(args))
