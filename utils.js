@@ -12,7 +12,7 @@ function chooseServiceByName(name) {
         }
     }
     if(flowiumService == null)
-        throw Error(`Service "${service}" not found in the config file.`)
+        throw Error(`Service "${name}" not found in the config file.`)
 }
 
 function chooseService() {
