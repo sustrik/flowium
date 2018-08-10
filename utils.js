@@ -44,7 +44,9 @@ function authenticate() {
             return
         }
 
-        console.log(accessToken)
+        localStorage.setItem("token", accessToken)
+        // Restore the original URL.
+        window.location.href = localStorage.getItem("url")
         return
     }
 
@@ -59,7 +61,8 @@ function authenticate() {
             // Store URL so that it can be reused once the authorization is over.
             localStorage.setItem("url", window.location.href)
             // Redirect to GitHub to authorize.
-            window.location.replace("https://github.com/login/oauth/authorize?"+
+            window.location.replace(
+                "https://github.com/login/oauth/authorize?" +
                 "scope=repo&client_id=" + flowiumService.clientID)
             return
         }
