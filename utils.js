@@ -154,3 +154,19 @@ function trimLeft(str) {
     return str.replace(/^\s+/, "")
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//  Error handling.
+////////////////////////////////////////////////////////////////////////////////
+
+window.addEventListener('error', function (e) {
+    $("#flowium-all").hide()
+    console.log(e)
+    if("error" in e && e.error != null) var text = e.error.message +
+        "\n\n" + e.error.stack
+    else var text = e.message
+    var alert = $(`<pre class="alert alert-danger" role="alert"></pre>`)
+        .text(text)
+    $("#flowium-error-text").append(alert)
+    $("#flowium-error").show()
+})
+
