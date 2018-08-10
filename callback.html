@@ -30,14 +30,27 @@
 <script>
 
 function authenticationDone(token) {
-   console.log("done")
+   console.log(token)
 }
 
 $(document).ready(function() {
+    var urlParams = new URLSearchParams(window.location.search)
     var service = localStorage.getItem("service")
     chooseServiceByName(service)
 
     if(flowiumService.type == "GitHub") {
+        var code = urlParams.get("code")
+        var rq = new XMLHttpRequest();
+        rq.onreadystatechange = function() {
+            if (rq.readyState == 4 && rq.status == 200) {
+                authenticationDone(JSON.parse(rq.responseText).token)
+            }
+        }
+        rq.open('GET', `${flowiumService.gatekeeperURL}/authenticate/${code}`,
+            true)
+        rq.setRequestHeader('Content-type', 'application/json')
+        rq.setRequestHeader('Accept', '*/*')
+        rq.send();
         return
     }
 
