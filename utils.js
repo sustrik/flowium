@@ -39,7 +39,7 @@ function authenticate() {
                 `?client_id=` +
                 `4dbe6da72b8954701424c1439519d1debe60211f7294547e111787b1e340544b` +
                  `&redirect_uri=` +
-                 encodeURIComponent(`https://flowium.com/gitlab.html`) +
+                 encodeURIComponent(`https://flowium.com/index.html`) +
                  `&response_type=token`)
             return
         }
