@@ -31,23 +31,29 @@ function authenticate() {
     var urlParams = new URLSearchParams(window.location.search)
 
     if(flowiumService.type == "GitLab") {
-        var accessToken = urlParams.get("access_token")
-        if(accessToken == null) {
-            // Store URL so that it can be reused once the authorization is over.
-            localStorage.setItem("url", window.location.href)
-            window.location.replace(`https://gitlab.com/oauth/authorize` +
-                `?client_id=` +
-                `4dbe6da72b8954701424c1439519d1debe60211f7294547e111787b1e340544b` +
-                 `&redirect_uri=` +
-                 encodeURIComponent(`https://flowium.com/index.html`) +
-                 `&response_type=token`)
-            return
+        var hash = window.location.hash
+        var params = hash.split("&")
+        var accessToken = null
+        for(var i = 0; i < params.length; i++) {
+            var param = splitOnce(params[i], "=")
+            if(param[0] == "access_token") {
+                accessToken = param[1]
+                localStorage.setItem("token", accessToken)
+                // Restore the original URL.
+                window.location.href = localStorage.getItem("url")
+                return
+            }
         }
 
-        localStorage.setItem("token", accessToken)
-        // Restore the original URL.
-        window.location.href = localStorage.getItem("url")
-        return
+        // Store URL so that it can be reused once the authorization is over.
+        localStorage.setItem("url", window.location.href)
+        window.location.replace(`https://gitlab.com/oauth/authorize` +
+            `?client_id=` +
+            `4dbe6da72b8954701424c1439519d1debe60211f7294547e111787b1e340544b` +
+             `&redirect_uri=` +
+             encodeURIComponent(`https://flowium.com/index.html`) +
+             `&response_type=token`)
+        return        
     }
 
     if(flowiumService.type == "GitHub") {
