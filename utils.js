@@ -34,12 +34,22 @@ function chooseService() {
 function authenticate() {
     var urlParams = new URLSearchParams(window.location.search)
 
+    // First, check whether access token is in the local storage.
+    var tokens = localStorage.getItem("tokens")
+    if(tokens != null && flowiumService.name in tokens) {
+        flowiumService["token"] = tokens[flowiumService.name]
+        return
+    }
+
+    // Store some value temporarily while authentication is being done.
+    localStorage.setItem("service", flowiumService.name)
+    localStorage.setItem("url", window.location.href)
+
     if(flowiumService.type == "GitLab") {
         // Store URL so that it can be reused once the authorization is over.
         localStorage.setItem("url", window.location.href)
         window.location.replace(`https://gitlab.com/oauth/authorize` +
-            `?client_id=` +
-            `4dbe6da72b8954701424c1439519d1debe60211f7294547e111787b1e340544b` +
+            `?client_id=${flowiumService.applicationID}` +
              `&redirect_uri=` +
              encodeURIComponent(`https://flowium.com/callback.html`) +
              `&response_type=token`)
@@ -47,36 +57,9 @@ function authenticate() {
     }
 
     if(flowiumService.type == "GitHub") {
-        // First, check whether access token is in the local storage.
-        var token = localStorage.getItem("token")
-        if(token != null) return
-
-        // First step of authorization. Redirect to GitHub.
-        var code = urlParams.get("code")
-        if(code == null) {
-            // Store URL so that it can be reused once the authorization is over.
-            localStorage.setItem("url", window.location.href)
-            // Redirect to GitHub to authorize.
-            window.location.replace(
-                "https://github.com/login/oauth/authorize?" +
-                "scope=repo&client_id=" + flowiumService.clientID)
-            return
-        }
-
-        // Second step of authorization. Convert code to a token.
-        var rq = new XMLHttpRequest();
-        rq.onreadystatechange = function() {
-            if (rq.readyState == 4 && rq.status == 200) {
-                localStorage.setItem("token", JSON.parse(rq.responseText).token)
-                // Restore the original URL.
-                window.location.href = localStorage.getItem("url")
-            }
-        }
-        rq.open('GET', `${flowiumService.gatekeeperURL}/authenticate/${code}`,
-            true)
-        rq.setRequestHeader('Content-type', 'application/json')
-        rq.setRequestHeader('Accept', '*/*')
-        rq.send();
+        window.location.replace(
+            `https://github.com/login/oauth/authorize?` +
+            `scope=repo&client_id=${flowiumService.clientID}`)
         return
     }
 
