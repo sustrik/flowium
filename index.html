@@ -35,85 +35,24 @@
 
 function createIssue(repository, template, title, comment) {
     // Get the current version of the template.
-    ghGet(`repos/${repository}/commits?path=${template}`, null,
-          function(commits) {
-        var sha = commits[0].sha
-        var prologue = '~> _template: ' + template + ":" + sha + "\n\n"
-        // Create the issue.
-        var args = {
-            "title": title,
-            "body": prologue + comment,
-        }
-        ghPost(`repos/${repository}/issues`, args, function(reply) {
+    flowiumService.recentVersion(template, function(version) {
+        var prologue = '~> _template: ' + template + ":" + version + "\n\n"
+        flowiumService.createIssue(title, prologue + comment, function(id) {
             var addr = 'issue.html' +
-                '?repository=' + encodeURIComponent(repository) +
-                '&issue=' + reply.number
+                '?service=' + encodeURIComponent(flowiumService.name) +
+                '&issue=' + encodeURIComponent(id)
             var body = `View in Flowium: <${flowiumConfig.URL}/${addr}>`
-            ghPost(`repos/${repository}/issues/${reply.number}/comments`,
-                  {"body": body}, function(reply) { 
+            flowiumService.postComment(id, body, function() {
                 window.location.href = addr
             })
         })
     })
 }
 
-function loadTemplates(repository, path) {
-    ghGet(`repos/${repository}/contents${path}`, null, function(files) {
-        $("#create-path").empty()
-        $("#file-table").empty()
-        // Fill in the file path.
-        var elems = path.split("/")
-        elems.pop()
-        var partial = ""
-        for(var i = 0; i < elems.length; i++) {
-            partial += elems[i] + "/"
-            var caption = elems[i]
-            if(elems[i] == "") caption = "$"
-            var a = $("<a></a>").text(caption)
-            a.attr("href",
-                `javascript:loadTemplates("${repository}", "${partial}")`)
-            var li = $(`<li class="breadcrumb-item"></li>`).append(a)
-            $("#create-path").append(li)
-        }
-        // Fill in the file list.
-        var dirs = {}
-        for(var i = 0; i < files.length; i++) {
-            var f = files[i]
-            if(f.type != "dir") continue
-            dirs[f.name] = (function (newpath) {return function() {
-                loadTemplates(repository, newpath)
-            }})(`${path}${f.name}/`)
-        }
-        var tfiles = {}
-        for(var i = 0; i < files.length; i++) {
-            var f = files[i]
-            if(f.type != "file") continue
-            if(!f.name.endsWith('.md')) continue
-            tfiles[f.name] = (function (tname) {return function() {                
-                var li = $(`<li class="breadcrumb-item active"></li>`)
-                li.text(tname)
-                $("#create-path").append(li)
-            }})(f.name)
-        }
-        var items = []
-        var keys = Object.keys(dirs).sort()
-        for(var i = 0; i < keys.length; i++)
-            items.push([keys[i], dirs[keys[i]], "fa-folder-o"])
-        keys = Object.keys(tfiles).sort()
-        for(var i = 0; i < keys.length; i++)
-            items.push([keys[i], tfiles[keys[i]], "fa-file-o"])
-        for(var i = 0; i < items.length; i++) {
-            var t = $(`<tr class="clickable-element"></tr>`).click(items[i][1])
-            t.append($(`<td><i class="fa ${items[i][2]}"></i></td>`))
-            t.append($("<td></td>").text(items[i][0]))
-            $("#file-table").append(t)
-        }
-    })
-}
-
 $(document).ready(function() {
     // Authenticate & authorize with GitHub, as needed.
     chooseService()
+    setUpServiceAdaptor()
     authenticate()
 
     // This page can be used to create issues by passing the parameters
@@ -137,82 +76,66 @@ $(document).ready(function() {
     }
 
     // Fill in the "recent issues" tab.
-    var recent = JSON.parse(localStorage.getItem("recent"))
-    var recentRepositories = {}
-    if(recent == null || recent.length == 0) {
+    var recent = JSON.parse(localStorage.getItem("recentIssues"))
+    if(recent == null || !(flowiumService.name in recent) ||
+          recent[flowiumService.name].length == 0) {
         $("#no-recent-issues").show()
     } else {
-        for(var i = 0; i < recent.length; i++) {
-            var issue = recent[i]
-            recentRepositories[issue.repository] = null
+        for(var i = 0; i < recent[flowiumService.name].length; i++) {
+            var issue = recent[flowiumService.name][i]
             var t = $(`<tr class="clickable-element"></tr>`).click(function() {
                 var cols = $(this).children("td")
-                var repository = cols.eq(0).text()
-                var issue = cols.eq(1).text().substring(1)
+                var issue = cols.eq(0).text()
                 window.location.href =
-                    `issue.html?repository=${encodeURIComponent(repository)}` +
-                    `&issue=${issue}`
+                    `issue.html?service=${encodeURIComponent(flowiumService.name)}` +
+                    `&issue=${encodeURIComponent(issue)}`
             })
-            t.append($("<td></td>").text(issue.repository))
-            t.append($("<td></td>").text(`#${issue.issue}`))
+            t.append($("<td></td>").text(issue.issue))
             t.append($("<td></td>").text(issue.title))
             $("#recent-issue-table-body").append(t)
             $("#recent-issue-table").show()
         }
     }
-    
-    // Use the repositories from the recent issues to pre-fill the repository
-    // drop-down lists.
-    recentRepositories = Object.keys(recentRepositories).sort()
-    for(var i = 0; i < recentRepositories.length; i++) {
-        $("#repository-list")
-            .append($("<option/>")
-            .attr("value", recentRepositories[i]))
-    }
 
     // Fill in the "find an issue" tab.
-    // When new repository is selected, read all the issues from GitHub
-    // and put them into the table.
-    $("#find-repository").change(function () {
-        var repository = $("#find-repository").val()
-        $("#find-issue-table").empty()
-        ghGet(`repos/${repository}/issues`, null, function(issues) {
-            for(var i = 0; i < issues.length; i++) {
-                var issue = issues[i]
-                var t = $(`<tr class="clickable-element"></tr>`).click(
-                      function() {
-                    var cols = $(this).children("td")
-                    var repository = cols.eq(0).text()
-                    var issue = cols.eq(1).text().substring(1)
-                    window.location.href =
-                        "issue.html" +
-                        `?repository=${encodeURIComponent(repository)}` +
-                        `&issue=${issue}`
-                })
-                t.append($("<td></td>").text(repository))
-                t.append($("<td></td>").text(`#${issue.number}`))
-                t.append($("<td></td>").text(issue.title))
-                $("#find-issue-table").append(t)
-            }
-        })
+    flowiumService.issues(function(issues) {
+        for(var i = 0; i < issues.length; i++) {
+            var issue = issues[i]
+            var t = $(`<tr class="clickable-element"></tr>`).click(
+                  function() {
+                var cols = $(this).children("td")
+                var issueID = cols.eq(0).text()
+                window.location.href =
+                    "issue.html" +
+                    `?service=${encodeURIComponent(flowiumService.name)}` +
+                    `&issue=${encodeURIComponent(issueID)}`
+            })
+            t.append($("<td></td>").text(issue.id))
+            t.append($("<td></td>").text(issue.title))
+            $("#find-issue-table").append(t)
+        }
     })
 
     // Fill in the "create an issue" tab.
-    // When repository is selected, start browsing files.
-    $("#create-repository").change(function () {
-        var repository = $("#create-repository").val()
-        loadTemplates(repository, "/")
+    flowiumService.templates(function(files) {
+        var tfiles = []
+        for(var i = 0; i < files.length; i++) {
+            var f = files[i]
+            if(!f.endsWith('.md')) continue
+            tfiles.push(f.substring(0, f.length - 3)) 
+        }
+        tfiles.sort()
+        for(var i = 0; i < tfiles.length; i++) {
+            $("#template-list").append($("<option/>")
+                .attr("value", tfiles[i]))
+        }
     })
     $("#create-button").click(function() {
         // Collect the info from the form.
-        var repository = $("#create-repository").val()
-        var elems = $("#create-path").children()
-        var template = ""
-        for(var i = 1; i < elems.length; i++)
-            template += "/" + elems.eq(i).text()
+        var template = $("#create-template").val() + ".md"
         var title = $("#create-title").val()
         var comment = $("#create-comment").val()
-        createIssue(repository, template, title, comment)
+        createIssue(flowiumService.repository, template, title, comment)
     })
 
     // Now the page is fully loaded, so show it to the user.
@@ -247,8 +170,6 @@ $(document).ready(function() {
 
   <div class="tab-content">
 
-    <datalist id="repository-list"></datalist>
-
     <div id="recent-issues" class="container tab-pane active"><br>
       <h3>Recent issues</h3>
       <br>
@@ -256,7 +177,6 @@ $(document).ready(function() {
           style="display: none;">
         <thead>
           <tr>
-            <th>Repository</th>
             <th>Issue</th>
             <th>Title</th>
           </tr>
@@ -271,16 +191,9 @@ $(document).ready(function() {
     <div id="find-issue" class="container tab-pane fade"><br>
       <h3>Find an issue</h3>
       <br>
-      <div class="form-group">
-        <label for="find-repository">
-            GitHub repository (e.g. <i>johndoe/myproject</i>):</label>
-        <input type="text" class="form-control" id="find-repository"
-            list="repository-list">
-      </div>
       <table class="table table-hover">
         <thead>
           <tr>
-            <th>Repository</th>
             <th>Issue</th>
             <th>Title</th>
           </tr>
@@ -293,18 +206,11 @@ $(document).ready(function() {
       <h3>Create an issue</h3>
       <br>
       <div class="form-group">
-        <label for="create-repository">
-            GitHub repository (e.g. <i>johndoe/myproject</i>):</label>
-        <input type="text" class="form-control" id="create-repository"
-            list="repository-list">
+          <datalist id="template-list"></datalist>
+          <label for="create-template">Template file:</label>
+          <input type="text" class="form-control" id="create-template"
+              list="template-list"></input>
       </div>
-      <div class="form-group">
-        <label for="create-template">Template file:</label>
-        <ul id="create-path" class="breadcrumb"></ul>
-        <table class="table table-hover" id="create-template">
-          <tbody id="file-table"></tbody>
-        </table>
-      <div>
       <div class="form-group">
           <label for="create-title">Issue title:</label>
           <input type="text" class="form-control" id="create-title"></input>

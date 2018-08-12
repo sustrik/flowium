@@ -5,7 +5,9 @@ flowiumConfig = {
             name: "github",
             type: "GitHub",
             clientID: "d027578d9cca180f9e0e",
-            gatekeeperURL: "https://flowium.herokuapp.com"
+            gatekeeperURL: "https://flowium.herokuapp.com",
+            repository: "sustrik/flowium-sandbox",
+            templatePath: "/",
         },
         {
             name: "gitlab",

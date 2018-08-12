@@ -735,7 +735,7 @@ $(document).ready(function() {
     authenticate()
     // Parse query string.
     var urlParams = new URLSearchParams(window.location.search)
-    var issueRepository = urlParams.get("repository")
+    var issueRepository = flowiumService.repository
     var issueNumber = urlParams.get("issue")
     // Get the data from GitHub.
     ghGet(`repos/${issueRepository}/issues/${issueNumber}`, null,
@@ -758,7 +758,7 @@ $(document).ready(function() {
             var parts = variables["_template"].split(':')
             var template = parts[0].trim()
             var version = parts[1].trim()
-            ghGet(`repos/${issueRepository}/contents${template}` +
+            ghGet(`repos/${issueRepository}/contents/${template}` +
                   `?ref=${version}`, {}, function(src) {
                 // Expand variables in the template text.
                 var text = atob(src.content)
@@ -823,19 +823,21 @@ $(document).ready(function() {
                     variables)
 
                 // Add the issue to the list of recent issues.
-                var recent = JSON.parse(localStorage.getItem("recent"))
-                if(recent == null) recent = []
-                recent = recent.filter(function(it) {
-                    return it.repository != issueRepository ||
-                        it.issue != issueNumber
+                var recentIssues = JSON.parse(localStorage.getItem("recentIssues"))
+                if(recentIssues == null) recentIssues = {}
+                if(!(flowiumService.name in recentIssues))
+                    recentIssues[flowiumService.name] = []
+                recent = recentIssues[flowiumService.name].filter(function(it) {
+                    return it.issue != issueNumber
                 })
                 recent.unshift({
-                    repository: issueRepository,
                     issue: issueNumber,
                     title: issue.title,
                 })
                 recent = recent.slice(0, 20)
-                localStorage.setItem("recent", JSON.stringify(recent))
+                recentIssues[flowiumService.name] = recent
+                localStorage.setItem("recentIssues",
+                    JSON.stringify(recentIssues))
 
                 // All is done. Let's make the page visible.
                 $("#flowium-all").show()
