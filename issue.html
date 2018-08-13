@@ -748,10 +748,10 @@ $(document).ready(function() {
         var parts = variables["_template"].split(':')
         var template = parts[0].trim()
         var version = parts[1].trim()
-        ghGet(`repos/${issueRepository}/contents/${template}` +
-              `?ref=${version}`, {}, function(src) {
+//        ghGet(`repos/${issueRepository}/contents/${template}` +
+//              `?ref=${version}`, {}, function(src) {
+        flowiumService.getFileContent(template, version, function(text) {
             // Expand variables in the template text.
-            var text = atob(src.content)
             var keys = Object.keys(variables)
             for(var j = 0; j < keys.length; j++) {
                 var name = keys[j]

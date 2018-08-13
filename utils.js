@@ -143,6 +143,13 @@ function ghReopenIssue(id, cb) {
     })
 }
 
+function ghGetFileContent(file, version, cb) {
+    ghGet(`repos/${this.repository}/contents/${file}?ref=${version}`, {},
+          function(file) {
+        cb(atob(file.content))
+    })
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //  Choose one of the services in the config to use.
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,6 +189,7 @@ function setUpServiceAdaptor() {
         flowiumService.getIssue = ghGetIssue
         flowiumService.closeIssue = ghCloseIssue
         flowiumService.reopenIssue = ghReopenIssue
+        flowiumService.getFileContent = ghGetFileContent
     }
 }
 
