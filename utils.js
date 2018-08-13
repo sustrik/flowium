@@ -170,6 +170,18 @@ function ghGetFileHistory(file, cb) {
     })
 }
 
+function ghGetIssueLink(id) {
+    return `https://github.com/${this.repository}/issues/${id}`
+}
+
+function ghGetFileLink(file, version) {
+    return `https://github.com/${this.repository}/blob/${version}/${file}`
+}
+
+function ghGetEditLink(file) {
+    return `https://github.com/${this.repository}/edit/master/${file}`
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //  Choose one of the services in the config to use.
 ////////////////////////////////////////////////////////////////////////////////
@@ -211,6 +223,9 @@ function setUpServiceAdaptor() {
         flowiumService.reopenIssue = ghReopenIssue
         flowiumService.getFileContent = ghGetFileContent
         flowiumService.getFileHistory = ghGetFileHistory
+        flowiumService.getIssueLink = ghGetIssueLink
+        flowiumService.getFileLink = ghGetFileLink
+        flowiumService.getEditLink = ghGetEditLink
     }
 }
 

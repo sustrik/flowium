@@ -687,14 +687,9 @@ function initMore(repository, issue, template, version, variables) {
         })
     })
     $("#gh-link-template").attr("href",
-        `https://github.com/${repository}/blob/` +
-        `${version}/${template}`)
-    $("#gh-edit-template").attr("href",
-        `https://github.com/${repository}/edit/master/` +
-        `${template}`)
-    $("#gh-link-issue").attr("href",
-        `https://github.com/${repository}/issues/` +
-        `${issue}`)
+        flowiumService.getFileLink(template, version))
+    $("#gh-edit-template").attr("href", flowiumService.getEditLink(template))
+    $("#gh-link-issue").attr("href", flowiumService.getIssueLink(issue))
     $("#more-clean-state").click(function () {
         localStorage.clear()
     })
@@ -900,7 +895,7 @@ $(document).ready(function() {
           Inspect the variables</a></p>
         <p><a id="gh-update-template" href="#">Update the template</a></p>
         <br>
-        <h5>Links to GitHub</h5>
+        <h5>Links</h5>
         <br>
         <p><a id="gh-link-issue" target="_blank">
           This issue</a></p>
