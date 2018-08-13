@@ -291,17 +291,16 @@ function splitCommentsAndVariables(text) {
 //     created: <time when the comment was created>,
 // }
 
-function processComments(issue, comments) {
-    comments.unshift(issue)
+function processComments(comments) {
     var cmnts = []
     var cmntsByStep = {}
     for(var i = 0; i < comments.length; i++) {
         var c = comments[i]
-        sc = splitCommentsAndVariables(c.body)
+        sc = splitCommentsAndVariables(c.text)
         for(var j = 0; j < sc.length; j++) {
-            sc[j].user = c.user.login
-            sc[j].avatar = c.user.avatar_url
-            sc[j].created = new Date(c.created_at).toLocaleString()
+            sc[j].user = c.author
+            sc[j].avatar = c.avatar
+            sc[j].created = c.posted.toLocaleString()
             cmnts.push(sc[j])
             if("step" in sc[j]) {
                 var stepId = sc[j].step
@@ -733,115 +732,112 @@ $(document).ready(function() {
     // Authenticate with GitHub, as needed.
     chooseService()
     authenticate()
+    setUpServiceAdaptor()
     // Parse query string.
     var urlParams = new URLSearchParams(window.location.search)
     var issueRepository = flowiumService.repository
     var issueNumber = urlParams.get("issue")
     // Get the data from GitHub.
-    ghGet(`repos/${issueRepository}/issues/${issueNumber}`, null,
-          function(issue) {
-        ghGet(`repos/${issueRepository}/issues/${issueNumber}/comments`, null,
-              function(cmnts) {
-            var comments = processComments(issue, cmnts)
-            // Merge the variables from comments to get the current status quo.
-            var variables = {}
-            for(var i = 0; i < comments.comments.length; i++) {
-                var comment = comments.comments[i]
-                if(comment.type != "variables") continue
-                variables = Object.assign(variables, comment.variables)
+    flowiumService.getIssue(issueNumber, function (title, state, cmnts) {
+        var comments = processComments(cmnts)
+        // Merge the variables from comments to get the current status quo.
+        var variables = {}
+        for(var i = 0; i < comments.comments.length; i++) {
+            var comment = comments.comments[i]
+            if(comment.type != "variables") continue
+            variables = Object.assign(variables, comment.variables)
+        }
+        // Get the template file.
+        if(!"_template" in variables) {
+            throw ReferenceError(
+                "Template file is not specified in the issue!")
+        }
+        var parts = variables["_template"].split(':')
+        var template = parts[0].trim()
+        var version = parts[1].trim()
+        ghGet(`repos/${issueRepository}/contents/${template}` +
+              `?ref=${version}`, {}, function(src) {
+            // Expand variables in the template text.
+            var text = atob(src.content)
+            var keys = Object.keys(variables)
+            for(var j = 0; j < keys.length; j++) {
+                var name = keys[j]
+                var value = variables[name]
+                text = text.replace(new RegExp(`#{${name}}`, 'g'), value)
             }
-            // Get the template file.
-            if(!"_template" in variables) {
-                throw ReferenceError(
-                    "Template file is not specified in the issue!")
+            // Do the template parsing.
+            var steps = parseTemplate(text)
+            // Collect statuses from comments.
+            var statusById = {}
+            for(var i = 0; i != steps.steps.length; i++) {
+                var id = steps.steps[i].id
+                var status = "not-done"
+                var vname = "_status+" + id
+                if(vname in variables)
+                    status = variables[vname]
+                statusById[id] = status
             }
-            var parts = variables["_template"].split(':')
-            var template = parts[0].trim()
-            var version = parts[1].trim()
-            ghGet(`repos/${issueRepository}/contents/${template}` +
-                  `?ref=${version}`, {}, function(src) {
-                // Expand variables in the template text.
-                var text = atob(src.content)
-                var keys = Object.keys(variables)
-                for(var j = 0; j < keys.length; j++) {
-                    var name = keys[j]
-                    var value = variables[name]
-                    text = text.replace(new RegExp(`#{${name}}`, 'g'), value)
+            // Annotate the steps with statuses.
+            for(var i = 0; i != steps.steps.length; i++) {
+                var step = steps.steps[i]
+                if(statusById[step.id] == "done") {
+                    step["status"] = "done"
+                    continue
                 }
-                // Do the template parsing.
-                var steps = parseTemplate(text)
-                // Collect statuses from comments.
-                var statusById = {}
-                for(var i = 0; i != steps.steps.length; i++) {
-                    var id = steps.steps[i].id
-                    var status = "not-done"
-                    var vname = "_status+" + id
-                    if(vname in variables)
-                        status = variables[vname]
-                    statusById[id] = status
-                }
-                // Annotate the steps with statuses.
-                for(var i = 0; i != steps.steps.length; i++) {
-                    var step = steps.steps[i]
-                    if(statusById[step.id] == "done") {
-                        step["status"] = "done"
-                        continue
+                // Steps that are not yet done will be either 'active' or
+                // 'blocked' based on the status of the dependecies.
+                var deps = step.deps
+                var blocked = false
+                for(j = 0; j < step.deps.length; j++) {
+                    var depId = step.deps[j]
+                    if(statusById[depId] != "done") {
+                        blocked = true
+                        break
                     }
-                    // Steps that are not yet done will be either 'active' or
-                    // 'blocked' based on the status of the dependecies.
-                    var deps = step.deps
-                    var blocked = false
-                    for(j = 0; j < step.deps.length; j++) {
-                        var depId = step.deps[j]
-                        if(statusById[depId] != "done") {
-                            blocked = true
-                            break
-                        }
-                    }
-                    if(blocked) step["status"] = "blocked"
-                    else step["status"] = "active"
                 }
+                if(blocked) step["status"] = "blocked"
+                else step["status"] = "active"
+            }
 
-                // At this point we are done with data collection and
-                // preprocessing we can more to rendering the page.
+            // At this point we are done with data collection and
+            // preprocessing we can more to rendering the page.
 
-                // The page title is the title of the GitHub issue.
-                $("#title").prepend(issue.title)
-                $(document).attr("title", issue.title)
-                $("#back-to-index").click(function () {
-                    window.location.href = "index.html"
-                })
-
-                // Initialize different tabs on the page.
-                initSteps(issueRepository, issueNumber, steps,
-                    comments.commentsByStep, variables, issue.state == "closed")
-                initGraph(steps.steps)
-                initHistory(issueRepository, issueNumber, comments.comments,
-                    steps.stepById)
-                initVariables(issueRepository, issueNumber, variables)
-                initMore(issueRepository, issueNumber, template, version,
-                    variables)
-
-                // Add the issue to the list of recent issues.
-                var recentIssues = JSON.parse(localStorage.getItem("recentIssues"))
-                if(recentIssues == null) recentIssues = {}
-                if(!(flowiumService.name in recentIssues))
-                    recentIssues[flowiumService.name] = []
-                recent = recentIssues[flowiumService.name].filter(function(it) {
-                    return it.issue != issueNumber
-                })
-                recent.unshift({
-                    issue: issueNumber,
-                    title: issue.title,
-                })
-                recent = recent.slice(0, 20)
-                recentIssues[flowiumService.name] = recent
-                localStorage.setItem("recentIssues",
-                    JSON.stringify(recentIssues))
-
-                // All is done. Let's make the page visible.
-                $("#flowium-all").show()
+            // The page title is the title of the GitHub issue.
+            $("#title").prepend(title)
+            $(document).attr("title", title)
+            $("#back-to-index").click(function () {
+                window.location.href = "index.html"
             })
+
+            // Initialize different tabs on the page.
+            initSteps(issueRepository, issueNumber, steps,
+                comments.commentsByStep, variables, state == "closed")
+            initGraph(steps.steps)
+            initHistory(issueRepository, issueNumber, comments.comments,
+                steps.stepById)
+            initVariables(issueRepository, issueNumber, variables)
+            initMore(issueRepository, issueNumber, template, version,
+                variables)
+
+            // Add the issue to the list of recent issues.
+            var recentIssues = JSON.parse(localStorage.getItem("recentIssues"))
+            if(recentIssues == null) recentIssues = {}
+            if(!(flowiumService.name in recentIssues))
+                recentIssues[flowiumService.name] = []
+            recent = recentIssues[flowiumService.name].filter(function(it) {
+                return it.issue != issueNumber
+            })
+            recent.unshift({
+                issue: issueNumber,
+                title: title,
+            })
+            recent = recent.slice(0, 20)
+            recentIssues[flowiumService.name] = recent
+            localStorage.setItem("recentIssues",
+                JSON.stringify(recentIssues))
+
+            // All is done. Let's make the page visible.
+            $("#flowium-all").show()
         })
     })
 })

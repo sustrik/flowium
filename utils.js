@@ -108,9 +108,10 @@ function ghPostComment(id, text, cb) {
 //     text: <body-of-the-comment>,
 // }
 function ghGetIssue(id, cb) {
-    ghGet(`repos/${this.epository}/issues/${id}`, null,
+    var repo = this.repository
+    ghGet(`repos/${repo}/issues/${id}`, null,
           function(issue) {
-        ghGet(`repos/${this.repository}/issues/${id}/comments`,
+        ghGet(`repos/${repo}/issues/${id}/comments`,
               null, function(comments) {
             comments.unshift(issue)
             var cs = []
@@ -123,7 +124,7 @@ function ghGetIssue(id, cb) {
                     text: c.body,
                 })
             }
-            cb(issue.title, cs)
+            cb(issue.title, issue.state, cs)
         })
     })
 }
@@ -164,6 +165,7 @@ function setUpServiceAdaptor() {
         flowiumService.recentVersion = ghRecentVersion
         flowiumService.createIssue = ghCreateIssue
         flowiumService.postComment = ghPostComment
+        flowiumService.getIssue = ghGetIssue
     }
 }
 
