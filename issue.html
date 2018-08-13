@@ -664,14 +664,13 @@ function initMore(repository, issue, template, version, variables) {
         $("#template-file").val(template)
         $("#template-commit").empty()
         // Load the history of the template file.
-        ghGet(`repos/${repository}/commits?path=${template}`,
-              {}, function(reply) {
-            for(var i = 0; i < reply.length; i++) {
-                var msg = reply[i].commit.message.split("\n")[0]
-                var sha = reply[i].sha
-                if(sha == version) break
+        flowiumService.getFileHistory(template, function (history) {
+            for(var i = 0; i < history.length; i++) {
+                var msg = history[i].message.split("\n")[0]
+                var v = history[i].version
+                if(v == version) break
                 var opt = $("<option></option>")
-                    .attr("value", sha)
+                    .attr("value", v)
                     .text(msg)
                 $("#template-commit").append(opt)
             }

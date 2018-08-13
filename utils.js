@@ -150,6 +150,26 @@ function ghGetFileContent(file, version, cb) {
     })
 }
 
+// Returns an array of commits. Each commit looks like this:
+//
+// {
+//     version: <version-id>,
+//     message: <commit-message>,
+// }
+function ghGetFileHistory(file, cb) {
+    ghGet(`repos/${this.repository}/commits?path=${file}`, {},
+          function (commits) {
+        var history = []
+        for(var i = 0; i < commits.length; i++) {
+             history.push({
+                 version: commits[i].sha,
+                 message: commits[i].commit.message
+             })
+        }
+        cb(history)
+    })
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //  Choose one of the services in the config to use.
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,6 +210,7 @@ function setUpServiceAdaptor() {
         flowiumService.closeIssue = ghCloseIssue
         flowiumService.reopenIssue = ghReopenIssue
         flowiumService.getFileContent = ghGetFileContent
+        flowiumService.getFileHistory = ghGetFileHistory
     }
 }
 
