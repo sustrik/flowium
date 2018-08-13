@@ -129,6 +129,20 @@ function ghGetIssue(id, cb) {
     })
 }
 
+function ghCloseIssue(id, cb) {
+    ghPost(`repos/${this.repository}/issues/${id}`, {"state": "closed"},
+          function(reply) {
+        cb()
+    })
+}
+
+function ghReopenIssue(id, cb) {
+    ghPost(`repos/${this.repository}/issues/${id}`, {"state": "open"},
+          function(reply) {
+        cb()
+    })
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //  Choose one of the services in the config to use.
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,6 +180,8 @@ function setUpServiceAdaptor() {
         flowiumService.createIssue = ghCreateIssue
         flowiumService.postComment = ghPostComment
         flowiumService.getIssue = ghGetIssue
+        flowiumService.closeIssue = ghCloseIssue
+        flowiumService.reopenIssue = ghReopenIssue
     }
 }
 
