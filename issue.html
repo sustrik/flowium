@@ -393,8 +393,8 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
                     }
                     if(updates == "") return
                     $("flowium-all").hide()
-                    ghPost(`repos/${repository}/issues/${issue}/comments`,
-                          {"body": updates.trim()}, function(reply) {
+                    flowiumService.postComment(issue, updates.trim(),
+                          function () {
                         location.reload()
                     })
                 }))
@@ -678,8 +678,7 @@ function initMore(repository, issue, template, version, variables) {
                 var commit = $("#template-commit").val()
                 $("flowium-all").hide()
                 var body = `~> _template: ${template}:${commit}`
-                ghPost(`repos/${repository}/issues/${issue}/comments`,
-                      {"body": body}, function(reply) { 
+                flowiumService.postComment(issue, body, function() {
                     location.reload()
                 })
             })
