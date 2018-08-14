@@ -155,6 +155,7 @@ function ghGetFileContent(file, version, cb) {
 // {
 //     version: <version-id>,
 //     message: <commit-message>,
+//     committed: <time-when-committed>,
 // }
 function ghGetFileHistory(file, cb) {
     ghGet(`repos/${this.repository}/commits?path=${file}`, {},
@@ -163,7 +164,8 @@ function ghGetFileHistory(file, cb) {
         for(var i = 0; i < commits.length; i++) {
              history.push({
                  version: commits[i].sha,
-                 message: commits[i].commit.message
+                 message: commits[i].commit.message,
+                 committed: new Date(commits[i].commit.committer.date),
              })
         }
         cb(history)
@@ -180,6 +182,225 @@ function ghGetFileLink(file, version) {
 
 function ghGetEditLink(file) {
     return `https://github.com/${this.repository}/edit/master/${file}`
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//  GitLab adaptor.
+////////////////////////////////////////////////////////////////////////////////
+
+function glGet(path, args, cb) {
+    var request = new XMLHttpRequest();
+    request.onerror = function() {
+        throw Error(request.responseText || "Network request failed.")
+    }
+    request.onreadystatechange = function() { 
+        if (request.readyState == 4) {
+            if (request.status >= 200 &&
+                  request.status < 300) {
+                cb(issues = JSON.parse(request.responseText))
+            }
+        }
+    }
+    request.open('GET', this.root + "/api/v4/" + path, true);
+    request.setRequestHeader('Authorization','bearer ' +
+        flowiumService.token)
+    request.setRequestHeader('Content-type', 'application/json')
+    request.setRequestHeader('Accept', '*/*')
+    request.send(args);
+}
+
+function glPost(path, args, cb) {
+    var request = new XMLHttpRequest()
+    request.onerror = function() {
+        throw Error(request.responseText || "Network request failed.")
+    }
+    request.onreadystatechange = function() {
+        if (request.readyState == 4) {
+            if (request.status >= 200 &&
+                  request.status < 300) {
+                cb(issues = JSON.parse(request.responseText))
+            } else {
+                console.log(request)
+            }
+        }
+    }
+    request.open('POST', this.root + "/api/v4/" + path, true)
+    request.setRequestHeader('Authorization','bearer ' +
+        flowiumService.token)
+    request.setRequestHeader('Content-type', 'application/json')
+    request.setRequestHeader('Accept', '*/*')
+    request.send(JSON.stringify(args))
+}
+
+function glPut(path, args, cb) {
+    var request = new XMLHttpRequest()
+    request.onerror = function() {
+        throw Error(request.responseText || "Network request failed.")
+    }
+    request.onreadystatechange = function() {
+        if (request.readyState == 4) {
+            if (request.status >= 200 &&
+                  request.status < 300) {
+                cb(issues = JSON.parse(request.responseText))
+            } else {
+                console.log(request)
+            }
+        }
+    }
+    request.open('PUT', this.root + "/api/v4/" + path, true)
+    request.setRequestHeader('Authorization','bearer ' +
+        flowiumService.token)
+    request.setRequestHeader('Content-type', 'application/json')
+    request.setRequestHeader('Accept', '*/*')
+    request.send(JSON.stringify(args))
+}
+
+// Returns all open issues. Returns an array of issues, each looking like this:
+//
+// {id: <ID-of-the-issue>, title: <title-of-the-issue>}
+function glIssues(cb) {
+    this.get(`projects/${encodeURIComponent(this.project)}/issues`, {},
+          function(issues) {
+        var r = []
+        for(var i = 0; i < issues.length; i++) {
+            r.push({
+                id: issues[i].iid,
+                title: issues[i].title,
+            })
+        }
+        cb(r)
+    })
+}
+
+// Returns an array of all files in the template directory.
+function glTemplates(cb) {
+    this.get(`projects/${encodeURIComponent(this.project)}/repository/` +
+          `tree${this.templatePath}`, {}, function(files) {
+        var r = []
+        for(var i = 0; i < files.length; i++) {
+            var f = files[i]
+            if(f.type != "blob") continue
+            r.push(f.name) 
+        }
+        cb(r)
+    })
+}
+
+// Returns recent version ID of the specified file from the template directory.
+function glRecentVersion(file, cb) {
+    this.get(`projects/${encodeURIComponent(this.project)}/repository/` +
+          `files${this.templatePath}${file}?ref=master`, {}, function(file) {
+        cb(file.commit_id)
+    })
+}
+
+// Creates an issue with specified title and text.
+// Returns ID of the created issue.
+function glCreateIssue(title, text, cb) {
+    this.post(`projects/${encodeURIComponent(this.project)}/issues`,
+          {title: title, description: text}, function(reply) {
+        cb(reply.iid)
+    })
+}
+
+// Posts a comment to the issue with specified ID. Returns no data.
+function glPostComment(id, text, cb) {
+    this.post(`projects/${encodeURIComponent(this.project)}/issues/${id}/notes`,
+          {body: text}, function(reply) {
+        cb()
+    })
+}
+
+// Returns all comments from the issue with specified ID, including the initial
+// comment supplied when the issue was created. Each comment looks like this:
+//
+// {
+//     author: <author-of-the-comment>,
+//     avatar: <optional-link-to-authors-avatar>,
+//     posted: <time-when-posted>,
+//     text: <body-of-the-comment>,
+// }
+function glGetIssue(id, cb) {
+    var r = []
+    this.get(`projects/${encodeURIComponent(this.project)}/issues/${id}`,
+          {}, function(reply) {
+        r.push({
+            author: reply.author.username,
+            avatar: reply.author.avatar_url,
+            posted: new Date(reply.created_at),
+            text: reply.description,
+        })
+        flowiumService.get(`projects/` +
+              `${encodeURIComponent(flowiumService.project)}/issues/${id}/notes`,
+              {}, function(notes) {
+            for(var i = 0; i < notes.length; i++) {
+                var note = notes[i]
+                r.push({
+                    author: note.author.username,
+                    avatar: note.author.avatar_url,
+                    posted: new Date(note.created_at),
+                    text: note.body,
+                })
+            }
+            cb(reply.title, reply.state, r)
+        })
+    })
+}
+
+function glCloseIssue(id, cb) {
+    this.put(`projects/${encodeURIComponent(this.project)}/issues/${id}`,
+          {state_event: "close"}, function(reply) {
+        cb()
+    })
+}
+
+function glReopenIssue(id, cb) {
+    this.put(`projects/${encodeURIComponent(this.project)}/issues/${id}`,
+          {state_event: "reopen"}, function(reply) {
+        cb()
+    })
+}
+
+function glGetFileContent(file, version, cb) {
+    this.get(`projects/${encodeURIComponent(flowiumService.project)}/` +
+          `repository/files${this.templatePath}${file}?ref=${version}`,
+          {}, function(f) {
+        cb(atob(f.content))
+    })
+}
+
+// Returns an array of commits. Each commit looks like this:
+//
+// {
+//     version: <version-id>,
+//     message: <commit-message>,
+//     committed: <time-when-committed>,
+// }
+function glGetFileHistory(file, cb) {
+    this.get(`projects/${encodeURIComponent(flowiumService.project)}/` +
+          `repository/commits?path=${file}`, {}, function(reply) {
+        var r = []
+        for(var i = 0; i < reply.length; i++) {
+            r.push({
+                version: reply[i].id,
+                message: reply[i].message,
+                committed: new Date(reply[i].committed_date)
+            })
+        }
+        cb(r)
+    })
+}
+
+function glGetIssueLink(id) {
+    return `${this.root}/${this.project}/issues/${id}`
+}
+
+function glGetFileLink(file, version) {
+    return `${this.root}/${this.project}/blob/${version}/${file}`
+}
+
+function glGetEditLink(file) {
+    return `${this.root}/${this.project}/edit/master/${file}`
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -226,6 +447,24 @@ function setUpServiceAdaptor() {
         flowiumService.getIssueLink = ghGetIssueLink
         flowiumService.getFileLink = ghGetFileLink
         flowiumService.getEditLink = ghGetEditLink
+    }
+    if(flowiumService.type == "GitLab") {
+        flowiumService.get = glGet
+        flowiumService.post = glPost
+        flowiumService.put = glPut
+        flowiumService.issues = glIssues
+        flowiumService.templates = glTemplates
+        flowiumService.recentVersion = glRecentVersion
+        flowiumService.createIssue = glCreateIssue
+        flowiumService.postComment = glPostComment
+        flowiumService.getIssue = glGetIssue
+        flowiumService.closeIssue = glCloseIssue
+        flowiumService.reopenIssue = glReopenIssue
+        flowiumService.getFileContent = glGetFileContent
+        flowiumService.getFileHistory = glGetFileHistory
+        flowiumService.getIssueLink = glGetIssueLink
+        flowiumService.getFileLink = glGetFileLink
+        flowiumService.getEditLink = glGetEditLink
     }
 }
 

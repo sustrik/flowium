@@ -665,6 +665,12 @@ function initMore(repository, issue, template, version, variables) {
         $("#template-commit").empty()
         // Load the history of the template file.
         flowiumService.getFileHistory(template, function (history) {
+            // Sort the commits by time.
+            history.sort(function(a, b) {
+                if(a.committed < b.committed) return -1
+                if(a.committed > b.committed) return 1
+                return 0
+            })
             for(var i = 0; i < history.length; i++) {
                 var msg = history[i].message.split("\n")[0]
                 var v = history[i].version
@@ -725,6 +731,12 @@ $(document).ready(function() {
     var issueNumber = urlParams.get("issue")
     // Get the data from GitHub.
     flowiumService.getIssue(issueNumber, function (title, state, cmnts) {
+        // Sort the comments by time.
+        cmnts.sort(function(a, b) {
+            if(a.posted < b.posted) return -1
+            if(a.posted > b.posted) return 1
+            return 0
+        })
         var comments = processComments(cmnts)
         // Merge the variables from comments to get the current status quo.
         var variables = {}
