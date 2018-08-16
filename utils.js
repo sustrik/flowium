@@ -259,7 +259,7 @@ function glPut(path, args, cb) {
 //
 // {id: <ID-of-the-issue>, title: <title-of-the-issue>}
 function glIssues(cb) {
-    this.get(`projects/${encodeURIComponent(this.project)}/issues`, {},
+    this.get(`projects/${encodeURIComponent(this.repository)}/issues`, {},
           function(issues) {
         var r = []
         for(var i = 0; i < issues.length; i++) {
@@ -274,7 +274,7 @@ function glIssues(cb) {
 
 // Returns an array of all files in the template directory.
 function glTemplates(cb) {
-    this.get(`projects/${encodeURIComponent(this.project)}/repository/` +
+    this.get(`projects/${encodeURIComponent(this.repository)}/repository/` +
           `tree${this.templatePath}`, {}, function(files) {
         var r = []
         for(var i = 0; i < files.length; i++) {
@@ -288,7 +288,7 @@ function glTemplates(cb) {
 
 // Returns recent version ID of the specified file from the template directory.
 function glRecentVersion(file, cb) {
-    this.get(`projects/${encodeURIComponent(this.project)}/repository/` +
+    this.get(`projects/${encodeURIComponent(this.repository)}/repository/` +
           `files${this.templatePath}${file}?ref=master`, {}, function(file) {
         cb(file.commit_id)
     })
@@ -297,7 +297,7 @@ function glRecentVersion(file, cb) {
 // Creates an issue with specified title and text.
 // Returns ID of the created issue.
 function glCreateIssue(title, text, cb) {
-    this.post(`projects/${encodeURIComponent(this.project)}/issues`,
+    this.post(`projects/${encodeURIComponent(this.repository)}/issues`,
           {title: title, description: text}, function(reply) {
         cb(reply.iid)
     })
@@ -305,7 +305,7 @@ function glCreateIssue(title, text, cb) {
 
 // Posts a comment to the issue with specified ID. Returns no data.
 function glPostComment(id, text, cb) {
-    this.post(`projects/${encodeURIComponent(this.project)}/issues/${id}/notes`,
+    this.post(`projects/${encodeURIComponent(this.repository)}/issues/${id}/notes`,
           {body: text}, function(reply) {
         cb()
     })
@@ -322,7 +322,7 @@ function glPostComment(id, text, cb) {
 // }
 function glGetIssue(id, cb) {
     var r = []
-    this.get(`projects/${encodeURIComponent(this.project)}/issues/${id}`,
+    this.get(`projects/${encodeURIComponent(this.repository)}/issues/${id}`,
           {}, function(reply) {
         r.push({
             author: reply.author.username,
@@ -331,7 +331,7 @@ function glGetIssue(id, cb) {
             text: reply.description,
         })
         flowiumService.get(`projects/` +
-              `${encodeURIComponent(flowiumService.project)}/issues/${id}/notes`,
+              `${encodeURIComponent(flowiumService.repository)}/issues/${id}/notes`,
               {}, function(notes) {
             for(var i = 0; i < notes.length; i++) {
                 var note = notes[i]
@@ -348,21 +348,21 @@ function glGetIssue(id, cb) {
 }
 
 function glCloseIssue(id, cb) {
-    this.put(`projects/${encodeURIComponent(this.project)}/issues/${id}`,
+    this.put(`projects/${encodeURIComponent(this.repository)}/issues/${id}`,
           {state_event: "close"}, function(reply) {
         cb()
     })
 }
 
 function glReopenIssue(id, cb) {
-    this.put(`projects/${encodeURIComponent(this.project)}/issues/${id}`,
+    this.put(`projects/${encodeURIComponent(this.repository)}/issues/${id}`,
           {state_event: "reopen"}, function(reply) {
         cb()
     })
 }
 
 function glGetFileContent(file, version, cb) {
-    this.get(`projects/${encodeURIComponent(flowiumService.project)}/` +
+    this.get(`projects/${encodeURIComponent(flowiumService.repository)}/` +
           `repository/files${this.templatePath}${file}?ref=${version}`,
           {}, function(f) {
         cb(atob(f.content))
@@ -377,7 +377,7 @@ function glGetFileContent(file, version, cb) {
 //     committed: <time-when-committed>,
 // }
 function glGetFileHistory(file, cb) {
-    this.get(`projects/${encodeURIComponent(flowiumService.project)}/` +
+    this.get(`projects/${encodeURIComponent(flowiumService.repository)}/` +
           `repository/commits?path=${file}`, {}, function(reply) {
         var r = []
         for(var i = 0; i < reply.length; i++) {
@@ -392,15 +392,15 @@ function glGetFileHistory(file, cb) {
 }
 
 function glGetIssueLink(id) {
-    return `${this.root}/${this.project}/issues/${id}`
+    return `${this.root}/${this.repository}/issues/${id}`
 }
 
 function glGetFileLink(file, version) {
-    return `${this.root}/${this.project}/blob/${version}/${file}`
+    return `${this.root}/${this.repository}/blob/${version}/${file}`
 }
 
 function glGetEditLink(file) {
-    return `${this.root}/${this.project}/edit/master/${file}`
+    return `${this.root}/${this.repository}/edit/master/${file}`
 }
 
 ////////////////////////////////////////////////////////////////////////////////
