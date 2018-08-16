@@ -516,8 +516,8 @@ $(document).ready(function() {
     // who haven't authorized Flowium can still read the documentation.
     chooseService()
 
-    $("#back-to-index").click(function () {
-        window.location.href = "index.html"
+    $("#go-back").click(function () {
+        window.history.back()
     })
 
     $(".section-body").hide()
@@ -550,7 +550,7 @@ $(document).ready(function() {
 
   <h1 class="flowium-title">Flowium (BETA)
     <small>
-      <i id="back-to-index" class="float-right fa fa-close cancel-icon"></i>
+      <i id="go-back" class="float-right fa fa-close cancel-icon"></i>
     </small>
   </h1>
 

@@ -404,6 +404,104 @@ function glGetEditLink(file) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//  Gitea adaptor.
+////////////////////////////////////////////////////////////////////////////////
+
+function gtGet(path, args, cb) {
+    var request = new XMLHttpRequest();
+    request.onerror = function() {
+        throw Error(request.responseText || "Network request failed.")
+    }
+    request.onreadystatechange = function() { 
+        if (request.readyState == 4) {
+            if (request.status >= 200 &&
+                  request.status < 300) {
+                cb(issues = JSON.parse(request.responseText))
+            }
+        }
+    }
+    request.open('GET', flowiumService.root + "/api/v1/" + path, true);
+    request.setRequestHeader('Authorization','token ' +
+        flowiumService.token)
+    request.setRequestHeader('Content-type', 'application/json')
+    request.setRequestHeader('Accept', '*/*')
+    request.send(args);
+}
+
+// Returns all open issues. Returns an array of issues, each looking like this:
+//
+// {id: <ID-of-the-issue>, title: <title-of-the-issue>}
+function gtIssues(cb) {
+    gtGet(`repos/${flowiumService.repository}/issues`, {}, function(reply) {
+        var r = []
+        for(var i = 0; i < reply.length; i++) {
+            r.push({
+                id: reply[i].id,
+                title: reply[i].title,
+            })
+        }
+        cb(r)
+    })
+}
+
+// Returns an array of all files in the template directory.
+function gtTemplates(cb) {
+}
+
+// Returns recent version ID of the specified file from the template directory.
+function gtRecentVersion(file, cb) {
+}
+
+// Creates an issue with specified title and text.
+// Returns ID of the created issue.
+function gtCreateIssue(title, text, cb) {
+}
+
+// Posts a comment to the issue with specified ID. Returns no data.
+function gtPostComment(id, text, cb) {
+}
+
+// Returns all comments from the issue with specified ID, including the initial
+// comment supplied when the issue was created. Each comment looks like this:
+//
+// {
+//     author: <author-of-the-comment>,
+//     avatar: <optional-link-to-authors-avatar>,
+//     posted: <time-when-posted>,
+//     text: <body-of-the-comment>,
+// }
+function gtGetIssue(id, cb) {
+}
+
+function gtCloseIssue(id, cb) {
+}
+
+function gtReopenIssue(id, cb) {
+}
+
+function gtGetFileContent(file, version, cb) {
+}
+
+// Returns an array of commits. Each commit looks like this:
+//
+// {
+//     version: <version-id>,
+//     message: <commit-message>,
+//     committed: <time-when-committed>,
+// }
+function gtGetFileHistory(file, cb) {
+}
+
+function gtGetIssueLink(id) {
+}
+
+function gtGetFileLink(file, version) {
+}
+
+function gtGetEditLink(file) {
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //  Choose one of the services in the config to use.
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -466,6 +564,21 @@ function setUpServiceAdaptor() {
         flowiumService.getFileLink = glGetFileLink
         flowiumService.getEditLink = glGetEditLink
     }
+    if(flowiumService.type == "Gitea") {
+        flowiumService.issues = gtIssues
+        flowiumService.templates = gtTemplates
+        flowiumService.recentVersion = gtRecentVersion
+        flowiumService.createIssue = gtCreateIssue
+        flowiumService.postComment = gtPostComment
+        flowiumService.getIssue = gtGetIssue
+        flowiumService.closeIssue = gtCloseIssue
+        flowiumService.reopenIssue = gtReopenIssue
+        flowiumService.getFileContent = gtGetFileContent
+        flowiumService.getFileHistory = gtGetFileHistory
+        flowiumService.getIssueLink = gtGetIssueLink
+        flowiumService.getFileLink = gtGetFileLink
+        flowiumService.getEditLink = gtGetEditLink
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -501,6 +614,14 @@ function authenticate() {
         window.location.replace(
             `https://github.com/login/oauth/authorize?` +
             `scope=repo&client_id=${flowiumService.clientID}`)
+        return
+    }
+
+    if(flowiumService.type == "Gitea") {
+        // For Gitea, access key has to be specified in the config.
+        if(!("token" in flowiumService))
+            throw Error("Token was not specified in the service config.")
+        tokens[flowiumService.name] = flowiumService.token
         return
     }
 

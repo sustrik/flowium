@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>flowium</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- JQuery -->
+  <script
+    src="https://code.jquery.com/jquery-3.3.1.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous"></script>
+
+  <!-- Bootstrap -->
+  <link
+    rel="stylesheet"
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+    integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+    crossorigin="anonymous">
+  <script
+    src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+    integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+    crossorigin="anonymous">
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="flowium.css">
+  <script src="config.js"></script>
+  <script src="utils.js"></script>
+</head>
+<script>
+
+$(document).ready(function() {
+    if(flowiumConfig.services.length == 0) {
+        $("#no-backends").show()
+    } else {
+        for(var i = 0; i < flowiumConfig.services.length; i++) {
+            var c = flowiumConfig.services[i]
+            var t = $(`<tr class="clickable-element"></tr>`).click(function() {
+            })
+            t.append($("<td></td>").text(c.name))
+            t.append($("<td></td>").text(c.root))
+            t.append($("<td></td>").text(c.repository))
+            if("editable" in c && c.editable) {
+                t.append($(`<td align="right"><i class="fa fa-pencil comment-icon"></i><i class="fa fa-close"></i></td>`))
+            } else {
+                t.append($(`<td align="right"><i class="fa fa-eye"></i></td>`))
+            }
+            $("#backend-table-body").append(t)
+            $("#backend-table").show()
+        }
+    }
+
+    // Now the page is fully loaded, so show it to the user.
+    $("#flowium-all").show()
+})
+
+</script>
+<body>
+  
+<div id="flowium-all" class="container-fluid" style="display: none;">
+
+  <h1 class="flowium-title">Flowium (BETA)</h1>
+
+  <ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" data-toggle="tab" href="#backends">
+          Backends</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="help.html">
+          Help</a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+
+    <div id="backends" class="container tab-pane active"><br>
+      <h3>Backends</h3>
+      <br>
+      <table id="backend-table" class="table table-hover"
+          style="display: none;">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Root</th>
+            <th>Repository</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="backend-table-body"></tbody>
+      </table>
+      <div id="no-backends" style="display: none;">
+        <p>There are no backends defined.</p>
+      </div>
+      <br>
+      <button id="new-backend" type="button"
+          class="btn btn-primary">New backend</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="flowium-error" class="container-fluid" style="display: none;">
+    <br>
+    <h3>Flowium encountered an error</h3>
+    <br>
+    <div id="flowium-error-text"></div>
+    <p>If this doesn't look like a user error please do
+      <a href="https://github.com/sustrik/flowium/issues/new"
+          target="_blank">report the problem</a>.
+    </p>
+</div>
+
+</body>
+</html>
