@@ -31,25 +31,169 @@
 </head>
 <script>
 
+var editedBackend = null
+
+function openBackendTab(name, type, disable) {
+    $("#main").hide()
+    editedBackend = name
+    if(type == "Gitea") {
+        if(name == null) {
+            $("#gitea-name").val("").prop("disabled", disable)
+        } else {
+            $("#gitea-name").val(name).prop("disabled", disable)
+        }
+        $("#gitea-save").prop("disabled", disable)
+        $("#gitea").show()
+        return
+    }
+    if(type == "GitHub") {
+        if(name == null) {
+            $("#github-name").val("").prop("disabled", disable)
+            $("#github-client-id").val("").prop("disabled", disable)
+            $("#github-gatekeeper").val("").prop("disabled", disable)
+            $("#github-repository").val("").prop("disabled", disable)
+            $("#github-path").val("").prop("disabled", disable)
+        } else {
+            $("#github-name").val(name).prop("disabled", disable)
+            $("#github-client-id").val(flowiumConfig.backends[name].clientID).prop("disabled", disable)
+            $("#github-gatekeeper").val(flowiumConfig.backends[name].gatekeeperURL).prop("disabled", disable)
+            $("#github-repository").val(flowiumConfig.backends[name].repository).prop("disabled", disable)
+            $("#github-path").val(flowiumConfig.backends[name].templatePath).prop("disabled", disable)
+        }
+        $("#github-save").prop("disabled", disable)
+        $("#github").show()
+        return
+    }
+    if(type == "GitLab") {
+        if(name == null) {
+            $("#gitlab-name").val("").prop("disabled", disable)
+            $("#gitlab-URL").val("").prop("disabled", disable)
+            $("#gitlab-application-id").val("").prop("disabled", disable)
+            $("#gitlab-repository").val("").prop("disabled", disable)
+            $("#gitlab-path").val("").prop("disabled", disable)
+        } else {
+            $("#gitlab-name").val(name).prop("disabled", disable)
+            $("#gitlab-URL").val(flowiumConfig.backends[name].URL).prop("disabled", disable)
+            $("#gitlab-application-id").val(flowiumConfig.backends[name].applicationID).prop("disabled", disable)
+            $("#gitlab-repository").val(flowiumConfig.backends[name].repository).prop("disabled", disable)
+            $("#gitlab-path").val(flowiumConfig.backends[name].templatePath).prop("disabled", disable)
+        }
+        $("#gitlab-save").prop("disabled", disable)
+        $("#gitlab").show()
+        return
+    }
+    throw Error(`Unknown service type ${type}`)
+}
+
 $(document).ready(function() {
-    if(flowiumConfig.services.length == 0) {
+    // Get the backend config from local storage. If there is none, keep the
+    // config hardcoded in config.js
+    var config = JSON.parse(localStorage.getItem("config"))
+    if(config != null) flowiumConfig = config
+    else localStorage.setItem("config", JSON.stringify(flowiumConfig))
+
+    if(flowiumConfig.backends.length == 0) {
         $("#no-backends").show()
     } else {
-        for(var i = 0; i < flowiumConfig.services.length; i++) {
-            var c = flowiumConfig.services[i]
-            var t = $(`<tr class="clickable-element"></tr>`).click(function() {
-            })
-            t.append($("<td></td>").text(c.name))
-            t.append($("<td></td>").text(c.root))
+        var keys = Object.keys(flowiumConfig.backends).sort()
+        for(var i = 0; i < keys.length; i++) {
+            var name = keys[i]
+            var c = flowiumConfig.backends[name]
+            var t = $(`<tr class="clickable-element"></tr>`).click(function(name) {
+                return function() {
+                    window.location.href =
+                        `issues.html?backend=${encodeURIComponent(name)}`
+                }
+            }(name))
+            t.append($("<td></td>").text(name))
+            t.append($("<td></td>").text(c.URL))
             t.append($("<td></td>").text(c.repository))
             if("editable" in c && c.editable) {
-                t.append($(`<td align="right"><i class="fa fa-pencil comment-icon"></i><i class="fa fa-close"></i></td>`))
+                var td = ($(`<td align="right"></td>`))
+                var icon = $(`<i class="fa fa-pencil comment-icon"></i>`).click(function(name) {
+                    return function(ev) {
+                        openBackendTab(name, flowiumConfig.backends[name].type, false)
+                        ev.stopPropagation()
+                    }
+                }(name))
+                td.append(icon)
+                var icon = $(`<i class="fa fa-close"></i>`).click(function(name) {
+                    return function(ev) {
+                        delete flowiumConfig.backends[name]
+                        localStorage.setItem("config",
+                            JSON.stringify(flowiumConfig))
+                        location.reload()
+                        ev.stopPropagation()
+                    }
+                }(name))
+                td.append(icon)
+                t.append(td)
             } else {
-                t.append($(`<td align="right"><i class="fa fa-eye"></i></td>`))
+                var td = ($(`<td align="right"></td>`))
+                var icon = $(`<i class="fa fa-eye"></i>`).click(function(name) {
+                    return function(ev) {
+                        openBackendTab(name, flowiumConfig.backends[name].type, true)
+                        ev.stopPropagation()
+                    }
+                }(name))
+                td.append(icon)
+                t.append(td)
             }
             $("#backend-table-body").append(t)
-            $("#backend-table").show()
         }
+        $("#backend-table").show()
+
+        $("#new-gitea").click(function() {
+            openBackendTab(null, "Gitea", false)
+        })
+        $("#new-github").click(function() {
+            openBackendTab(null, "GitHub", false)
+        })
+        $("#new-gitlab").click(function() {
+            openBackendTab(null, "GitLab", false)
+        })
+        $(".back-to-main").click(function() {
+            $("#gitea").hide()
+            $("#github").hide()
+            $("#gitlab").hide()
+            $("#main").show()
+        })
+        $("#gitea-save").click(function() {
+           if(editedBackend != null) delete flowiumConfig.backends[editedBackend]
+           flowiumConfig.backends[$("#gitea-name").val()] = {
+               type: "Gitea",
+               editable: true,
+           }
+           localStorage.setItem("config", JSON.stringify(flowiumConfig))
+           location.reload()
+        })
+        $("#github-save").click(function() {
+           if(editedBackend != null) delete flowiumConfig.backends[editedBackend]
+           flowiumConfig.backends[$("#github-name").val()] = {
+               type: "GitHub",
+               URL: "https://api.github.com",
+               clientID: $("#github-client-id").val(),
+               gatekeeperURL: $("#github-gatekeeper").val(),
+               repository: $("#github-repository").val(),
+               templatePath: $("#github-path").val(),
+               editable: true,
+           }
+           localStorage.setItem("config", JSON.stringify(flowiumConfig))
+           location.reload()
+        })
+        $("#gitlab-save").click(function() {
+           if(editedBackend != null) delete flowiumConfig.backends[editedBackend]
+           flowiumConfig.backends[$("#gitlab-name").val()] = {
+               type: "GitLab",
+               URL: $("#gitlab-URL").val(),
+               applicationID: $("#gitlab-application-id").val(),
+               repository: $("#gitlab-repository").val(),
+               templatePath: $("#gitlab-path").val(),
+               editable: true,
+           }
+           localStorage.setItem("config", JSON.stringify(flowiumConfig))
+           location.reload()
+        })
     }
 
     // Now the page is fully loaded, so show it to the user.
@@ -69,34 +213,118 @@ $(document).ready(function() {
           Backends</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="help.html">
+      <a class="nav-link" href="help.html" target="_blank">
           Help</a>
     </li>
   </ul>
 
   <div class="tab-content">
-
     <div id="backends" class="container tab-pane active"><br>
-      <h3>Backends</h3>
-      <br>
-      <table id="backend-table" class="table table-hover"
-          style="display: none;">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Root</th>
-            <th>Repository</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="backend-table-body"></tbody>
-      </table>
-      <div id="no-backends" style="display: none;">
-        <p>There are no backends defined.</p>
+
+      <div id="main" class="more-tab" style="display: block;">
+        <h3>Backends</h3>
+        <br>
+        <table id="backend-table" class="table table-hover"
+            style="display: none;">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>URL</th>
+              <th>Repository</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="backend-table-body"></tbody>
+        </table>
+        <div id="no-backends" style="display: none;">
+          <p>There are no backends defined.</p>
+        </div>
+        <br>
+        <button id="new-gitea" type="button"
+            class="btn btn-primary">New Gitea backend</button>
+        <button id="new-github" type="button"
+            class="btn btn-primary">New GitHub backend</button>
+        <button id="new-gitlab" type="button"
+            class="btn btn-primary">New GitLab backend</button>
       </div>
-      <br>
-      <button id="new-backend" type="button"
-          class="btn btn-primary">New backend</button>
+
+      <div id="gitea" class="more-tab" style="display: none;">
+        <h3>
+          Gitea backend
+          <i class="float-right fa fa-close cancel-icon back-to-main"></i>
+        </h3>
+        <br>
+        <div class="form-group">
+            <label for="gitea-name">Name:</label>
+            <input type="text" class="form-control" id="gitea-name"></input>
+        </div>
+        <br>
+        <button id="gitea-save" type="button"
+            class="btn btn-primary flowium-active">Save</button>
+      </div>
+
+      <div id="github" class="more-tab" style="display: none;">
+        <h3>
+          GitHub backend
+          <i class="float-right fa fa-close cancel-icon back-to-main"></i>
+        </h3>
+        <br>
+        <div class="form-group">
+            <label for="github-name">Name:</label>
+            <input type="text" class="form-control" id="github-name"></input>
+        </div>
+        <div class="form-group">
+            <label for="github-client-id">Client ID (see <a href="https://github.com/settings/developers" target="_blank">Developer Settings/OAuth Apps at GitHub</a>):</label>
+            <input type="text" class="form-control" id="github-client-id"></input>
+        </div>
+        <div class="form-group">
+            <label for="github-gatekeeper">Gatekeeper URL (e.g. <code>https://flowium.herokuapp.com</code>):</label>
+            <input type="text" class="form-control" id="github-gatekeeper"></input>
+        </div>
+        <div class="form-group">
+            <label for="github-repository">Repository (e.g. <code>myuser/myrepo</code>):</label>
+            <input type="text" class="form-control" id="github-repository"></input>
+        </div>
+        <div class="form-group">
+            <label for="github-path">Path to process files (e.g. <code>/path/to/process/files</code>):</label>
+            <input type="text" class="form-control" id="github-path"></input>
+        </div>
+        <br>
+        <button id="github-save" type="button"
+            class="btn btn-primary flowium-active">Save</button>
+      </div>
+
+      <div id="gitlab" class="more-tab" style="display: none;">
+        <h3>
+          GitLab backend
+          <i class="float-right fa fa-close cancel-icon back-to-main"></i>
+        </h3>
+        <br>
+        <div class="form-group">
+            <label for="gitlab-name">Name:</label>
+            <input type="text" class="form-control" id="gitlab-name"></input>
+        </div>
+        <div class="form-group">
+            <label for="gitlab-URL">URL:</label>
+            <input type="text" class="form-control" id="gitlab-URL"></input>
+        </div>
+        <div class="form-group">
+            <label for="gitlab-application-id">Application ID:</label>
+            <input type="text" class="form-control" id="gitlab-application-id"></input>
+        </div>
+        <div class="form-group">
+            <label for="gitlab-repository">Repository (e.g. <code>myuser/myrepo</code>):</label>
+            <input type="text" class="form-control" id="gitlab-repository"></input>
+        </div>
+        <div class="form-group">
+            <label for="gitlab-path">Path to process files (e.g. <code>/path/to/process/files</code>):</label>
+            <input type="text" class="form-control" id="gitlab-path"></input>
+        </div>
+        <br>
+        <button id="gitlab-save" type="button"
+            class="btn btn-primary flowium-active">Save</button>
+      </div>
+
     </div>
   </div>
 

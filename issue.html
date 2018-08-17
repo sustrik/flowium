@@ -393,7 +393,7 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
                     }
                     if(updates == "") return
                     $("flowium-all").hide()
-                    flowiumService.postComment(issue, updates.trim(),
+                    flowiumBackend.postComment(issue, updates.trim(),
                           function () {
                         location.reload()
                     })
@@ -421,7 +421,7 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
             var text = $(this).prev().children().first().val()
             var body = `~>_step: ${step.id}` + "\n\n" + text
             $("flowium-all").hide()
-            flowiumService.postComment(issue, body, function() {
+            flowiumBackend.postComment(issue, body, function() {
                 location.reload()
             })
         }}(step)))
@@ -434,7 +434,7 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
                 if(text != "")
                     body += "\n" + `~>_step: ${step.id}` + "\n\n" + text
                 $("flowium-all").hide()
-                flowiumService.postComment(issue, body, function () {
+                flowiumBackend.postComment(issue, body, function () {
                     location.reload()
                 })
             }}(step)))
@@ -447,7 +447,7 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
                 if(text != "")
                     body += "\n" + `~>_step: ${step.id}` + "\n\n" + text
                 $("flowium-all").hide()
-                flowiumService.postComment(issue, body, function () { 
+                flowiumBackend.postComment(issue, body, function () { 
                     location.reload()
                 })
             }}(step)))
@@ -462,7 +462,7 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
         var btn =$(`<p><button class="btn btn-primary">Reopen</button></p>`)
         btn.click(function () {
             $("flowium-all").hide()
-            flowiumService.reopenIssue(issue, function() { 
+            flowiumBackend.reopenIssue(issue, function() { 
                 location.reload()
             })
         })
@@ -473,8 +473,9 @@ function initSteps(repository, issue, steps, commentsByStep, variables,
         var btn =$(`<p><button class="btn btn-primary">Close</button></p>`)
         btn.click(function () {
             $("flowium-all").hide()
-            flowiumService.closeIssue(issue, function() { 
-                window.location.href = "index.html"
+            flowiumBackend.closeIssue(issue, function() { 
+                window.location.href =
+                    `issues.html?backend=${encodeURIComponent(flowiumBackendName)}`
             })
         })
         $("#steps-main").append("<br>").append(btn)
@@ -549,7 +550,7 @@ function initVariables(repository, issue, vars) {
         var value = $("#variable-value").val()
         var body = `~> ${name}: ${value}`
         $("flowium-all").hide()
-        flowiumService.postComment(issue, body, function() {
+        flowiumBackend.postComment(issue, body, function() {
             location.reload();
         })
     })
@@ -645,7 +646,7 @@ function initHistory(repository, issue, comments, steps) {
     $("#comment-button").click(function () {
         var body = $("#history-comment").val()
         $("flowium-all").hide()
-        flowiumService.postComment(issue, body, function() {
+        flowiumBackend.postComment(issue, body, function() {
             location.reload()
         })
     })
@@ -664,7 +665,7 @@ function initMore(repository, issue, template, version, variables) {
         $("#template-file").val(template)
         $("#template-commit").empty()
         // Load the history of the template file.
-        flowiumService.getFileHistory(template, function (history) {
+        flowiumBackend.getFileHistory(template, function (history) {
             // Sort the commits by time.
             history.sort(function(a, b) {
                 if(a.committed < b.committed) return -1
@@ -684,7 +685,7 @@ function initMore(repository, issue, template, version, variables) {
                 var commit = $("#template-commit").val()
                 $("flowium-all").hide()
                 var body = `~> _template: ${template}:${commit}`
-                flowiumService.postComment(issue, body, function() {
+                flowiumBackend.postComment(issue, body, function() {
                     location.reload()
                 })
             })
@@ -693,9 +694,9 @@ function initMore(repository, issue, template, version, variables) {
         })
     })
     $("#gh-link-template").attr("href",
-        flowiumService.getFileLink(template, version))
-    $("#gh-edit-template").attr("href", flowiumService.getEditLink(template))
-    $("#gh-link-issue").attr("href", flowiumService.getIssueLink(issue))
+        flowiumBackend.getFileLink(template, version))
+    $("#gh-edit-template").attr("href", flowiumBackend.getEditLink(template))
+    $("#gh-link-issue").attr("href", flowiumBackend.getIssueLink(issue))
     $("#more-clean-state").click(function () {
         localStorage.clear()
     })
@@ -727,10 +728,10 @@ $(document).ready(function() {
     setUpServiceAdaptor()
     // Parse query string.
     var urlParams = new URLSearchParams(window.location.search)
-    var issueRepository = flowiumService.repository
+    var issueRepository = flowiumBackend.repository
     var issueNumber = urlParams.get("issue")
     // Get the data from GitHub.
-    flowiumService.getIssue(issueNumber, function (title, state, cmnts) {
+    flowiumBackend.getIssue(issueNumber, function (title, state, cmnts) {
         // Sort the comments by time.
         cmnts.sort(function(a, b) {
             if(a.posted < b.posted) return -1
@@ -753,7 +754,7 @@ $(document).ready(function() {
         var parts = variables["_template"].split(':')
         var template = parts[0].trim()
         var version = parts[1].trim()
-        flowiumService.getFileContent(template, version, function(text) {
+        flowiumBackend.getFileContent(template, version, function(text) {
             // Expand variables in the template text.
             var keys = Object.keys(variables)
             for(var j = 0; j < keys.length; j++) {
@@ -802,7 +803,8 @@ $(document).ready(function() {
             $("#title").prepend(title)
             $(document).attr("title", title)
             $("#back-to-index").click(function () {
-                window.location.href = "index.html"
+                window.location.href =
+                    `issues.html?backend=${encodeURIComponent(flowiumBackendName)}`
             })
 
             // Initialize different tabs on the page.
@@ -818,9 +820,9 @@ $(document).ready(function() {
             // Add the issue to the list of recent issues.
             var recentIssues = JSON.parse(localStorage.getItem("recentIssues"))
             if(recentIssues == null) recentIssues = {}
-            if(!(flowiumService.name in recentIssues))
-                recentIssues[flowiumService.name] = []
-            recent = recentIssues[flowiumService.name].filter(function(it) {
+            if(!(flowiumBackend.name in recentIssues))
+                recentIssues[flowiumBackend.name] = []
+            recent = recentIssues[flowiumBackend.name].filter(function(it) {
                 return it.issue != issueNumber
             })
             recent.unshift({
@@ -828,7 +830,7 @@ $(document).ready(function() {
                 title: title,
             })
             recent = recent.slice(0, 20)
-            recentIssues[flowiumService.name] = recent
+            recentIssues[flowiumBackend.name] = recent
             localStorage.setItem("recentIssues",
                 JSON.stringify(recentIssues))
 

@@ -35,14 +35,14 @@
 
 function createIssue(repository, template, title, comment) {
     // Get the current version of the template.
-    flowiumService.recentVersion(template, function(version) {
+    flowiumBackend.recentVersion(template, function(version) {
         var prologue = '~> _template: ' + template + ":" + version + "\n\n"
-        flowiumService.createIssue(title, prologue + comment, function(id) {
+        flowiumBackend.createIssue(title, prologue + comment, function(id) {
             var addr = 'issue.html' +
-                '?service=' + encodeURIComponent(flowiumService.name) +
+                '?service=' + encodeURIComponent(flowiumBackend.name) +
                 '&issue=' + encodeURIComponent(id)
             var body = `View in Flowium: <${flowiumConfig.URL}/${addr}>`
-            flowiumService.postComment(id, body, function() {
+            flowiumBackend.postComment(id, body, function() {
                 window.location.href = addr
             })
         })
@@ -75,19 +75,28 @@ $(document).ready(function() {
         return
     }
 
+    // Title is the name of the backend.
+    var backend = urlParams.get("backend")
+    if(backend == null) throw Error(`Backend is not specified.`)
+    $("#title").prepend(backend)
+    $(document).attr("title", backend)
+    $("#back-to-backends").click(function () {
+        window.location.href = "backends.html"
+    })
+
     // Fill in the "recent issues" tab.
     var recent = JSON.parse(localStorage.getItem("recentIssues"))
-    if(recent == null || !(flowiumService.name in recent) ||
-          recent[flowiumService.name].length == 0) {
+    if(recent == null || !(flowiumBackend.name in recent) ||
+          recent[flowiumBackend.name].length == 0) {
         $("#no-recent-issues").show()
     } else {
-        for(var i = 0; i < recent[flowiumService.name].length; i++) {
-            var issue = recent[flowiumService.name][i]
+        for(var i = 0; i < recent[flowiumBackend.name].length; i++) {
+            var issue = recent[flowiumBackend.name][i]
             var t = $(`<tr class="clickable-element"></tr>`).click(function() {
                 var cols = $(this).children("td")
                 var issue = cols.eq(0).text()
                 window.location.href =
-                    `issue.html?service=${encodeURIComponent(flowiumService.name)}` +
+                    `issue.html?backend=${encodeURIComponent(flowiumBackendName)}` +
                     `&issue=${encodeURIComponent(issue)}`
             })
             t.append($("<td></td>").text(issue.issue))
@@ -98,7 +107,7 @@ $(document).ready(function() {
     }
 
     // Fill in the "find an issue" tab.
-    flowiumService.issues(function(issues) {
+    flowiumBackend.issues(function(issues) {
         for(var i = 0; i < issues.length; i++) {
             var issue = issues[i]
             var t = $(`<tr class="clickable-element"></tr>`).click(
@@ -107,7 +116,7 @@ $(document).ready(function() {
                 var issueID = cols.eq(0).text()
                 window.location.href =
                     "issue.html" +
-                    `?service=${encodeURIComponent(flowiumService.name)}` +
+                    `?backend=${encodeURIComponent(flowiumBackendName)}` +
                     `&issue=${encodeURIComponent(issueID)}`
             })
             t.append($("<td></td>").text(issue.id))
@@ -117,7 +126,7 @@ $(document).ready(function() {
     })
 
     // Fill in the "create an issue" tab.
-    flowiumService.templates(function(files) {
+    flowiumBackend.templates(function(files) {
         var tfiles = []
         for(var i = 0; i < files.length; i++) {
             var f = files[i]
@@ -135,7 +144,7 @@ $(document).ready(function() {
         var template = $("#create-template").val() + ".md"
         var title = $("#create-title").val()
         var comment = $("#create-comment").val()
-        createIssue(flowiumService.repository, template, title, comment)
+        createIssue(flowiumBackend.repository, template, title, comment)
     })
 
     // Now the page is fully loaded, so show it to the user.
@@ -147,7 +156,8 @@ $(document).ready(function() {
   
 <div id="flowium-all" class="container-fluid" style="display: none;">
 
-  <h1 class="flowium-title">Flowium (BETA)</h1>
+  <h1 id="title" class="flowium-title"><small><i id="back-to-backends"
+    class="float-right fa fa-close cancel-icon"></i></small></h1>
 
   <ul class="nav nav-tabs" role="tablist">
     <li class="nav-item">
@@ -163,7 +173,7 @@ $(document).ready(function() {
           Create</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="help.html">
+      <a class="nav-link" href="help.html" target="_blank">
           Help</a>
     </li>
   </ul>

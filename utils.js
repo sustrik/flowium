@@ -17,7 +17,7 @@ function ghGet(path, args, cb) {
     }
     request.open('GET', "https://api.github.com/" + path, true);
     request.setRequestHeader('Authorization','token ' +
-        flowiumService.token)
+        flowiumBackend.token)
     request.setRequestHeader('Content-type', 'application/json')
     request.setRequestHeader('Accept', '*/*')
     request.send(args);
@@ -40,7 +40,7 @@ function ghPost(path, args, cb) {
     }
     request.open('POST', "https://api.github.com/" + path, true)
     request.setRequestHeader('Authorization','token ' +
-        flowiumService.token)
+        flowiumBackend.token)
     request.setRequestHeader('Content-type', 'application/json')
     request.setRequestHeader('Accept', '*/*')
     request.send(JSON.stringify(args))
@@ -203,7 +203,7 @@ function glGet(path, args, cb) {
     }
     request.open('GET', this.root + "/api/v4/" + path, true);
     request.setRequestHeader('Authorization','bearer ' +
-        flowiumService.token)
+        flowiumBackend.token)
     request.setRequestHeader('Content-type', 'application/json')
     request.setRequestHeader('Accept', '*/*')
     request.send(args);
@@ -226,7 +226,7 @@ function glPost(path, args, cb) {
     }
     request.open('POST', this.root + "/api/v4/" + path, true)
     request.setRequestHeader('Authorization','bearer ' +
-        flowiumService.token)
+        flowiumBackend.token)
     request.setRequestHeader('Content-type', 'application/json')
     request.setRequestHeader('Accept', '*/*')
     request.send(JSON.stringify(args))
@@ -249,7 +249,7 @@ function glPut(path, args, cb) {
     }
     request.open('PUT', this.root + "/api/v4/" + path, true)
     request.setRequestHeader('Authorization','bearer ' +
-        flowiumService.token)
+        flowiumBackend.token)
     request.setRequestHeader('Content-type', 'application/json')
     request.setRequestHeader('Accept', '*/*')
     request.send(JSON.stringify(args))
@@ -330,8 +330,8 @@ function glGetIssue(id, cb) {
             posted: new Date(reply.created_at),
             text: reply.description,
         })
-        flowiumService.get(`projects/` +
-              `${encodeURIComponent(flowiumService.repository)}/issues/${id}/notes`,
+        flowiumBackend.get(`projects/` +
+              `${encodeURIComponent(flowiumBackend.repository)}/issues/${id}/notes`,
               {}, function(notes) {
             for(var i = 0; i < notes.length; i++) {
                 var note = notes[i]
@@ -362,7 +362,7 @@ function glReopenIssue(id, cb) {
 }
 
 function glGetFileContent(file, version, cb) {
-    this.get(`projects/${encodeURIComponent(flowiumService.repository)}/` +
+    this.get(`projects/${encodeURIComponent(flowiumBackend.repository)}/` +
           `repository/files${this.templatePath}${file}?ref=${version}`,
           {}, function(f) {
         cb(atob(f.content))
@@ -377,7 +377,7 @@ function glGetFileContent(file, version, cb) {
 //     committed: <time-when-committed>,
 // }
 function glGetFileHistory(file, cb) {
-    this.get(`projects/${encodeURIComponent(flowiumService.repository)}/` +
+    this.get(`projects/${encodeURIComponent(flowiumBackend.repository)}/` +
           `repository/commits?path=${file}`, {}, function(reply) {
         var r = []
         for(var i = 0; i < reply.length; i++) {
@@ -420,9 +420,9 @@ function gtGet(path, args, cb) {
             }
         }
     }
-    request.open('GET', flowiumService.root + "/api/v1/" + path, true);
+    request.open('GET', flowiumBackend.root + "/api/v1/" + path, true);
     request.setRequestHeader('Authorization','token ' +
-        flowiumService.token)
+        flowiumBackend.token)
     request.setRequestHeader('Content-type', 'application/json')
     request.setRequestHeader('Accept', '*/*')
     request.send(args);
@@ -432,7 +432,7 @@ function gtGet(path, args, cb) {
 //
 // {id: <ID-of-the-issue>, title: <title-of-the-issue>}
 function gtIssues(cb) {
-    gtGet(`repos/${flowiumService.repository}/issues`, {}, function(reply) {
+    gtGet(`repos/${flowiumBackend.repository}/issues`, {}, function(reply) {
         var r = []
         for(var i = 0; i < reply.length; i++) {
             r.push({
@@ -505,79 +505,71 @@ function gtGetEditLink(file) {
 //  Choose one of the services in the config to use.
 ////////////////////////////////////////////////////////////////////////////////
 
-var flowiumService = null
+var flowiumBackendName = null
+var flowiumBackend = null
 
 function chooseServiceByName(name) {
-    for(var i = 0; i < flowiumConfig.services.length; i++) {
-        if(flowiumConfig.services[i].name == name) {
-            flowiumService = flowiumConfig.services[i]
-            break
-        }
-    }
-    if(flowiumService == null)
+    flowiumBackendName = name
+    flowiumBackend = flowiumConfig.backends[name]
+    if(flowiumBackend == null)
         throw Error(`Service "${name}" not found in the config file.`)
 }
 
 function chooseService() {
     var urlParams = new URLSearchParams(window.location.search)
-    var service = urlParams.get("service")
-    if(service == null) {
-        if(flowiumConfig.services.length == 0)
-            throw Error("No services in the config file.")
-        flowiumService = flowiumConfig.services[0]
-    } else {
-        chooseServiceByName(service)
-    }
+    var backend = urlParams.get("backend")
+    if(backend == null) throw Error("No backend is specified.")
+    chooseServiceByName(backend)
 }
 
 function setUpServiceAdaptor() {
-    if(flowiumService.type == "GitHub") {
-        flowiumService.issues = ghIssues
-        flowiumService.templates = ghTemplates
-        flowiumService.recentVersion = ghRecentVersion
-        flowiumService.createIssue = ghCreateIssue
-        flowiumService.postComment = ghPostComment
-        flowiumService.getIssue = ghGetIssue
-        flowiumService.closeIssue = ghCloseIssue
-        flowiumService.reopenIssue = ghReopenIssue
-        flowiumService.getFileContent = ghGetFileContent
-        flowiumService.getFileHistory = ghGetFileHistory
-        flowiumService.getIssueLink = ghGetIssueLink
-        flowiumService.getFileLink = ghGetFileLink
-        flowiumService.getEditLink = ghGetEditLink
+    if(flowiumBackend.type == "GitHub") {
+        flowiumBackend.issues = ghIssues
+        flowiumBackend.templates = ghTemplates
+        flowiumBackend.recentVersion = ghRecentVersion
+        flowiumBackend.createIssue = ghCreateIssue
+        flowiumBackend.postComment = ghPostComment
+        flowiumBackend.getIssue = ghGetIssue
+        flowiumBackend.closeIssue = ghCloseIssue
+        flowiumBackend.reopenIssue = ghReopenIssue
+        flowiumBackend.getFileContent = ghGetFileContent
+        flowiumBackend.getFileHistory = ghGetFileHistory
+        flowiumBackend.getIssueLink = ghGetIssueLink
+        flowiumBackend.getFileLink = ghGetFileLink
+        flowiumBackend.getEditLink = ghGetEditLink
     }
-    if(flowiumService.type == "GitLab") {
-        flowiumService.get = glGet
-        flowiumService.post = glPost
-        flowiumService.put = glPut
-        flowiumService.issues = glIssues
-        flowiumService.templates = glTemplates
-        flowiumService.recentVersion = glRecentVersion
-        flowiumService.createIssue = glCreateIssue
-        flowiumService.postComment = glPostComment
-        flowiumService.getIssue = glGetIssue
-        flowiumService.closeIssue = glCloseIssue
-        flowiumService.reopenIssue = glReopenIssue
-        flowiumService.getFileContent = glGetFileContent
-        flowiumService.getFileHistory = glGetFileHistory
-        flowiumService.getIssueLink = glGetIssueLink
-        flowiumService.getFileLink = glGetFileLink
-        flowiumService.getEditLink = glGetEditLink
+    if(flowiumBackend.type == "GitLab") {
+        flowiumBackend.get = glGet
+        flowiumBackend.post = glPost
+        flowiumBackend.put = glPut
+        flowiumBackend.issues = glIssues
+        flowiumBackend.templates = glTemplates
+        flowiumBackend.recentVersion = glRecentVersion
+        flowiumBackend.createIssue = glCreateIssue
+        flowiumBackend.postComment = glPostComment
+        flowiumBackend.getIssue = glGetIssue
+        flowiumBackend.closeIssue = glCloseIssue
+        flowiumBackend.reopenIssue = glReopenIssue
+        flowiumBackend.getFileContent = glGetFileContent
+        flowiumBackend.getFileHistory = glGetFileHistory
+        flowiumBackend.getIssueLink = glGetIssueLink
+        flowiumBackend.getFileLink = glGetFileLink
+        flowiumBackend.getEditLink = glGetEditLink
     }
-    if(flowiumService.type == "Gitea") {
-        flowiumService.issues = gtIssues
-        flowiumService.templates = gtTemplates
-        flowiumService.recentVersion = gtRecentVersion
-        flowiumService.createIssue = gtCreateIssue
-        flowiumService.postComment = gtPostComment
-        flowiumService.getIssue = gtGetIssue
-        flowiumService.closeIssue = gtCloseIssue
-        flowiumService.reopenIssue = gtReopenIssue
-        flowiumService.getFileContent = gtGetFileContent
-        flowiumService.getFileHistory = gtGetFileHistory
-        flowiumService.getIssueLink = gtGetIssueLink
-        flowiumService.getFileLink = gtGetFileLink
-        flowiumService.getEditLink = gtGetEditLink
+    if(flowiumBackend.type == "Gitea") {
+        flowiumBackend.issues = gtIssues
+        flowiumBackend.templates = gtTemplates
+        flowiumBackend.recentVersion = gtRecentVersion
+        flowiumBackend.createIssue = gtCreateIssue
+        flowiumBackend.postComment = gtPostComment
+        flowiumBackend.getIssue = gtGetIssue
+        flowiumBackend.closeIssue = gtCloseIssue
+        flowiumBackend.reopenIssue = gtReopenIssue
+        flowiumBackend.getFileContent = gtGetFileContent
+        flowiumBackend.getFileHistory = gtGetFileHistory
+        flowiumBackend.getIssueLink = gtGetIssueLink
+        flowiumBackend.getFileLink = gtGetFileLink
+        flowiumBackend.getEditLink = gtGetEditLink
     }
 }
 
@@ -589,43 +581,40 @@ function authenticate() {
     var urlParams = new URLSearchParams(window.location.search)
 
     // First, check whether access token is in the local storage.
-    var tokens = JSON.parse(localStorage.getItem("tokens"))
-    if(tokens != null && flowiumService.name in tokens) {
-        flowiumService["token"] = tokens[flowiumService.name]
-        return
-    }
+    if("token" in flowiumBackend) return
+    debugger
 
     // Store some value temporarily while authentication is being done.
-    localStorage.setItem("service", flowiumService.name)
+    localStorage.setItem("service", flowiumBackend.name)
     localStorage.setItem("url", window.location.href)
 
-    if(flowiumService.type == "GitLab") {
+    if(flowiumBackend.type == "GitLab") {
         // Store URL so that it can be reused once the authorization is over.
         localStorage.setItem("url", window.location.href)
         window.location.replace(`https://gitlab.com/oauth/authorize` +
-            `?client_id=${flowiumService.applicationID}` +
+            `?client_id=${flowiumBackend.applicationID}` +
              `&redirect_uri=` +
              encodeURIComponent(`https://flowium.com/callback.html`) +
              `&response_type=token`)
         return        
     }
 
-    if(flowiumService.type == "GitHub") {
+    if(flowiumBackend.type == "GitHub") {
         window.location.replace(
             `https://github.com/login/oauth/authorize?` +
-            `scope=repo&client_id=${flowiumService.clientID}`)
+            `scope=repo&client_id=${flowiumBackend.clientID}`)
         return
     }
 
-    if(flowiumService.type == "Gitea") {
+    if(flowiumBackend.type == "Gitea") {
         // For Gitea, access key has to be specified in the config.
-        if(!("token" in flowiumService))
+        if(!("token" in flowiumBackend))
             throw Error("Token was not specified in the service config.")
-        tokens[flowiumService.name] = flowiumService.token
+        tokens[flowiumBackend.name] = flowiumBackend.token
         return
     }
 
-    throw Error(`Unsupported service type ${flowiumService.type}.`)
+    throw Error(`Unsupported service type ${flowiumBackend.type}.`)
 }
 
 ////////////////////////////////////////////////////////////////////////////////

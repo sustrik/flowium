@@ -514,11 +514,6 @@ repository.
 $(document).ready(function() {
     // This page deliberately doesn't do authorization so that even the users
     // who haven't authorized Flowium can still read the documentation.
-    chooseService()
-
-    $("#go-back").click(function () {
-        window.history.back()
-    })
 
     $(".section-body").hide()
     $(".section-header").click(function () {
@@ -548,11 +543,7 @@ $(document).ready(function() {
   
 <div id="flowium-all" class="container-fluid" style="display: none;">
 
-  <h1 class="flowium-title">Flowium (BETA)
-    <small>
-      <i id="go-back" class="float-right fa fa-close cancel-icon"></i>
-    </small>
-  </h1>
+  <h1 class="flowium-title">Flowium (BETA)</h1>
 
   <div class="container tab-pane active"><br>
 
