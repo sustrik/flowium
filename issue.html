@@ -723,6 +723,7 @@ function linkToStep(stepId, stepById) {
 
 $(document).ready(function() {
     // Authenticate with GitHub, as needed.
+    initializeConfig()
     chooseService()
     authenticate()
     setUpServiceAdaptor()
@@ -818,22 +819,17 @@ $(document).ready(function() {
                 variables)
 
             // Add the issue to the list of recent issues.
-            var recentIssues = JSON.parse(localStorage.getItem("recentIssues"))
-            if(recentIssues == null) recentIssues = {}
-            if(!(flowiumBackend.name in recentIssues))
-                recentIssues[flowiumBackend.name] = []
-            recent = recentIssues[flowiumBackend.name].filter(function(it) {
+            if(!("recent" in flowiumBackend)) flowiumBackend["recent"] = []
+            var recent = flowiumBackend.recent.filter(function(it) {
                 return it.issue != issueNumber
             })
             recent.unshift({
                 issue: issueNumber,
                 title: title,
             })
-            recent = recent.slice(0, 20)
-            recentIssues[flowiumBackend.name] = recent
-            localStorage.setItem("recentIssues",
-                JSON.stringify(recentIssues))
-
+            flowiumBackend.recent = recent.slice(0, 20)
+            localStorage.setItem("config", JSON.stringify(flowiumConfig))
+            
             // All is done. Let's make the page visible.
             $("#flowium-all").show()
         })

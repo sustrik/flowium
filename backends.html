@@ -86,11 +86,7 @@ function openBackendTab(name, type, disable) {
 }
 
 $(document).ready(function() {
-    // Get the backend config from local storage. If there is none, keep the
-    // config hardcoded in config.js
-    var config = JSON.parse(localStorage.getItem("config"))
-    if(config != null) flowiumConfig = config
-    else localStorage.setItem("config", JSON.stringify(flowiumConfig))
+    initializeConfig()
 
     if(flowiumConfig.backends.length == 0) {
         $("#no-backends").show()

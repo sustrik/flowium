@@ -51,6 +51,7 @@ function createIssue(repository, process, title, comment) {
 
 $(document).ready(function() {
     // Authenticate & authorize with GitHub, as needed.
+    initializeConfig()
     chooseService()
     setUpServiceAdaptor()
     authenticate()
@@ -85,13 +86,12 @@ $(document).ready(function() {
     })
 
     // Fill in the "recent issues" tab.
-    var recent = JSON.parse(localStorage.getItem("recentIssues"))
-    if(recent == null || !(flowiumBackend.name in recent) ||
-          recent[flowiumBackend.name].length == 0) {
+    var recent = flowiumBackend.recent
+    if(recent == null || recent.length == 0) {
         $("#no-recent-issues").show()
     } else {
-        for(var i = 0; i < recent[flowiumBackend.name].length; i++) {
-            var issue = recent[flowiumBackend.name][i]
+        for(var i = 0; i < recent.length; i++) {
+            var issue = recent[i]
             var t = $(`<tr class="clickable-element"></tr>`).click(function() {
                 var cols = $(this).children("td")
                 var issue = cols.eq(0).text()

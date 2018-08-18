@@ -508,6 +508,14 @@ function gtGetEditLink(file) {
 var flowiumBackendName = null
 var flowiumBackend = null
 
+function initializeConfig() {
+    // Get the backend config from local storage. If there is none, keep the
+    // config hardcoded in config.js
+    var config = JSON.parse(localStorage.getItem("config"))
+    if(config != null) flowiumConfig = config
+    else localStorage.setItem("config", JSON.stringify(flowiumConfig))
+}
+
 function chooseServiceByName(name) {
     flowiumBackendName = name
     flowiumBackend = flowiumConfig.backends[name]
