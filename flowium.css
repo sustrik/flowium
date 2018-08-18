@@ -78,3 +78,8 @@ pre {
     background-color: #F8F8F8;
     padding: 1rem;
 }
+
+.flowium-avatar {
+    height: 2rem;
+    width: 2rem;
+}

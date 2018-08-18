@@ -563,8 +563,8 @@ function initVariables(repository, issue, vars) {
 function renderComment(comment, icon, iconText, text) {
     // Comment header.
     var hdr = $(`<div class="card-header flowium-card-header"></div>`)
-    hdr.append($(`<img class="rounded comment-avatar"/>`)
-        .attr("src", comment.avatar + "&s=32"))
+    hdr.append($(`<img class="rounded comment-avatar flowium-avatar"/>`)
+        .attr("src", comment.avatar))
     hdr.append($("<a></a>")
         .text(comment.user)
         .attr("href", `https://github.com/${comment.user}`))
