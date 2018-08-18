@@ -58,7 +58,7 @@ function openBackendTab(name, type, disable) {
             $("#github-client-id").val(flowiumConfig.backends[name].clientID).prop("disabled", disable)
             $("#github-gatekeeper").val(flowiumConfig.backends[name].gatekeeperURL).prop("disabled", disable)
             $("#github-repository").val(flowiumConfig.backends[name].repository).prop("disabled", disable)
-            $("#github-path").val(flowiumConfig.backends[name].templatePath).prop("disabled", disable)
+            $("#github-path").val(flowiumConfig.backends[name].processPath).prop("disabled", disable)
         }
         $("#github-save").prop("disabled", disable)
         $("#github").show()
@@ -76,7 +76,7 @@ function openBackendTab(name, type, disable) {
             $("#gitlab-URL").val(flowiumConfig.backends[name].URL).prop("disabled", disable)
             $("#gitlab-application-id").val(flowiumConfig.backends[name].applicationID).prop("disabled", disable)
             $("#gitlab-repository").val(flowiumConfig.backends[name].repository).prop("disabled", disable)
-            $("#gitlab-path").val(flowiumConfig.backends[name].templatePath).prop("disabled", disable)
+            $("#gitlab-path").val(flowiumConfig.backends[name].processPath).prop("disabled", disable)
         }
         $("#gitlab-save").prop("disabled", disable)
         $("#gitlab").show()
@@ -175,7 +175,7 @@ $(document).ready(function() {
                clientID: $("#github-client-id").val(),
                gatekeeperURL: $("#github-gatekeeper").val(),
                repository: $("#github-repository").val(),
-               templatePath: $("#github-path").val(),
+               processPath: $("#github-path").val(),
                editable: true,
            }
            localStorage.setItem("config", JSON.stringify(flowiumConfig))
@@ -188,7 +188,7 @@ $(document).ready(function() {
                URL: $("#gitlab-URL").val(),
                applicationID: $("#gitlab-application-id").val(),
                repository: $("#gitlab-repository").val(),
-               templatePath: $("#gitlab-path").val(),
+               processPath: $("#gitlab-path").val(),
                editable: true,
            }
            localStorage.setItem("config", JSON.stringify(flowiumConfig))

@@ -35,7 +35,7 @@
 <script>
 
 ////////////////////////////////////////////////////////////////////////////////
-//  Parsing the template.
+//  Parsing the process file.
 ////////////////////////////////////////////////////////////////////////////////
 
 // Checks whether ID is valid.
@@ -96,7 +96,7 @@ function parseField(ln) {
     return {caption: caption, name: name}
 }
 
-// Function parseTemplate gets the markdown document and
+// Function parseProcess gets the markdown document and
 // returns the following object:
 //
 // {
@@ -132,10 +132,10 @@ function parseField(ln) {
 //     name: <name of the variable to capture>,
 // }
 
-function parseTemplate(template) {
-    // Convert the template into a list of child nodes.
+function parseProcess(process) {
+    // Convert the process into a list of child nodes.
     var src = document.createElement('div');
-    src.innerHTML = mdConvert(template)
+    src.innerHTML = mdConvert(process)
     var ch = src.childNodes
 
     var steps = []
@@ -604,13 +604,13 @@ function initHistory(repository, issue, comments, steps) {
                 var value = c.variables[names[j]]
                 if(name == "_template") {
                     var parts = splitOnce(value, ":")
-                    var template = escapeHtml(parts[0].trim())
+                    var process = escapeHtml(parts[0].trim())
                     var version = escapeHtml(parts[1].trim())
                     var link = $(`<a target="_blank"></a>`).text(version).attr("href",
                     `https://github.com/${repository}/blob/` +
-                    `${version}/${template}`)
-                    cards.push(renderComment(c, "fa-cog", "Template",
-                        `Use template <b>${template}` +
+                    `${version}/${process}`)
+                    cards.push(renderComment(c, "fa-cog", "Process definition",
+                        `Use process <b>${process}` +
                         `</b> version ${link[0].outerHTML}.`))
                     continue
                 }
@@ -656,16 +656,16 @@ function initHistory(repository, issue, comments, steps) {
 //  More.
 ////////////////////////////////////////////////////////////////////////////////
 
-function initMore(repository, issue, template, version, variables) {
+function initMore(repository, issue, process, version, variables) {
     $("#inspect-variables").click(function () {
         $(".more-tab").hide()
         $("#more-variables").show()
     })
-    $("#gh-update-template").click(function () {
-        $("#template-file").val(template)
-        $("#template-commit").empty()
-        // Load the history of the template file.
-        flowiumBackend.getFileHistory(template, function (history) {
+    $("#gh-update-process").click(function () {
+        $("#process-file").val(process)
+        $("#process-commit").empty()
+        // Load the history of the process file.
+        flowiumBackend.getFileHistory(process, function (history) {
             // Sort the commits by time.
             history.sort(function(a, b) {
                 if(a.committed < b.committed) return -1
@@ -679,12 +679,12 @@ function initMore(repository, issue, template, version, variables) {
                 var opt = $("<option></option>")
                     .attr("value", v)
                     .text(msg)
-                $("#template-commit").append(opt)
+                $("#process-commit").append(opt)
             }
             $("#update-button").click(function () {
-                var commit = $("#template-commit").val()
+                var commit = $("#process-commit").val()
                 $("flowium-all").hide()
-                var body = `~> _template: ${template}:${commit}`
+                var body = `~> _template: ${process}:${commit}`
                 flowiumBackend.postComment(issue, body, function() {
                     location.reload()
                 })
@@ -693,9 +693,9 @@ function initMore(repository, issue, template, version, variables) {
             $("#more-update").show()
         })
     })
-    $("#gh-link-template").attr("href",
-        flowiumBackend.getFileLink(template, version))
-    $("#gh-edit-template").attr("href", flowiumBackend.getEditLink(template))
+    $("#gh-link-process").attr("href",
+        flowiumBackend.getFileLink(process, version))
+    $("#gh-edit-process").attr("href", flowiumBackend.getEditLink(process))
     $("#gh-link-issue").attr("href", flowiumBackend.getIssueLink(issue))
     $("#more-clean-state").click(function () {
         localStorage.clear()
@@ -746,24 +746,24 @@ $(document).ready(function() {
             if(comment.type != "variables") continue
             variables = Object.assign(variables, comment.variables)
         }
-        // Get the template file.
+        // Get the process file.
         if(!"_template" in variables) {
             throw ReferenceError(
-                "Template file is not specified in the issue!")
+                "Process file is not specified in the issue!")
         }
         var parts = variables["_template"].split(':')
-        var template = parts[0].trim()
+        var process = parts[0].trim()
         var version = parts[1].trim()
-        flowiumBackend.getFileContent(template, version, function(text) {
-            // Expand variables in the template text.
+        flowiumBackend.getFileContent(process, version, function(text) {
+            // Expand variables in the process text.
             var keys = Object.keys(variables)
             for(var j = 0; j < keys.length; j++) {
                 var name = keys[j]
                 var value = variables[name]
                 text = text.replace(new RegExp(`#{${name}}`, 'g'), value)
             }
-            // Do the template parsing.
-            var steps = parseTemplate(text)
+            // Do the process parsing.
+            var steps = parseProcess(text)
             // Collect statuses from comments.
             var statusById = {}
             for(var i = 0; i != steps.steps.length; i++) {
@@ -814,7 +814,7 @@ $(document).ready(function() {
             initHistory(issueRepository, issueNumber, comments.comments,
                 steps.stepById)
             initVariables(issueRepository, issueNumber, variables)
-            initMore(issueRepository, issueNumber, template, version,
+            initMore(issueRepository, issueNumber, process, version,
                 variables)
 
             // Add the issue to the list of recent issues.
@@ -862,6 +862,9 @@ $(document).ready(function() {
     <li class="nav-item">
       <a class="nav-link" data-toggle="tab" href="#more">More</a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link" href="help.html" target="_blank">Help</a>
+    </li>
   </ul>
 
   <br>
@@ -907,16 +910,16 @@ $(document).ready(function() {
         <br>
         <p><a id="inspect-variables" href="">
           Inspect the variables</a></p>
-        <p><a id="gh-update-template" href="">Update the template</a></p>
+        <p><a id="gh-update-process" href="">Update the process definition</a></p>
         <br>
         <h5>Links</h5>
         <br>
         <p><a id="gh-link-issue" target="_blank">
           This issue</a></p>
-        <p><a id="gh-link-template" target="_blank">
-          Currently used version of the template</a></p>
-        <p><a id="gh-edit-template" target="_blank">
-          Edit the template</a></p>
+        <p><a id="gh-link-process" target="_blank">
+          Currently used version of the process file</a></p>
+        <p><a id="gh-edit-process" target="_blank">
+          Edit the process file</a></p>
         <br>
         <h5>Flowium</h5>
         <br>
@@ -956,18 +959,18 @@ $(document).ready(function() {
 
       <div id="more-update" class="more-tab" style="display: none;">
         <h3>
-          Update template
+          Update process
           <i class="float-right fa fa-close cancel-icon cancel-more"></i>
         </h3>
         <br>
         <div class="form-group">
-            <label for="template-file">Template file:</label>
+            <label for="process-file">Process file:</label>
             <input type="text" class="form-control" disabled
-                id="template-file"></input>
+                id="process-file"></input>
         </div>
         <div class="form-group">
-            <label for="template-commit">Commit:</label>
-            <select class="form-control" id="template-commit"></select>
+            <label for="process-commit">Commit:</label>
+            <select class="form-control" id="process-commit"></select>
         </div>
         <br/>
         <button id="update-button" type="button"

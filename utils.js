@@ -58,10 +58,10 @@ function ghIssues(cb) {
     })
 }
 
-// Returns an array of all files in the template directory.
-function ghTemplates(cb) {
+// Returns an array of all files in the process directory.
+function ghProcesses(cb) {
     ghGet(`repos/${this.repository}` +
-          `/contents${this.templatePath}`, null, function(files) {
+          `/contents${this.processPath}`, null, function(files) {
         var r = []
         for(var i = 0; i < files.length; i++) {
             var f = files[i]
@@ -72,9 +72,9 @@ function ghTemplates(cb) {
     })
 }
 
-// Returns recent version ID of the specified file from the template directory.
+// Returns recent version ID of the specified file from the processes directory.
 function ghRecentVersion(file, cb) {
-    var fname = `${this.templatePath}${file}`
+    var fname = `${this.processPath}${file}`
     ghGet(`repos/${this.repository}/commits?path=${encodeURIComponent(fname)}`,
           null, function(result) {
         cb(result[0].sha)
@@ -272,10 +272,10 @@ function glIssues(cb) {
     })
 }
 
-// Returns an array of all files in the template directory.
-function glTemplates(cb) {
+// Returns an array of all files in the process directory.
+function glProcesses(cb) {
     this.get(`projects/${encodeURIComponent(this.repository)}/repository/` +
-          `tree${this.templatePath}`, {}, function(files) {
+          `tree${this.processPath}`, {}, function(files) {
         var r = []
         for(var i = 0; i < files.length; i++) {
             var f = files[i]
@@ -286,10 +286,10 @@ function glTemplates(cb) {
     })
 }
 
-// Returns recent version ID of the specified file from the template directory.
+// Returns recent version ID of the specified file from the process directory.
 function glRecentVersion(file, cb) {
     this.get(`projects/${encodeURIComponent(this.repository)}/repository/` +
-          `files${this.templatePath}${file}?ref=master`, {}, function(file) {
+          `files${this.processPath}${file}?ref=master`, {}, function(file) {
         cb(file.commit_id)
     })
 }
@@ -363,7 +363,7 @@ function glReopenIssue(id, cb) {
 
 function glGetFileContent(file, version, cb) {
     this.get(`projects/${encodeURIComponent(flowiumBackend.repository)}/` +
-          `repository/files${this.templatePath}${file}?ref=${version}`,
+          `repository/files${this.processPath}${file}?ref=${version}`,
           {}, function(f) {
         cb(atob(f.content))
     })
@@ -444,11 +444,11 @@ function gtIssues(cb) {
     })
 }
 
-// Returns an array of all files in the template directory.
-function gtTemplates(cb) {
+// Returns an array of all files in the process directory.
+function gtProcesses(cb) {
 }
 
-// Returns recent version ID of the specified file from the template directory.
+// Returns recent version ID of the specified file from the process directory.
 function gtRecentVersion(file, cb) {
 }
 
@@ -525,7 +525,7 @@ function chooseService() {
 function setUpServiceAdaptor() {
     if(flowiumBackend.type == "GitHub") {
         flowiumBackend.issues = ghIssues
-        flowiumBackend.templates = ghTemplates
+        flowiumBackend.processes = ghProcesses
         flowiumBackend.recentVersion = ghRecentVersion
         flowiumBackend.createIssue = ghCreateIssue
         flowiumBackend.postComment = ghPostComment
@@ -543,7 +543,7 @@ function setUpServiceAdaptor() {
         flowiumBackend.post = glPost
         flowiumBackend.put = glPut
         flowiumBackend.issues = glIssues
-        flowiumBackend.templates = glTemplates
+        flowiumBackend.processes = glProcesses
         flowiumBackend.recentVersion = glRecentVersion
         flowiumBackend.createIssue = glCreateIssue
         flowiumBackend.postComment = glPostComment
@@ -558,7 +558,7 @@ function setUpServiceAdaptor() {
     }
     if(flowiumBackend.type == "Gitea") {
         flowiumBackend.issues = gtIssues
-        flowiumBackend.templates = gtTemplates
+        flowiumBackend.processes = gtProcesses
         flowiumBackend.recentVersion = gtRecentVersion
         flowiumBackend.createIssue = gtCreateIssue
         flowiumBackend.postComment = gtPostComment

@@ -33,13 +33,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function createIssue(repository, template, title, comment) {
-    // Get the current version of the template.
-    flowiumBackend.recentVersion(template, function(version) {
-        var prologue = '~> _template: ' + template + ":" + version + "\n\n"
+function createIssue(repository, process, title, comment) {
+    // Get the current version of the process.
+    flowiumBackend.recentVersion(process, function(version) {
+        var prologue = '~> _template: ' + process + ":" + version + "\n\n"
         flowiumBackend.createIssue(title, prologue + comment, function(id) {
             var addr = 'issue.html' +
-                '?service=' + encodeURIComponent(flowiumBackend.name) +
+                '?backend=' + encodeURIComponent(flowiumBackendName) +
                 '&issue=' + encodeURIComponent(id)
             var body = `View in Flowium: <${flowiumConfig.URL}/${addr}>`
             flowiumBackend.postComment(id, body, function() {
@@ -63,15 +63,15 @@ $(document).ready(function() {
         var repository = urlParams.get("repository")
         if(repository == null) throw Error(
             "Issue creation request is missing repository in the URL.")
-        var template = urlParams.get("template")
-        if(template == null) throw Error(
+        var process = urlParams.get("process")
+        if(process == null) throw Error(
             "Issue creation request is missing temlate in the URL.")
         var title = urlParams.get("title")
         if(title == null) throw Error(
             "Issue creation request is missing title in the URL.")
         var comment = urlParams.get("comment")
         if(comment == null) comment = ""
-        createIssue(repository, template, title, comment)
+        createIssue(repository, process, title, comment)
         return
     }
 
@@ -126,25 +126,38 @@ $(document).ready(function() {
     })
 
     // Fill in the "create an issue" tab.
-    flowiumBackend.templates(function(files) {
+    flowiumBackend.processes(function(files) {
         var tfiles = []
         for(var i = 0; i < files.length; i++) {
             var f = files[i]
             if(!f.endsWith('.md')) continue
-            tfiles.push(f.substring(0, f.length - 3)) 
+            tfiles.push(f) 
         }
         tfiles.sort()
         for(var i = 0; i < tfiles.length; i++) {
-            $("#template-list").append($("<option/>")
+            $("#process-list").append($("<option/>")
                 .attr("value", tfiles[i]))
         }
     })
+    $("#create-process").change(function() {
+        flowiumBackend.getFileContent($("#create-process").val(), "master",
+              function (content) {
+            console.log(content)
+            var lns = content.split("\n")
+            var info = ""
+            for(var i = 0; i < lns.length; i++) {
+                if(lns[i].startsWith("#")) break
+                info += lns[i] + "\n"
+            }
+            $("#create-info").html(mdConvert(info.trim()))
+        })
+    })
     $("#create-button").click(function() {
         // Collect the info from the form.
-        var template = $("#create-template").val() + ".md"
+        var process = $("#create-process").val()
         var title = $("#create-title").val()
         var comment = $("#create-comment").val()
-        createIssue(flowiumBackend.repository, template, title, comment)
+        createIssue(flowiumBackend.repository, process, title, comment)
     })
 
     // Now the page is fully loaded, so show it to the user.
@@ -216,11 +229,12 @@ $(document).ready(function() {
       <h3>Create an issue</h3>
       <br>
       <div class="form-group">
-          <datalist id="template-list"></datalist>
-          <label for="create-template">Template file:</label>
-          <input type="text" class="form-control" id="create-template"
-              list="template-list"></input>
+          <datalist id="process-list"></datalist>
+          <label for="create-process">Process file:</label>
+          <input type="text" class="form-control" id="create-process"
+              list="process-list"></input>
       </div>
+      <div id="create-info" class="alert alert-primary" role="alert"></div>
       <div class="form-group">
           <label for="create-title">Issue title:</label>
           <input type="text" class="form-control" id="create-title"></input>
