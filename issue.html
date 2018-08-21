@@ -532,6 +532,7 @@ function initGraph(steps) {
 
 function initVariables(repository, issue, vars) {
     var keys = Object.keys(vars).sort()
+    var varnum = 0
     for(var i = 0; i < keys.length; i++) {
         if(keys[i].startsWith("_")) continue
         var tr = $(`<tr class="clickable-element"></tr>`)
@@ -542,7 +543,10 @@ function initVariables(repository, issue, vars) {
         tr.append($("<td></td>").text(keys[i]))
         tr.append($("<td></td>").text(vars[keys[i]]))
         $("#variable-table").append(tr)
+        varnum++
     }
+    if(varnum > 0) $("#some-variables").show()
+    else $("#no-variables").show()
 
     // When the button is pressed one variable is updated.
     $("#variable-save").click(function () {
@@ -697,9 +701,6 @@ function initMore(repository, issue, process, version, variables) {
         flowiumBackend.getFileLink(process, version))
     $("#gh-edit-process").attr("href", flowiumBackend.getEditLink(process))
     $("#gh-link-issue").attr("href", flowiumBackend.getIssueLink(issue))
-    $("#more-clean-state").click(function () {
-        localStorage.clear()
-    })
     $(".cancel-more").click(function () {
         $(".more-tab").hide()
         $("#more-index").show()
@@ -904,9 +905,9 @@ $(document).ready(function() {
         <br>
         <h5>Actions</h5>
         <br>
-        <p><a id="inspect-variables" href="">
+        <p><a id="inspect-variables" href="#">
           Inspect the variables</a></p>
-        <p><a id="gh-update-process" href="">Update the process definition</a></p>
+        <p><a id="gh-update-process" href="#">Update the process definition</a></p>
         <br>
         <h5>Links</h5>
         <br>
@@ -921,7 +922,6 @@ $(document).ready(function() {
         <br>
         <p><a href="https://github.com/sustrik/flowium/issues/new"
           target="_blank">Report a bug in Flowium</a></p>
-        <p><a id="more-clean-state" href="">Clean the local state</a></p>
       </div>
 
       <div id="more-variables" class="more-tab" style="display: none;">
@@ -930,15 +930,20 @@ $(document).ready(function() {
           <i class="float-right fa fa-close cancel-icon cancel-more"></i>
         </h3>
         <br>
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody id="variable-table"></tbody>
-        </table>
+        <div id="some-variables" style="display: none;">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody id="variable-table"></tbody>
+          </table>
+        </div>
+        <div id="no-variables" style="display: none;">
+          <p>There are no variables defined.</p>
+        </div>
         <div class="form-group">
             <label for="variable-name">Name:</label>
             <input type="text" class="form-control flowium-active"
