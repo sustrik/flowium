@@ -49,6 +49,7 @@ function authenticationDone(token) {
 }
 
 $(document).ready(function() {
+    debugger
     var urlParams = new URLSearchParams(window.location.search)
     var backend = localStorage.getItem("backend")
     chooseServiceByName(backend)
