@@ -8,7 +8,6 @@ flowiumConfig = {
             gatekeeperURL: "https://flowium.herokuapp.com",
             repository: "sustrik/flowium-sandbox",
             processPath: "/",
-            token: "99ed9700a8f10eae26a0ba57627cde25d3d1846d",
         },
         'gitlab-test': {
             type: "GitLab",
