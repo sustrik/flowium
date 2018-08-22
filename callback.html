@@ -41,7 +41,7 @@ function authenticationDone(token) {
    var tokens = localStorage.getItem("tokens")
    if(tokens == null) tokens = {}
    else tokens = JSON.parse(tokens)
-   tokens[flowiumService.name] = token
+   tokens[flowiumBackend.name] = token
    localStorage.setItem("tokens", JSON.stringify(tokens))
 
    // Redirect back to the original URL.
@@ -53,7 +53,7 @@ $(document).ready(function() {
     var backend = localStorage.getItem("backend")
     chooseServiceByName(backend)
 
-    if(flowiumService.type == "GitHub") {
+    if(flowiumBackend.type == "GitHub") {
         var code = urlParams.get("code")
         var rq = new XMLHttpRequest();
         rq.onreadystatechange = function() {
@@ -61,7 +61,7 @@ $(document).ready(function() {
                 authenticationDone(JSON.parse(rq.responseText).token)
             }
         }
-        rq.open('GET', `${flowiumService.gatekeeperURL}/authenticate/${code}`,
+        rq.open('GET', `${flowiumBackend.gatekeeperURL}/authenticate/${code}`,
             true)
         rq.setRequestHeader('Content-type', 'application/json')
         rq.setRequestHeader('Accept', '*/*')
@@ -69,7 +69,7 @@ $(document).ready(function() {
         return
     }
 
-    if(flowiumService.type == "GitLab") {
+    if(flowiumBackend.type == "GitLab") {
         var hash = window.location.hash.substring(1)
         var params = hash.split("&")
         var accessToken = null
@@ -83,7 +83,7 @@ $(document).ready(function() {
         return
     }
 
-    throw Error(`Invalid service type ${flowiumService.type}`)
+    throw Error(`Invalid service type ${flowiumBackend.type}`)
 })
 
 </script>
