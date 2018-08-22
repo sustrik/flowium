@@ -39,27 +39,27 @@ are processes like "How to get a new major release out of the door?", "How to
 reconfigure the company network?" or "How to build a new datacenter?"
 
 These processes require a huge amount of highly technical knowledge, yet they
-are rarely documented. And even when they are the documentation is often
-long out of date. The knowledge is passed down by oral tradition. It
+are rarely documented. And even if they are the documentation is often
+out of date. The knowledge is passed down by oral tradition. It
 gradually dissipates and when people leave the company it is lost forever.
 
-Flowium is an attempt to help with this problem.
+Flowium is an attempt to help with that problem.
 
 It assumes that the process
 is written down as a markdown document. Then it turns the document into a tool
 to guide people through the process, to track what has already been done, to
 collect all the available context and to provide a well-defined communication
-channel for all the participants in the process. Last but not least it tries
+channel for all the participants in the process. Last but not least, it tries
 to encourage updating and maintenance of the original markdown document.
 
 Technically, Flowium is a shim on top of an pre-existing issue tracker, such as
-GitHub issue tracker, GitLab issue tracker or similar. It runs entirely in
+GitHub's or GitLab's issue tracker. It runs entirely in
 the user's browser and speaks only to the issue tracker at the backend.
 `
 
 shoping = `
 Let's start with the most trivial example. A list of items to buy at a grocery.
-Here's the markdown document:
+Here's the markdown document describing the process:
 
 \`\`\`
 # Bread
@@ -78,7 +78,7 @@ Either strawberry or raspberry jam.
 You are supposed to upload your document to a source control repository,
 however, the examples in this tutorial have already been uploaded for you,
 so you can
-<a href="index.html?action=create&backend=FlowiumSandbox&template=%2Fshopping-list.md&title=My%20shopping%20list&comment=Go%20shopping!" target="_blank">start shopping straight away</a>.
+<a href="issues.html?action=create&backend=FlowiumSandbox&process=shopping-list.md&title=My%20shopping%20list&comment=Go%20shopping!" target="_blank">start shopping straight away</a>.
 
 As you can see you can comment on individual steps and mark them as either
 done or not done. When a step is marked as done it's color changes from green
@@ -91,14 +91,15 @@ steps as done. However, they've left following comment on the last step:
 "I hate jam! I am not going to buy it." Then they've closed the issue.
 
 A proper authoritarian tool would require all steps to be marked as done before
-the issue could be closed. However, Flowium is lax about that. What's going
+the issue could be closed. However, Flowium is lax about that. It allowed the
+user to close the issue without buying jam first. What's going
 on here?
 
 The main design principle behind Flowium is the acceptance of the fact that
 complex processes are inherently quirky and full of exceptions. Trying to
-enforce the process stricly would just put obstacles in the user's way.
+strictly enforce the process would just put obstacles in the user's way.
 The shopping list may work for most users but once in a while you are going to
-run into a user who hates jam and will thus deviate from the process.
+run into someone who hates jam and who will thus deviate from the process.
 
 Therefore, Flowium adopts a liberal attitude, allowing for arbitrary violations
 of the process.
@@ -118,14 +119,15 @@ Technically, the entire process is stored as an issue in an issue tracker and
 it is therefore accessible to any user with appropriate access rights.
 
 The easiest way to send the issue to a colleague is to pass them the URL from
-your browser. When they open it they will see which steps have already been done
+the browser. When they open it they will see which steps have already been done
 (marked grey) and which are still to be done (marked green). They can check
 the comments and understand what kinds of obstacles you've encountered when
 trying to execute the step.
 
 An alternative way to notify a co-worker is to take advantage of notifications
-built into the underlying issue tracker, for instance, GitHub notifications.
-If you put someone's GitHub nick into a comment, they'll get notified:
+built into the underlying issue tracker, for instance, of GitHub notifications.
+If you put someone's GitHub nick into a comment, they'll get notified via an
+email:
 
 \`\`\`
 @johndoe: Can you please take a look at this?
@@ -133,10 +135,10 @@ If you put someone's GitHub nick into a comment, they'll get notified:
 `
 
 audit = `
-Sometimes, when investigating a failure or writing a post-mortem, you want
+Sometimes, when investigating a failure or when writing a post-mortem, you want
 to see all that happened in chronological order.
 
-Click on the "History" tab in Flowium and you'll get exactly that.
+The history tab in Flowium does exactly that.
 
 <div class="alert alert-warning" role="alert">
 Flowium does not allow you to edit or delete comments. Please refrain from
@@ -149,7 +151,7 @@ dependencies = `
 More often than not a step cannot be done unless a previous step was finished.
 
 Flowium allows to formalize these dependencies by assigning short names to
-individual steps and then defining which step depends on which:
+individual steps and then defining which steps depend on each other:
 
 \`\`\`
 # Make a toast ~> toast
@@ -167,7 +169,7 @@ Be generous with jam.
 \`\`\`
 
 You can
-<a href="index.html?action=create&backend=FlowiumSandbox&template=%2Fmake-a-toast.md&title=My%20toast&comment=Make%20a%20toast!" target="_blank">play with this process here</a>.
+<a href="issues.html?action=create&backend=FlowiumSandbox&process=make-a-toast.md&title=My%20toast&comment=Make%20a%20toast!" target="_blank">play with this process here</a>.
 
 The first step has short name \`toast\`, the second one \`butter\` and so on.
 
@@ -191,8 +193,12 @@ steps that have at least one step they are depending on that is not yet done.
 That being said, Flowium is liberal and you can mark even a blocked step as
 done.
 
-Now that we have dependencies between the steps the "Graph" tab start to make
-more sense. It gives you quick overview of the process, the states the
+Now that we have dependencies between the steps the graph tab start to make
+more sense.
+
+<img src="dependencies.png" style="max-width:100%;max-height:100%;"></img>
+
+It gives you quick overview of the process, the states the
 individual steps and what's blocking what. Clicking on a step in the graph will
 navigate you the corresponding step.
 
@@ -204,7 +210,7 @@ identifier and changing the title can break the workflow.
 `
 
 parallel = `
-Especially with long-lived processes, executing all the steps one-by-one would
+With long-lived processes in particular, executing all the steps in order would
 make the process stretch forever. Instead, we want to execute as many steps as
 possible in parallel.
 
@@ -251,8 +257,8 @@ Wait for a stormy night. Then flip the big switch.
 
 <img src="datacenter.png" style="max-width:100%;max-height:100%;"></img>
 
-As can be seen, splitting a flow into parallel flows requires only making
-mutliple steps depend on a single one. Joining the flows is done by listing
+As can be seen, splitting a flow into parallel flows requires making
+mutliple steps depend on a single one. Joining the flows is done by specifying
 multiple dependencies for the step.
 
 The important thing to understand here is how parallel flows allow multiple
@@ -312,7 +318,7 @@ Execute the following line in your shell:
 
 \`\`\`
 
-<a href="index.html?action=create&backend=FlowiumSandbox&template=%2Ffrobnicator.md&title=Install%20Frobnicator" target="_blank">Play with this process</a>.
+<a href="issues.html?action=create&backend=FlowiumSandbox&process=%2Ffrobnicator.md&title=Install%20Frobnicator" target="_blank">Play with this process</a>.
 
 <div class="alert alert-warning" role="alert">
 The names of the variables used to collect the input can contain letters, digits
@@ -345,9 +351,9 @@ that are being executed at the same time. For example, one datacenter may be
 still being built using the old process, while a more recent construction
 follows the new version of the process.
 
-All that being said, user can update the process version manually. Just go
-to "More" tab and click on "Update the process" link. Then choose the version to
-upgrade to.
+All that being said, user can update the process version manually by going to
+"More" tab and clicking on "Update the process" link. They are presented with
+a list of possible versions to upgrade to.
 
 <div class="alert alert-warning" role="alert">
 When upgrading to a new version of the process take caution. Think about
@@ -363,26 +369,122 @@ example = `
 <img src="example.png" style="max-width:100%;max-height:100%;"></img>
 
 To get a better feel of how Flowium works in real world try a
-<a href="index.html?action=create&backend=FlowiumSandbox&template=%2Frelease.md&title=Install%20Frobnicator" target="_blank">somehow more elaborated example here</a>.
+<a href="issues.html?action=create&backend=FlowiumSandbox&process=release.md&title=Install%20Frobnicator" target="_blank">somehow more elaborated example here</a>.
+`
+
+syntax = `
+
+##### Process file
+
+The file containing the process definition is a stadard Markdown file (with
+GitHub flavor). Its extension should be \`.md\` so that all the tools able
+to handle Markdown will treat it as such.
+
+##### Steps
+
+Flowium splits the file into steps based on headings. All headings are
+considered to be equal. A step defined with level 1 heading will behave
+exactly the same as a step defined with level 6 heading.
+
+The entire content of the file naturally splits into different steps,
+except for the possible content at the begininning of the file which may not
+be preceded by a heading. This initial content is not used by the process
+itself, however, it is shown to the user when an issue is being created.
+
+It therefore makes sense to start the file with a short description of the
+process.
+
+\`\`\`
+This process will guide you through getting a **new release** out of the door.
+
+# Check whether the tests still pass
+
+...
+\`\`\`
+
+##### Step identifiers
+
+Each step can have an identifier. The identifier can contain numbers, letters
+and dashes and can be specified like this:
+
+\`\`\`
+# Frobnicate all the files ~> frobnicate
+\`\`\`
+
+The identifiers are used for two main purposes. First, they are used when
+specifying dependecies between steps.
+
+Second, Flowium itself uses the identifier to keep track of the state of the
+step when the process is being executed. If, for example, you comment on the
+step above, you'll see the following comment in the undelying issue tracker:
+
+\`\`\`
+_step: frobnicate
+
+This is the text of the comment.
+\`\`\`
+
+It follows that while it's all right to change the title of the step you should
+never change the identifier of the step. Doing so would leave all the state
+associated with step in the issue tracker orphaned.
+
+It also means that you should specify the step identifier even when you don't
+immediately need it. Having an identifier gives you the freedom to modify
+the title of the step in the future without breaking the running instances
+of the process.
+
+##### Dependencies
+
+Each step can have a list of steps it depends on, like this:
+
+\`\`\`
+# Make a toast ~> toast: bread butter jam
+\`\`\`
+
+The dependencies are not strictly enforced. You can work on a step even if
+not all of its dependencies are done. However, the dependencies are used to
+construct the graph of the process as well as to color the steps as either
+"active" (green) or "blocked" (red). The step is considered to be "blocked"
+if it has at least one dependency that's not done yet.
+
+##### Forms
+
+You can create simple forms to gather data like this:
+
+\`\`\`
+* Fill in your first name here ~> first-name
+* Fill in your last name here ~> last-name
+* Fill in your ddress here ~> address
+\`\`\`
+
+The variable names (on the right of the wiggly arrow) can contain numbers,
+letters and dashes.
+
+The variables can be used in the text of the process like this:
+
+\`\`\`
+Your name is #{first-name} #{last-name} and you live at #{address}.
+\`\`\`
+
 `
 
 backends = `
-If, instead of playing with the examples, you go to the
+If, instead of playing with the examples, you go to the actual
 [main Flowium webpage](https://flowium.com), you will be asked to choose a
 "backend".
 
-Flowium, as already said, runs entirely in your browser, but the data itself,
+Flowium runs entirely in your browser, but the data itself,
 be it the process file, the state of the individual steps or your comments,
 are stored in a backend such as GitLab repository, GitHub repository or similar.
 
-When you open the main page you see the backends defined for you by
+When you open the main page you see the backends defined for you by the site
 \`flowium.com\`. For example, there's \`FlowiumSandbox\` backend that is used
 to run the toy examples in this manual.
 
 However, you are free to define your own backends. Just press one of the
 buttons at the bottom of the page and fill in the details.
 
-#### Github
+##### Github
 
 When creating a GitHub backend you'll be asked to fill in the following
 information:
@@ -399,7 +501,7 @@ information:
 * Path to process files: Path, within the repository, to the process files
   folder. If the files are hosted at the root level, use \`/\`.
 
-#### GitLab
+##### GitLab
 
 When creating a GitLab backend you'll be asked to fill in the following
 information:
@@ -418,7 +520,7 @@ information:
   folder. If the files are hosted at the root level, use \`/\`.
 `
 
-syntax = `
+issues = `
 Once you've chosen your backend you are supposed to choose the issue to work on.
 
 The issues are simply bug tracker issues at the underlying backend. For instance,
@@ -619,7 +721,7 @@ $(document).ready(function() {
     $("#example").append(mdConvert(example))
     $("#backends").append(mdConvert(backends))
     $("#syntax").append(mdConvert(syntax))
-    $("#self-hosting").append(mdConvert(selfhosting))
+    //$("#self-hosting").append(mdConvert(selfhosting))
 
     // Now the page is fully loaded, so show it to the user.
     $("#flowium-all").show()
@@ -706,13 +808,6 @@ $(document).ready(function() {
 
     <div class="card flowium-step">
       <div class="card-header flowium-card-header section-header">
-        <h5 class="step-title">Reference: Backends</h5>
-      </div>
-      <div id="backends" class="card-body section-body step-body"></div>
-    </div>
-
-    <div class="card flowium-step">
-      <div class="card-header flowium-card-header section-header">
         <h5 class="step-title">Reference: Syntax</h5>
       </div>
       <div id="syntax" class="card-body section-body step-body"></div>
@@ -720,10 +815,19 @@ $(document).ready(function() {
 
     <div class="card flowium-step">
       <div class="card-header flowium-card-header section-header">
+        <h5 class="step-title">Reference: Backends</h5>
+      </div>
+      <div id="backends" class="card-body section-body step-body"></div>
+    </div>
+
+    <!--
+    <div class="card flowium-step">
+      <div class="card-header flowium-card-header section-header">
         <h5 class="step-title">Reference: Self-hosting</h5>
       </div>
       <div id="self-hosting" class="card-body section-body step-body"></div>
     </div>
+    -->
 
   </div>
 </div>

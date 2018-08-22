@@ -33,7 +33,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function createIssue(repository, process, title, comment) {
+function createIssue(process, title, comment) {
     // Get the current version of the process.
     flowiumBackend.recentVersion(process, function(version) {
         var prologue = '~> _process: ' + process + ":" + version + "\n\n"
@@ -61,18 +61,15 @@ $(document).ready(function() {
     var urlParams = new URLSearchParams(window.location.search)
     var action = urlParams.get("action")
     if(action == "create") {
-        var repository = urlParams.get("repository")
-        if(repository == null) throw Error(
-            "Issue creation request is missing repository in the URL.")
         var process = urlParams.get("process")
         if(process == null) throw Error(
-            "Issue creation request is missing temlate in the URL.")
+            "Issue creation request is missing process file in the URL.")
         var title = urlParams.get("title")
         if(title == null) throw Error(
             "Issue creation request is missing title in the URL.")
         var comment = urlParams.get("comment")
         if(comment == null) comment = ""
-        createIssue(repository, process, title, comment)
+        createIssue(process, title, comment)
         return
     }
 
@@ -157,7 +154,7 @@ $(document).ready(function() {
         var process = $("#create-process").val()
         var title = $("#create-title").val()
         var comment = $("#create-comment").val()
-        createIssue(flowiumBackend.repository, process, title, comment)
+        createIssue(process, title, comment)
     })
 
     // Now the page is fully loaded, so show it to the user.

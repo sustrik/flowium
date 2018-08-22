@@ -10,6 +10,14 @@ flowiumConfig = {
             processPath: "/",
             token: "99ed9700a8f10eae26a0ba57627cde25d3d1846d",
         },
+        'gitlab-test': {
+            type: "GitLab",
+            URL: "https://gitlab.com",
+            applicationID: "4dbe6da72b8954701424c1439519d1debe60211f7294547e111787b1e340544b",
+            repository: "sustrik/flowium-sandbox",
+            processPath: "/",
+            editable: true,
+        },
         'gitea-test': {
             type: "Gitea",
             URL: "https://try.gitea.io",
@@ -17,14 +25,6 @@ flowiumConfig = {
             repository: "flowium/flowium-sandbox",
             processPath: "/",
             token: "7c270a276f42c3631645224e01bada02891bf925",
-            editable: true,
-        },
-        'gitlab-test': {
-            type: "GitLab",
-            URL: "https://gitlab.com",
-            applicationID: "4dbe6da72b8954701424c1439519d1debe60211f7294547e111787b1e340544b",
-            repository: "sustrik/flowium-sandbox",
-            processPath: "/",
             editable: true,
         },
     }
