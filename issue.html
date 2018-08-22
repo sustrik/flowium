@@ -753,7 +753,7 @@ $(document).ready(function() {
             throw ReferenceError(
                 "Process file is not specified in the issue!")
         }
-        var parts = variables["_process"].split(':')
+        var parts = splitLast(variables["_process"], ':')
         var process = parts[0].trim()
         var version = parts[1].trim()
         flowiumBackend.getFileContent(process, version, function(text) {

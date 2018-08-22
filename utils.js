@@ -652,6 +652,12 @@ function splitOnce(str, delimiter) {
     return [str.substring(0, i), str.substring(i + delimiter.length)]
 }
 
+function splitLast(str, delimiter) {
+    var i = str.lastIndexOf(delimiter)
+    if(i == -1) return [str]
+    return [str.substring(0, i), str.substring(i + delimiter.length)]
+}
+
 function escapeHtml(str) {
     return $("<p></p>").text(str).html()
 }

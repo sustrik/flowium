@@ -36,7 +36,7 @@
 function createIssue(repository, process, title, comment) {
     // Get the current version of the process.
     flowiumBackend.recentVersion(process, function(version) {
-        var prologue = '~> _template: ' + process + ":" + version + "\n\n"
+        var prologue = '~> _process: ' + process + ":" + version + "\n\n"
         flowiumBackend.createIssue(title, prologue + comment, function(id) {
             var addr = 'issue.html' +
                 '?backend=' + encodeURIComponent(flowiumBackendName) +
