@@ -381,13 +381,9 @@ to run the toy examples in this manual.
 
 However, you are free to define your own backends. Just press one of the
 buttons at the bottom of the page and fill in the details.
-`
 
-gitea = `
-Under construction.
-`
+#### Github
 
-github = `
 When creating a GitHub backend you'll be asked to fill in the following
 information:
 
@@ -402,9 +398,9 @@ information:
   tracker, in form \`user/project\`.
 * Path to process files: Path, within the repository, to the process files
   folder. If the files are hosted at the root level, use \`/\`.
-`
 
-gitlab = `
+#### GitLab
+
 When creating a GitLab backend you'll be asked to fill in the following
 information:
 
@@ -422,7 +418,7 @@ information:
   folder. If the files are hosted at the root level, use \`/\`.
 `
 
-issues = `
+syntax = `
 Once you've chosen your backend you are supposed to choose the issue to work on.
 
 The issues are simply bug tracker issues at the underlying backend. For instance,
@@ -622,10 +618,7 @@ $(document).ready(function() {
     $("#versioning").append(mdConvert(versioning))
     $("#example").append(mdConvert(example))
     $("#backends").append(mdConvert(backends))
-    $("#gitea").append(mdConvert(gitea))
-    $("#github").append(mdConvert(github))
-    $("#gitlab").append(mdConvert(gitlab))
-    $("#issues").append(mdConvert(issues))
+    $("#syntax").append(mdConvert(syntax))
     $("#self-hosting").append(mdConvert(selfhosting))
 
     // Now the page is fully loaded, so show it to the user.
@@ -720,30 +713,9 @@ $(document).ready(function() {
 
     <div class="card flowium-step">
       <div class="card-header flowium-card-header section-header">
-        <h5 class="step-title">Reference: Gitea</h5>
+        <h5 class="step-title">Reference: Syntax</h5>
       </div>
-      <div id="gitea" class="card-body section-body step-body"></div>
-    </div>
-
-    <div class="card flowium-step">
-      <div class="card-header flowium-card-header section-header">
-        <h5 class="step-title">Reference: GitHub</h5>
-      </div>
-      <div id="github" class="card-body section-body step-body"></div>
-    </div>
-
-    <div class="card flowium-step">
-      <div class="card-header flowium-card-header section-header">
-        <h5 class="step-title">Reference: GitLab</h5>
-      </div>
-      <div id="gitlab" class="card-body section-body step-body"></div>
-    </div>
-
-    <div class="card flowium-step">
-      <div class="card-header flowium-card-header section-header">
-        <h5 class="step-title">Reference: Issues</h5>
-      </div>
-      <div id="issues" class="card-body section-body step-body"></div>
+      <div id="syntax" class="card-body section-body step-body"></div>
     </div>
 
     <div class="card flowium-step">
