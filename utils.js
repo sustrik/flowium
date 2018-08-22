@@ -592,7 +592,7 @@ function authenticate() {
     if("token" in flowiumBackend) return
 
     // Store some value temporarily while authentication is being done.
-    localStorage.setItem("backend", flowiumBackend.name)
+    localStorage.setItem("backend", flowiumBackendName)
     localStorage.setItem("url", window.location.href)
 
     if(flowiumBackend.type == "GitLab") {
@@ -617,7 +617,7 @@ function authenticate() {
         // For Gitea, access key has to be specified in the config.
         if(!("token" in flowiumBackend))
             throw Error("Token was not specified in the service config.")
-        tokens[flowiumBackend.name] = flowiumBackend.token
+        tokens[flowiumBackendName] = flowiumBackend.token
         return
     }
 
