@@ -606,7 +606,7 @@ function initHistory(repository, issue, comments, steps) {
             for(var j = 0; j < names.length; j++) {
                 var name = names[j]
                 var value = c.variables[names[j]]
-                if(name == "_template") {
+                if(name == "_process") {
                     var parts = splitOnce(value, ":")
                     var process = escapeHtml(parts[0].trim())
                     var version = escapeHtml(parts[1].trim())
@@ -688,7 +688,7 @@ function initMore(repository, issue, process, version, variables) {
             $("#update-button").click(function () {
                 var commit = $("#process-commit").val()
                 $("flowium-all").hide()
-                var body = `~> _template: ${process}:${commit}`
+                var body = `~> _process: ${process}:${commit}`
                 flowiumBackend.postComment(issue, body, function() {
                     location.reload()
                 })
@@ -749,11 +749,11 @@ $(document).ready(function() {
             variables = Object.assign(variables, comment.variables)
         }
         // Get the process file.
-        if(!"_template" in variables) {
+        if(!("_process" in variables)) {
             throw ReferenceError(
                 "Process file is not specified in the issue!")
         }
-        var parts = variables["_template"].split(':')
+        var parts = variables["_process"].split(':')
         var process = parts[0].trim()
         var version = parts[1].trim()
         flowiumBackend.getFileContent(process, version, function(text) {
