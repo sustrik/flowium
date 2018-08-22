@@ -590,10 +590,9 @@ function authenticate() {
 
     // First, check whether access token is in the local storage.
     if("token" in flowiumBackend) return
-    debugger
 
     // Store some value temporarily while authentication is being done.
-    localStorage.setItem("service", flowiumBackend.name)
+    localStorage.setItem("backend", flowiumBackend.name)
     localStorage.setItem("url", window.location.href)
 
     if(flowiumBackend.type == "GitLab") {
