@@ -420,7 +420,7 @@ function gtGet(path, args, cb) {
             }
         }
     }
-    request.open('GET', flowiumBackend.root + "/api/v1/" + path, true);
+    request.open('GET', flowiumBackend.URL + "/api/v1/" + path, true);
     request.setRequestHeader('Authorization','token ' +
         flowiumBackend.token)
     request.setRequestHeader('Content-type', 'application/json')
