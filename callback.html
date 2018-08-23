@@ -30,7 +30,7 @@
 <script>
 
 function authenticationDone(token) {
-   var service = localStorage.getItem("backend")
+   var backend = localStorage.getItem("backend")
    var url = localStorage.getItem("url")
 
    // Delete the temporary data from the local storage.
@@ -41,7 +41,7 @@ function authenticationDone(token) {
    var tokens = localStorage.getItem("tokens")
    if(tokens == null) tokens = {}
    else tokens = JSON.parse(tokens)
-   tokens[flowiumBackend.name] = token
+   tokens[backend] = token
    localStorage.setItem("tokens", JSON.stringify(tokens))
 
    // Redirect back to the original URL.
