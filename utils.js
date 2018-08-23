@@ -201,7 +201,7 @@ function glGet(path, args, cb) {
             }
         }
     }
-    request.open('GET', this.root + "/api/v4/" + path, true);
+    request.open('GET', this.URL + "/api/v4/" + path, true);
     request.setRequestHeader('Authorization','bearer ' +
         flowiumBackend.token)
     request.setRequestHeader('Content-type', 'application/json')
@@ -224,7 +224,7 @@ function glPost(path, args, cb) {
             }
         }
     }
-    request.open('POST', this.root + "/api/v4/" + path, true)
+    request.open('POST', this.URL + "/api/v4/" + path, true)
     request.setRequestHeader('Authorization','bearer ' +
         flowiumBackend.token)
     request.setRequestHeader('Content-type', 'application/json')
