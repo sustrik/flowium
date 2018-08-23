@@ -30,11 +30,11 @@
 <script>
 
 function authenticationDone(token) {
-   var service = localStorage.getItem("service")
+   var service = localStorage.getItem("backend")
    var url = localStorage.getItem("url")
 
    // Delete the temporary data from the local storage.
-   localStorage.removeItem("service")
+   localStorage.removeItem("backend")
    localStorage.removeItem("url")
 
    // Store the token.
