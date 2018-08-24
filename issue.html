@@ -829,7 +829,7 @@ $(document).ready(function() {
                 title: title,
             })
             flowiumBackend.recent = recent.slice(0, 20)
-            localStorage.setItem("config", JSON.stringify(flowiumConfig))
+            saveConfig()
             
             // All is done. Let's make the page visible.
             $("#flowium-all").show()

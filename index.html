@@ -116,8 +116,7 @@ $(document).ready(function() {
                 var icon = $(`<i class="fa fa-close"></i>`).click(function(name) {
                     return function(ev) {
                         delete flowiumConfig.backends[name]
-                        localStorage.setItem("config",
-                            JSON.stringify(flowiumConfig))
+                        saveConfig()
                         location.reload()
                         ev.stopPropagation()
                     }
@@ -160,7 +159,7 @@ $(document).ready(function() {
                type: "Gitea",
                editable: true,
            }
-           localStorage.setItem("config", JSON.stringify(flowiumConfig))
+           saveConfig()
            location.reload()
         })
         $("#github-save").click(function() {
@@ -174,7 +173,7 @@ $(document).ready(function() {
                processPath: $("#github-path").val(),
                editable: true,
            }
-           localStorage.setItem("config", JSON.stringify(flowiumConfig))
+           saveConfig()
            location.reload()
         })
         $("#gitlab-save").click(function() {
@@ -187,7 +186,7 @@ $(document).ready(function() {
                processPath: $("#gitlab-path").val(),
                editable: true,
            }
-           localStorage.setItem("config", JSON.stringify(flowiumConfig))
+           saveConfig()
            location.reload()
         })
     }

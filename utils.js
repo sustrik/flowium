@@ -513,7 +513,11 @@ function initializeConfig() {
     // config hardcoded in config.js
     var config = JSON.parse(localStorage.getItem("config"))
     if(config != null) flowiumConfig = config
-    else localStorage.setItem("config", JSON.stringify(flowiumConfig))
+    else saveConfig()
+}
+
+function saveConfig() {
+    localStorage.setItem("config", JSON.stringify(flowiumConfig))
 }
 
 function chooseBackendByName(name) {

@@ -38,7 +38,7 @@ function authenticationDone(token) {
 
    // Store the token.
    flowiumBackend["token"] = token
-   localStorage.setItem("config", JSON.stringify(flowiumConfig))
+   saveConfig()
 
    // Redirect back to the original URL.
    window.location.replace(url)
