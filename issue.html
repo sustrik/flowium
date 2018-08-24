@@ -726,7 +726,7 @@ $(document).ready(function() {
     // Authenticate with GitHub, as needed.
     initializeConfig()
     chooseService()
-    authenticate()
+    if(!authenticate()) return
     setUpServiceAdaptor()
     // Parse query string.
     var urlParams = new URLSearchParams(window.location.search)

@@ -54,7 +54,7 @@ $(document).ready(function() {
     initializeConfig()
     chooseService()
     setUpServiceAdaptor()
-    authenticate()
+    if(!authenticate()) return
 
     // This page can be used to create issues by passing the parameters
     // in the URL query string.

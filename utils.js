@@ -589,7 +589,7 @@ function authenticate() {
     var urlParams = new URLSearchParams(window.location.search)
 
     // First, check whether access token is in the local storage.
-    if("token" in flowiumBackend) return
+    if("token" in flowiumBackend) return true
 
     // Store some value temporarily while authentication is being done.
     localStorage.setItem("backend", flowiumBackendName)
@@ -603,14 +603,14 @@ function authenticate() {
              `&redirect_uri=` +
              encodeURIComponent(`https://flowium.com/callback.html`) +
              `&response_type=token`)
-        return        
+        return false 
     }
 
     if(flowiumBackend.type == "GitHub") {
         window.location.replace(
             `https://github.com/login/oauth/authorize?` +
             `scope=repo&client_id=${flowiumBackend.clientID}`)
-        return
+        return false
     }
 
     if(flowiumBackend.type == "Gitea") {
@@ -618,7 +618,7 @@ function authenticate() {
         if(!("token" in flowiumBackend))
             throw Error("Token was not specified in the service config.")
         tokens[flowiumBackendName] = flowiumBackend.token
-        return
+        return false
     }
 
     throw Error(`Unsupported service type ${flowiumBackend.type}.`)
