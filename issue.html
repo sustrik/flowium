@@ -725,9 +725,9 @@ function linkToStep(stepId, stepById) {
 $(document).ready(function() {
     // Authenticate with GitHub, as needed.
     initializeConfig()
-    chooseService()
+    chooseBackend()
     if(!authenticate()) return
-    setUpServiceAdaptor()
+    setUpBackendAdaptor()
     // Parse query string.
     var urlParams = new URLSearchParams(window.location.search)
     var issueRepository = flowiumBackend.repository

@@ -516,21 +516,21 @@ function initializeConfig() {
     else localStorage.setItem("config", JSON.stringify(flowiumConfig))
 }
 
-function chooseServiceByName(name) {
+function chooseBackendByName(name) {
     flowiumBackendName = name
     flowiumBackend = flowiumConfig.backends[name]
     if(flowiumBackend == null)
         throw Error(`Service "${name}" not found in the config file.`)
 }
 
-function chooseService() {
+function chooseBackend() {
     var urlParams = new URLSearchParams(window.location.search)
     var backend = urlParams.get("backend")
     if(backend == null) throw Error("No backend is specified.")
-    chooseServiceByName(backend)
+    chooseBackendByName(backend)
 }
 
-function setUpServiceAdaptor() {
+function setUpBackendAdaptor() {
     if(flowiumBackend.type == "GitHub") {
         flowiumBackend.issues = ghIssues
         flowiumBackend.processes = ghProcesses

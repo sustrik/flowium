@@ -47,7 +47,7 @@ function authenticationDone(token) {
 $(document).ready(function() {
     var urlParams = new URLSearchParams(window.location.search)
     var backend = localStorage.getItem("backend")
-    chooseServiceByName(backend)
+    chooseBackendByName(backend)
 
     if(flowiumBackend.type == "GitHub") {
         var code = urlParams.get("code")

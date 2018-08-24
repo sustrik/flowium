@@ -52,8 +52,8 @@ function createIssue(process, title, comment) {
 $(document).ready(function() {
     // Authenticate & authorize with GitHub, as needed.
     initializeConfig()
-    chooseService()
-    setUpServiceAdaptor()
+    chooseBackend()
+    setUpBackendAdaptor()
     if(!authenticate()) return
 
     // This page can be used to create issues by passing the parameters
